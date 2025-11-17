@@ -7,6 +7,16 @@ export interface User {
   avatarUrl: string;
 }
 
+export interface UserProfile {
+    id: string;
+    role: UserRole;
+    email: string;
+    firstName: string;
+    lastName: string;
+    contactNumber?: string;
+    location?: string;
+}
+
 export interface Crop {
   id: string;
   name: string;

@@ -52,13 +52,13 @@ service cloud.firestore {
      * @description Rules for user profiles.
      * @path /users/{userId}
      * @allow (create) User with ID 'user123' can create their own profile if authenticated as 'user123'.
-     * @allow (get) User with ID 'user123' can read their own profile if authenticated as 'user123'.
+     * @allow (get) Any user can read a public profile.
      * @deny (create) User with ID 'user456' cannot create a profile for 'user123'.
      * @deny (update) User with ID 'user456' cannot update the profile for 'user123'.
-     * @principle Enforces document ownership for writes and reads.
+     * @principle Enforces document ownership for writes, but allows public reads for profiles.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get: if true;
       allow list: if false; // User listing is not allowed.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;

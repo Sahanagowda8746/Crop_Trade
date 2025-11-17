@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { useAppContext } from '@/context/app-context';
 import { Badge } from '@/components/ui/badge';
-import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import type { CropListing } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,15 +24,17 @@ function CropCard({ crop }: { crop: CropListing }) {
   return (
     <Card className="flex flex-col overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="p-0">
-        <div className="relative h-48 w-full">
-          <Image
-            src={crop.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
-            alt={crop.cropType}
-            fill
-            className="object-cover"
-            data-ai-hint={crop.imageHint || 'crop'}
-          />
-        </div>
+        <Link href={`/farmers/${crop.farmerId}`}>
+          <div className="relative h-48 w-full">
+            <Image
+              src={crop.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
+              alt={crop.cropType}
+              fill
+              className="object-cover"
+              data-ai-hint={crop.imageHint || 'crop'}
+            />
+          </div>
+        </Link>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <Badge variant="secondary" className="mb-2">
@@ -39,7 +42,10 @@ function CropCard({ crop }: { crop: CropListing }) {
         </Badge>
         <CardTitle className="font-headline text-2xl">{crop.cropType}</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
-          Sold by {crop.farmerName}
+          Sold by{' '}
+          <Link href={`/farmers/${crop.farmerId}`} className="hover:underline text-primary font-medium">
+            {crop.farmerName}
+          </Link>
         </CardDescription>
       </CardContent>
       <CardFooter className="p-4 flex justify-between items-center bg-muted/50">
@@ -93,11 +99,11 @@ export default function MarketPage() {
         description: 'Adding initial crop data to the database...',
     });
 
-    const promises = initialCrops.map((crop) => {
+    initialCrops.forEach((crop) => {
         const docRef = doc(cropsCollectionRef, crop.id);
         // Using setDocumentNonBlocking to ensure we use the predefined IDs
         // and avoid duplicates on multiple clicks.
-        setDocumentNonBlocking(docRef, crop, {});
+        setDocumentNonBlocking(docRef, crop, { merge: true });
     });
     
     toast({
