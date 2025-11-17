@@ -367,8 +367,6 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
     const { firestore } = initializeFirebase();
     const listingRef = doc(firestore, 'cropListings', listingId);
 
-    // Using set with merge:true to update the document.
-    // This is generally safer than updateDoc as it won't fail if the document doesn't exist.
     await setDocumentNonBlocking(listingRef, listingData, { merge: true });
 
     return { message: 'Listing updated successfully.' };
