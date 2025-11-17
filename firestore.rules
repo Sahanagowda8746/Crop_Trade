@@ -153,7 +153,7 @@ service cloud.firestore {
     match /soilKitOrders/{orderId} {
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
         allow read: if isSignedIn() && (isOwner(resource.data.userId) || hasRole('Admin'));
-        allow list: if hasRole('Admin'); // Allow admins to list all orders
+        allow list: if isSignedIn(); // Allow listing so users can query their own orders. Client-side query must enforce filtering.
         allow update: if hasRole('Admin')
                       && request.resource.data.userId == resource.data.userId; // Ensure userId is not changed
     }
@@ -258,5 +258,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
