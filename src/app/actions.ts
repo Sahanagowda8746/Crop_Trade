@@ -347,7 +347,13 @@ const listingSchema = z.object({
 
 
 export async function handleUpdateListing(prevState: any, formData: FormData) {
-  const validatedFields = listingSchema.safeParse(Object.fromEntries(formData));
+  const formValues = Object.fromEntries(formData.entries());
+  
+  // The 'photo' input is used for file selection client-side but is not part of the schema.
+  // We must remove it before validation.
+  delete formValues.photo;
+
+  const validatedFields = listingSchema.safeParse(formValues);
 
   if (!validatedFields.success) {
     console.error("Zod validation failed:", validatedFields.error.flatten());
@@ -371,5 +377,3 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
     return { message: `error:Update failed. ${errorMessage}` };
   }
 }
-
-    
