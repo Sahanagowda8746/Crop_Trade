@@ -6,16 +6,47 @@ import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, FlaskConical, Package, TestTube, Truck } from 'lucide-react';
+import { Check, FlaskConical, Package, TestTube, Truck, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 const features = [
     "Professional lab analysis of N, P, K, pH, and organic matter.",
     "Personalized fertilizer and crop recommendations.",
     "Digital report accessible anytime on the AgriLink platform.",
     "Easy-to-use sample collection and mail-in kit."
-]
+];
+
+const instructions = [
+    "Collect around 200-300g of soil.",
+    "Take samples from 5-10 random points in the area.",
+    "Sample from a depth of 0-15cm.",
+    "Ensure the soil is air-dried before packing.",
+    "Do not mix any fertilizer or extra water.",
+    "Use only the provided container and seal it tightly.",
+    "Attach the unique QR code label to the container.",
+    "Place the sealed container in the provided zip-lock bag.",
+    "Insert the completed submission form into the package.",
+    "Ship the sample using the pre-paid return pouch."
+];
+
+const requirements = [
+    { parameter: 'Soil Weight', requirement: '200-300g', compliant: true },
+    { parameter: 'Moisture', requirement: '<10% (air dried)', compliant: true },
+    { parameter: 'Container', requirement: 'Provided one only', compliant: true },
+    { parameter: 'Sun Drying', requirement: 'Not allowed', compliant: false },
+    { parameter: 'Water Added', requirement: 'Not allowed', compliant: false },
+    { parameter: 'Foreign Material', requirement: 'None (stones, roots)', compliant: false },
+];
+
 
 export default function SoilKitPage() {
     const { setPageTitle } = useAppContext();
@@ -131,8 +162,44 @@ export default function SoilKitPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline text-2xl">Sample Collection & Shipping Instructions</CardTitle>
+                    <CardDescription>Follow these instructions carefully to ensure an accurate lab analysis.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                        {instructions.map((instruction, i) => (
+                             <li key={i} className="flex items-start gap-3">
+                                <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <span>{instruction}</span>
+                            </li>
+                        ))}
+                    </div>
+                    <div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Parameter</TableHead>
+                                    <TableHead>Requirement</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {requirements.map(req => (
+                                    <TableRow key={req.parameter}>
+                                        <TableCell className="font-medium">{req.parameter}</TableCell>
+                                        <TableCell className="flex items-center gap-2">
+                                            {req.compliant ? <Check className="h-4 w-4 text-green-500"/> : <XCircle className="h-4 w-4 text-destructive"/>}
+                                            {req.requirement}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }
-
-    
