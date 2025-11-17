@@ -51,7 +51,7 @@ const mainNavItems = [
 const aiAdvisoryItems = [
     { href: '/soil-analysis', label: 'Soil Analysis', icon: TestTube, roles: ['Farmer', 'Admin'] },
     { href: '/pest-detection', label: 'Disease Detection', icon: Radar, roles: ['Farmer', 'Admin'] },
-    { href: '/soil-analysis', label: 'Fertilizer Calculator', icon: Calculator, roles: ['Farmer', 'Admin'] },
+    { href: '/fertilizer-calculator', label: 'Fertilizer Calculator', icon: Calculator, roles: ['Farmer', 'Admin'] },
     { href: '/yield-prediction', label: 'Yield Prediction', icon: AreaChart, roles: ['Farmer', 'Admin'] },
     { href: '/demand-forecast', label: 'Demand Forecast', icon: LineChart, roles: ['Farmer', 'Admin'] },
     { href: '/credit-score', label: 'Credit Score', icon: CircleDollarSign, roles: ['Farmer', 'Admin'] },

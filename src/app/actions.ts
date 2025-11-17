@@ -7,6 +7,7 @@ import { askAgronomist } from '@/ai/flows/ask-agronomist';
 import { generateAdImage } from '@/ai/flows/generate-ad-image';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { generateCropDescription } from '@/ai/flows/crop-description-generator';
+import { calculateFertilizer } from '@/ai/flows/fertilizer-calculator';
 
 // This is a simplified way to get the currently logged-in user's ID on the server.
 // In a real app, you'd get this from the session.

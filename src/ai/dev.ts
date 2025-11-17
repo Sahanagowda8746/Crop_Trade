@@ -8,3 +8,4 @@ import '@/ai/flows/ask-agronomist.ts';
 import '@/ai/flows/generate-ad-image.ts';
 import '@/ai/flows/text-to-speech.ts';
 import '@/ai/flows/soil-analysis-from-prompt.ts';
+import '@/ai/flows/fertilizer-calculator.ts';
