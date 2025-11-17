@@ -91,6 +91,15 @@ function PlaceBidDialog({ auction, userId }: { auction: Auction; userId: string 
             return;
         }
 
+        if (!firestore) {
+             toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Could not connect to the database.',
+            });
+            return;
+        }
+
         const auctionRef = doc(firestore, 'auctions', auction.id);
         updateDocumentNonBlocking(auctionRef, {
             currentBid: newBid,
@@ -157,9 +166,9 @@ export default function AuctionsPage() {
   const { user, isUserLoading } = useUser();
 
   const auctionsQuery = useMemoFirebase(() => {
-    if (!firestore || isUserLoading || !user) return null;
+    if (!firestore || !user) return null;
     return query(collection(firestore, 'auctions'), where('status', '==', 'open'));
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, user]);
 
   const { data: auctions, isLoading } = useCollection<Auction>(auctionsQuery);
 

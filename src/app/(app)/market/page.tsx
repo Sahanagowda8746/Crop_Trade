@@ -24,17 +24,15 @@ function CropCard({ crop }: { crop: CropListing }) {
   return (
     <Card className="flex flex-col overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="p-0">
-        <Link href={`/farmers/${crop.farmerId}`}>
           <div className="relative h-48 w-full">
             <Image
-              src={crop.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
+              src={crop.imageUrl || `https://picsum.photos/seed/${crop.id}/600/400`}
               alt={crop.cropType}
               fill
               className="object-cover"
               data-ai-hint={crop.imageHint || 'crop'}
             />
           </div>
-        </Link>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <Badge variant="secondary" className="mb-2">

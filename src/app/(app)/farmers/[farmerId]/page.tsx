@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star } from 'lucide-react';
+import Link from 'next/link';
 
 function CropCard({ crop }: { crop: CropListing }) {
   return (
@@ -19,7 +20,7 @@ function CropCard({ crop }: { crop: CropListing }) {
       <CardHeader className="p-0">
         <div className="relative h-40 w-full">
           <Image
-            src={crop.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
+            src={crop.imageUrl || `https://picsum.photos/seed/${crop.id}/600/400`}
             alt={crop.cropType}
             fill
             className="object-cover"
