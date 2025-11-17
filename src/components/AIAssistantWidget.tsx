@@ -157,7 +157,7 @@ export default function AIAssistantWidget() {
   if (!isOpen) {
     return (
       <Button 
-        className="fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90"
+        className="fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-lg z-50 bg-accent hover:bg-accent/90 text-accent-foreground"
         size="icon"
         onClick={() => setIsOpen(true)}
       >
