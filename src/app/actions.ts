@@ -1,19 +1,19 @@
 'use server';
 
 import { z } from 'zod';
-import { analyzeSoilFromPrompt } from '@/ai/flows/soil-analysis-from-prompt';
+import { analyzeSoilFromImage } from '@/ai/flows/soil-analysis-from-image';
 import { diagnosePestFromImage } from '@/ai/flows/pest-diagnosis-from-image';
 import { askAgronomist } from '@/ai/flows/ask-agronomist';
 import { generateAdImage } from '@/ai/flows/generate-ad-image';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 
 const soilAnalysisSchema = z.object({
-  soilDescription: z.string().min(10, 'Please provide a more detailed soil description.'),
+  photoDataUri: z.string().startsWith('data:image', 'Please upload a valid image file.'),
 });
 
 export async function handleSoilAnalysis(prevState: any, formData: FormData) {
   const validatedFields = soilAnalysisSchema.safeParse({
-    soilDescription: formData.get('soilDescription'),
+    photoDataUri: formData.get('photoDataUri'),
   });
 
   if (!validatedFields.success) {
@@ -22,9 +22,18 @@ export async function handleSoilAnalysis(prevState: any, formData: FormData) {
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
+
+  if (!validatedFields.data.photoDataUri) {
+      return {
+          message: 'error:Please upload an image.',
+          errors: {
+              photoDataUri: ['Please upload an image before analyzing.'],
+          },
+      }
+  }
   
   try {
-    const result = await analyzeSoilFromPrompt(validatedFields.data);
+    const result = await analyzeSoilFromImage(validatedFields.data);
     return { message: 'Analysis complete.', data: result };
   } catch (error) {
     console.error(error);
