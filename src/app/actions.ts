@@ -17,21 +17,23 @@ export async function handleSoilAnalysis(prevState: any, formData: FormData) {
 
   if (!validatedFields.success) {
     return {
-      message: 'Invalid form data.',
+      message: 'error:Invalid form data.',
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-
+  
   try {
     const result = await analyzeSoilFromPrompt(validatedFields.data);
     return { message: 'Analysis complete.', data: result };
   } catch (error) {
-    return { message: 'Analysis failed. Please try again.', errors: {} };
+    console.error(error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { message: `error:Analysis failed. ${errorMessage}`, errors: {} };
   }
 }
 
 const pestDiagnosisSchema = z.object({
-    photoDataUri: z.string().startsWith('data:image', 'Invalid image format.'),
+    photoDataUri: z.string().startsWith('data:image', 'Please upload a valid image file.'),
 });
 
 export async function handlePestDiagnosis(prevState: any, formData: FormData) {
@@ -41,9 +43,18 @@ export async function handlePestDiagnosis(prevState: any, formData: FormData) {
 
     if (!validatedFields.success) {
         return {
-            message: 'Invalid form data.',
+            message: 'error:Invalid form data.',
             errors: validatedFields.error.flatten().fieldErrors,
         };
+    }
+
+    if (!validatedFields.data.photoDataUri) {
+        return {
+            message: 'error:Please upload an image.',
+            errors: {
+                photoDataUri: ['Please upload an image before diagnosing.'],
+            },
+        }
     }
     
     try {
@@ -51,7 +62,8 @@ export async function handlePestDiagnosis(prevState: any, formData: FormData) {
         return { message: 'Diagnosis complete.', data: result };
     } catch (error) {
         console.error(error);
-        return { message: 'Diagnosis failed. Please try again.', errors: {} };
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { message: `error:Diagnosis failed. ${errorMessage}`, errors: {} };
     }
 }
 
@@ -65,7 +77,8 @@ export async function handleAskAgronomist(question: string) {
         return { message: 'Answer complete.', data: result };
     } catch (error) {
         console.error(error);
-        return { message: 'Failed to get answer. Please try again.', errors: {} };
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { message: `error:Failed to get answer. ${errorMessage}`, errors: {} };
     }
 }
 
@@ -80,7 +93,7 @@ export async function handleAdImageGeneration(prevState: any, formData: FormData
 
   if (!validatedFields.success) {
     return {
-      message: 'Invalid form data.',
+      message: 'error:Invalid form data.',
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
@@ -90,6 +103,7 @@ export async function handleAdImageGeneration(prevState: any, formData: FormData
     return { message: 'Image generated.', data: result };
   } catch (error) {
     console.error(error);
-    return { message: 'Image generation failed. Please try again.', errors: {} };
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { message: `error:Image generation failed. ${errorMessage}`, errors: {} };
   }
 }

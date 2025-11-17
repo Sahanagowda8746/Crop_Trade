@@ -51,17 +51,28 @@ export interface CropListing {
 
 export interface Auction {
   id: string;
-  crop: Crop;
-  currentBid: number;
-  endTime: Date;
-  bidderCount: number;
+  cropListingId: string;
+  startDate: string;
+  endDate: string;
+  startingBid: number;
+  currentBid?: number;
+  currentBidderId?: string;
+  status: 'open' | 'closed';
+
+  // Denormalized data
+  cropListing?: CropListing;
 }
 
 export interface TraceEvent {
   event: string;
-  timestamp: Date;
+  timestamp: string;
   location: string;
   details: string;
+}
+
+export interface Traceability {
+    id: string;
+    events: TraceEvent[];
 }
 
 export interface Order {

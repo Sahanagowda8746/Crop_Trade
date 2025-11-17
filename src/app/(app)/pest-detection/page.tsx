@@ -1,13 +1,13 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormState } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-context';
 import { handlePestDiagnosis } from '@/app/actions';
-import { ScanSearch, Bug, ShieldCheck, Upload } from 'lucide-react';
+import { ScanSearch, Bug, ShieldCheck, Upload, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -21,7 +21,15 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" aria-disabled={pending} disabled={pending} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-      {pending ? 'Diagnosing...' : 'Diagnose Pest'}
+      {pending ? (
+        <>
+          <Sparkles className="mr-2 h-4 w-4 animate-spin" /> Diagnosing...
+        </>
+       ) : (
+        <>
+          <Bug className="mr-2 h-4 w-4" /> Diagnose Pest
+        </>
+      )}
     </Button>
   );
 }
@@ -38,9 +46,8 @@ function fileToDataUri(file: File): Promise<string> {
 export default function PestDetectionPage() {
   const { setPageTitle } = useAppContext();
   const [state, formAction] = useFormState(handlePestDiagnosis, initialState);
-  const { pending } = useFormStatus();
   const [preview, setPreview] = useState<string | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setPageTitle('AI Pest Detection');
@@ -52,7 +59,7 @@ export default function PestDetectionPage() {
       const dataUri = await fileToDataUri(file);
       setPreview(dataUri);
     } else {
-        setPreview(null);
+      setPreview(null);
     }
   };
 
@@ -69,15 +76,21 @@ export default function PestDetectionPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form ref={formRef} action={formAction} className="space-y-4">
+          <form action={formAction} className="space-y-4">
              <div className="space-y-2">
                 <label htmlFor="photo" className="font-medium">Upload Photo</label>
-                <Input id="photo" name="photo" type="file" accept="image/*" onChange={handleFileChange} className="file:text-primary file:font-semibold"/>
+                <div className="flex gap-2">
+                    <Input id="photo" name="photo" type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef} className="hidden" />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="flex-grow">
+                        <Upload className="mr-2"/>
+                        Choose File
+                    </Button>
+                </div>
                 <input type="hidden" name="photoDataUri" value={preview || ''} />
              </div>
 
             {preview && (
-              <div className="relative w-full h-64 rounded-md overflow-hidden border">
+              <div className="relative w-full h-64 rounded-md overflow-hidden border bg-muted">
                 <Image src={preview} alt="Crop preview" fill className="object-contain" />
               </div>
             )}
@@ -91,7 +104,7 @@ export default function PestDetectionPage() {
         </CardContent>
       </Card>
       
-      {pending && (
+      {state.message && state.message.startsWith("pending:") && (
         <Card>
             <CardHeader>
                 <CardTitle>Diagnosis in Progress</CardTitle>
@@ -109,10 +122,10 @@ export default function PestDetectionPage() {
         </Card>
       )}
 
-      {state.message && !state.data && state.message !== 'Invalid form data.' && (
+      {state.message && state.message.startsWith("error:") && (
          <Alert variant="destructive">
             <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{state.message}</AlertDescription>
+            <AlertDescription>{state.message.replace('error:', '')}</AlertDescription>
         </Alert>
       )}
 

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-context';
 import { traceHistory } from '@/lib/data';
 import { TraceEvent } from '@/lib/types';
-import { FileCheck2, MapPin, Tractor, Package, Ship, Building2, CheckCircle } from 'lucide-react';
+import { FileCheck2, MapPin, Tractor, Package, Ship, Building2, CheckCircle, Leaf } from 'lucide-react';
 
 const formSchema = z.object({
   traceHash: z.string().min(1, 'Please enter a trace hash.'),
@@ -18,7 +18,7 @@ const formSchema = z.object({
 
 const eventIcons: Record<string, React.ElementType> = {
     'Planted': Tractor,
-    'Fertilized': Tractor,
+    'Fertilized': Leaf,
     'Harvested': Package,
     'Stored': Building2,
     'Shipped': Ship,
@@ -87,30 +87,31 @@ export default function TraceabilityPage() {
             </CardHeader>
             <CardContent>
                 {history && history.length > 0 ? (
-                    <div className="relative pl-6">
-                        <div className="absolute left-[35px] top-0 h-full w-0.5 bg-border transform -translate-x-1/2"></div>
+                    <div className="relative pl-6 before:absolute before:left-[35px] before:top-0 before:h-full before:w-0.5 before:bg-border before:-translate-x-1/2">
                         {history.map((item, index) => {
                             const Icon = eventIcons[item.event] || FileCheck2;
                             return (
                                 <div key={index} className="relative mb-8 pl-8">
-                                    <div className="absolute -left-1 top-1 flex items-center justify-center w-12 h-12 bg-card rounded-full border-4 border-primary">
+                                    <div className="absolute -left-1.5 top-1 flex items-center justify-center w-12 h-12 bg-card rounded-full ring-4 ring-primary">
                                        <Icon className="w-6 h-6 text-primary" />
                                     </div>
-                                    <p className="font-semibold text-lg">{item.event}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        {new Date(item.timestamp).toLocaleString()}
-                                    </p>
-                                    <div className="flex items-center text-sm mt-1">
-                                        <MapPin className="w-4 h-4 mr-2 text-muted-foreground"/>
-                                        <p>{item.location}</p>
+                                    <div className="pl-4">
+                                        <p className="font-semibold text-lg">{item.event}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {new Date(item.timestamp).toLocaleString()}
+                                        </p>
+                                        <div className="flex items-center text-sm mt-1">
+                                            <MapPin className="w-4 h-4 mr-2 text-muted-foreground"/>
+                                            <p>{item.location}</p>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground mt-1 italic">"{item.details}"</p>
                                     </div>
-                                    <p className="text-sm text-muted-foreground mt-1 italic">"{item.details}"</p>
                                 </div>
                             );
                         })}
                     </div>
                 ) : (
-                    <p className="text-center text-muted-foreground">No history found for this trace hash.</p>
+                    <p className="text-center text-muted-foreground py-8">No history found for this trace hash.</p>
                 )}
             </CardContent>
         </Card>

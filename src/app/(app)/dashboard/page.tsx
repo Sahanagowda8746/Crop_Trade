@@ -1,16 +1,41 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppContext } from '@/context/app-context';
 import { Gavel, List, Users } from 'lucide-react';
-import { auctions, crops } from '@/lib/data';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
+import type { Auction, CropListing } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const { setPageTitle } = useAppContext();
+  const firestore = useFirestore();
+
+  const cropsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'cropListings');
+  }, [firestore]);
+  const { data: crops, isLoading: isLoadingCrops } = useCollection<CropListing>(cropsQuery);
+
+  const auctionsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'auctions'), where('status', '==', 'open'));
+  }, [firestore]);
+  const { data: auctions, isLoading: isLoadingAuctions } = useCollection<Auction>(auctionsQuery);
+  
+  const isLoading = isLoadingCrops || isLoadingAuctions;
 
   useEffect(() => {
     setPageTitle('Dashboard');
   }, [setPageTitle]);
+
+  const totalBidders = useMemo(() => {
+      if (!auctions) return 0;
+      // This is a placeholder logic. In a real scenario, you'd likely count unique bidders.
+      // For now, we'll just count the number of auctions with a bidder.
+      return auctions.filter(a => a.currentBidderId).length;
+  }, [auctions]);
 
   return (
     <div className="space-y-8">
@@ -32,7 +57,7 @@ export default function DashboardPage() {
             <List className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{crops.length}</div>
+            {isLoading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-bold">{crops?.length || 0}</div>}
             <p className="text-xs text-muted-foreground">
               Crops available in the marketplace
             </p>
@@ -44,7 +69,7 @@ export default function DashboardPage() {
             <Gavel className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{auctions.length}</div>
+             {isLoading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-bold">{auctions?.length || 0}</div>}
             <p className="text-xs text-muted-foreground">
               Live bidding opportunities
             </p>
@@ -58,9 +83,7 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-                {auctions.reduce((sum, auction) => sum + auction.bidderCount, 0)}
-            </div>
+             {isLoading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-bold">{totalBidders}</div>}
             <p className="text-xs text-muted-foreground">
               Across all open auctions
             </p>

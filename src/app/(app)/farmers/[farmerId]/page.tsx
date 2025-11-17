@@ -107,7 +107,7 @@ export default function FarmerProfilePage() {
       <Card className="shadow-md">
         <CardContent className="flex flex-col md:flex-row items-center p-6 gap-6">
           <Avatar className="h-24 w-24 text-lg">
-            <AvatarImage src={`https://i.pravatar.cc/150?u=${farmer.id}`} alt={`${farmer.firstName} ${farmer.lastName}`} />
+            <AvatarImage src={`https://avatar.vercel.sh/${farmer.id}.png`} alt={`${farmer.firstName} ${farmer.lastName}`} />
             <AvatarFallback>{farmer.firstName?.charAt(0)}{farmer.lastName?.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="text-center md:text-left">
