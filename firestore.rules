@@ -161,19 +161,18 @@ service cloud.firestore {
     /**
      * @description Rules for auctions.
      * @path /auctions/{auctionId}
+     * @allow (read) Any authenticated user can read auction data.
      * @allow (create) Any authenticated user can create an auction.
-     * @allow (get) Any authenticated user can get an auction.
-     * @allow (list) Any authenticated user can list auctions.
-     * @allow (update) Any authenticated user can update auction details.
-     * @allow (delete) Any authenticated user can delete an auction.
-     * @principle Allows authenticated users to manage auctions.
+     * @allow (update) Authenticated users can place bids.
+     * @principle Allows authenticated users to participate in auctions.
      */
     match /auctions/{auctionId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get, list: if isSignedIn();
       allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow update: if isSignedIn()
+                    && request.resource.data.currentBid > resource.data.currentBid
+                    && request.resource.data.currentBidderId == request.auth.uid;
+      allow delete: if false; // Deleting auctions should be an admin/system task
     }
 
     /**

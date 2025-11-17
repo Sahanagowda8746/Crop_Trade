@@ -11,12 +11,25 @@ import {
 } from '@/components/ui/card';
 import { useAppContext } from '@/context/app-context';
 import type { Auction } from '@/lib/types';
-import { Gavel, Clock, Users, Tag, Package } from 'lucide-react';
+import { Gavel, Clock, Tag, Package } from 'lucide-react';
 import Image from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+
 
 const TimeLeft = ({ endTime }: { endTime: string }) => {
   const calculateTimeLeft = () => {
@@ -59,6 +72,84 @@ const TimeLeft = ({ endTime }: { endTime: string }) => {
   );
 };
 
+function PlaceBidDialog({ auction, userId }: { auction: Auction; userId: string }) {
+    const [bidAmount, setBidAmount] = useState<number | string>('');
+    const { toast } = useToast();
+    const firestore = useFirestore();
+
+    const currentBid = auction.currentBid || auction.startingBid;
+    const minBid = currentBid + 1; // Assuming bid increment is 1
+
+    const handlePlaceBid = () => {
+        const newBid = Number(bidAmount);
+        if (newBid <= currentBid) {
+            toast({
+                variant: 'destructive',
+                title: 'Invalid Bid',
+                description: `Your bid must be higher than the current bid of $${currentBid.toFixed(2)}.`,
+            });
+            return;
+        }
+
+        const auctionRef = doc(firestore, 'auctions', auction.id);
+        updateDocumentNonBlocking(auctionRef, {
+            currentBid: newBid,
+            currentBidderId: userId,
+        });
+        
+        toast({
+            title: 'Bid Placed!',
+            description: `You have successfully placed a bid of $${newBid.toFixed(2)}.`,
+        });
+    };
+
+    useEffect(() => {
+        // When the dialog opens, suggest the minimum next bid
+        setBidAmount(minBid);
+    }, [minBid]);
+
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button className="w-full md:w-auto bg-accent hover:bg-accent/90 text-accent-foreground" disabled={new Date(auction.endDate) < new Date()}>
+                    <Gavel className="mr-2 h-4 w-4" />
+                    Place Bid
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Place a Bid</DialogTitle>
+                    <DialogDescription>
+                        Place a bid on "{auction.cropListing?.cropType} - {auction.cropListing?.variety}". The current bid is ${currentBid.toFixed(2)}.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <label htmlFor="bid-amount" className="text-right">
+                            Your Bid
+                        </label>
+                        <Input
+                            id="bid-amount"
+                            type="number"
+                            value={bidAmount}
+                            onChange={(e) => setBidAmount(e.target.value)}
+                            className="col-span-3"
+                            min={minBid}
+                            step="1"
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="button" onClick={handlePlaceBid}>Place Bid</Button>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 
 export default function AuctionsPage() {
   const { setPageTitle } = useAppContext();
@@ -66,9 +157,9 @@ export default function AuctionsPage() {
   const { user, isUserLoading } = useUser();
 
   const auctionsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || isUserLoading || !user) return null;
     return query(collection(firestore, 'auctions'), where('status', '==', 'open'));
-  }, [firestore, user]);
+  }, [firestore, user, isUserLoading]);
 
   const { data: auctions, isLoading } = useCollection<Auction>(auctionsQuery);
 
@@ -164,10 +255,7 @@ export default function AuctionsPage() {
                </div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full md:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
-                <Gavel className="mr-2 h-4 w-4" />
-                Place Bid
-              </Button>
+              {user && <PlaceBidDialog auction={auction} userId={user.uid} />}
             </CardFooter>
           </div>
         </Card>
