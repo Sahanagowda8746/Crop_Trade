@@ -1,12 +1,12 @@
 'use client';
 import { useEffect, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAppContext } from '@/context/app-context';
@@ -210,7 +210,7 @@ export default function FertilizerCalculatorPage() {
             {state.data && (
                 <Card className="animate-in fade-in-50">
                     <CardHeader>
-                        <CardTitle>Plan for {state.data.recommendations.length > 0 ? form.getValues('targetCrop') : ''}</CardTitle>
+                        <CardTitle>Plan for {form.getValues('targetCrop')}</CardTitle>
                         <CardDescription>Based on your provided soil data, here is a custom plan.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">

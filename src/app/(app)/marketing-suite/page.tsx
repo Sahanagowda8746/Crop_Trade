@@ -7,11 +7,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-context';
 import { handleAdImageGeneration } from '@/app/actions';
-import { GalleryHorizontal, Sparkles } from 'lucide-react';
+import { GalleryHorizontal, Sparkles, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const initialState = {
+const initialState: {
+    message: string;
+    errors?: any;
+    data?: { imageUrl: string; } | null;
+} = {
   message: '',
   errors: {},
   data: null,
@@ -23,10 +27,13 @@ function SubmitButton() {
     <Button type="submit" aria-disabled={pending} disabled={pending} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
       {pending ? (
         <>
-          <Sparkles className="mr-2 animate-pulse" /> Generating...
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...
         </>
       ) : (
-        'Generate Image'
+        <>
+        <Sparkles className="mr-2 h-4 w-4" />
+        Generate Image
+        </>
       )}
     </Button>
   );
@@ -84,10 +91,10 @@ export default function MarketingSuitePage() {
         </Card>
       )}
 
-      {state.message && !state.data && state.message !== 'Invalid form data.' && (
+      {state.message && state.message.startsWith('error:') && (
          <Alert variant="destructive">
             <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{state.message}</AlertDescription>
+            <AlertDescription>{state.message.replace('error:', '')}</AlertDescription>
         </Alert>
       )}
 

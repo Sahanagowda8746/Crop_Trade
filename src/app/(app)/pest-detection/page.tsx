@@ -7,12 +7,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-context';
 import { handlePestDiagnosis } from '@/app/actions';
-import { ScanSearch, Bug, ShieldCheck, Upload, Sparkles } from 'lucide-react';
+import { ScanSearch, Bug, ShieldCheck, Upload, Sparkles, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
-const initialState = {
+const initialState: {
+    message: string;
+    errors?: any;
+    data?: { diagnosis: string; recommendedActions: string; } | null;
+} = {
   message: '',
   errors: {},
   data: null,
@@ -24,7 +28,7 @@ function SubmitButton() {
     <Button type="submit" aria-disabled={pending} disabled={pending} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
       {pending ? (
         <>
-          <Sparkles className="mr-2 h-4 w-4 animate-spin" /> Diagnosing...
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Diagnosing...
         </>
        ) : (
         <>

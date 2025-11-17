@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useActionState, useState } from 'react';
+import { useEffect, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { handleCropDescription } from '@/app/actions';
-import { PlusCircle, Wand2, Sparkles, Loader2 } from 'lucide-react';
+import { PlusCircle, Sparkles, Loader2 } from 'lucide-react';
 
 const listingSchema = z.object({
   cropType: z.string().min(2, "Crop type is required."),
@@ -35,16 +35,20 @@ const listingSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters."),
 });
 
-const aiDescriptionInitialState = {
+const aiDescriptionInitialState: {
+  message: string;
+  errors: any;
+  data: {description: string} | null;
+} = {
   message: '',
   errors: null,
   data: null,
 };
 
-function GenerateDescriptionButton({ onClick }: { onClick: () => void }) {
+function GenerateDescriptionButton({ onClick, disabled }: { onClick: () => void; disabled: boolean; }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="button" variant="outline" size="sm" onClick={onClick} disabled={pending}>
+    <Button type="button" variant="outline" size="sm" onClick={onClick} disabled={pending || disabled}>
       {pending ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       ) : (
@@ -62,12 +66,17 @@ export default function NewListingPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [aiState, formAction] = useActionState(handleCropDescription, aiDescriptionInitialState);
+  const [aiState, formAction, isAiPending] = useActionState(handleCropDescription, aiDescriptionInitialState);
 
   const form = useForm<z.infer<typeof listingSchema>>({
     resolver: zodResolver(listingSchema),
     defaultValues: {
       unit: 'kg',
+      cropType: '',
+      variety: '',
+      description: '',
+      harvestDate: '',
+      location: '',
     },
   });
   
@@ -91,10 +100,9 @@ export default function NewListingPage() {
     formData.append('cropName', cropData.cropType || 'Crop');
     formData.append('variety', cropData.variety || 'Standard');
     formData.append('growingConditions', 'Grown using standard organic farming practices.'); // Placeholder
-    formData.append('yield', `${cropData.quantity} ${cropData.unit}`);
+    formData.append('yield', `${cropData.quantity || 0} ${cropData.unit}`);
     formData.append('uniqueQualities', 'Fresh and locally sourced.'); // Placeholder
     
-    // @ts-ignore
     formAction(formData);
   };
 
@@ -132,6 +140,7 @@ export default function NewListingPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      <form onSubmit={form.handleSubmit(onSubmit)}>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-headline text-2xl">
@@ -144,7 +153,7 @@ export default function NewListingPage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormField
                   control={form.control}
@@ -250,7 +259,7 @@ export default function NewListingPage() {
                     <FormItem>
                       <div className="flex justify-between items-center">
                         <FormLabel>Description</FormLabel>
-                        <GenerateDescriptionButton onClick={handleGenerateDescription} />
+                        <GenerateDescriptionButton onClick={handleGenerateDescription} disabled={isAiPending} />
                       </div>
                       <FormControl>
                         <Textarea
@@ -271,12 +280,11 @@ export default function NewListingPage() {
                 <PlusCircle className="mr-2 h-5 w-5" />
                 Create Listing
               </Button>
-            </form>
+            </div>
           </Form>
         </CardContent>
       </Card>
+      </form>
     </div>
   );
 }
-
-    

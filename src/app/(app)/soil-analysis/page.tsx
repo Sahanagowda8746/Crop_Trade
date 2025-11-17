@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-context';
 import { handleSoilAnalysis } from '@/app/actions';
-import { Leaf, FlaskConical, Lightbulb, Sprout, Upload, Sparkles, Droplets, Microscope, TestTube, CheckCircle, Trees, Scale } from 'lucide-react';
+import { Leaf, FlaskConical, Lightbulb, Sprout, Upload, Sparkles, Droplets, Microscope, TestTube, CheckCircle, Trees, Scale, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +31,7 @@ function SubmitButton() {
     <Button type="submit" aria-disabled={pending} disabled={pending} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
        {pending ? (
         <>
-          <Sparkles className="mr-2 h-4 w-4 animate-spin" /> Analyzing...
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...
         </>
        ) : (
         <>
