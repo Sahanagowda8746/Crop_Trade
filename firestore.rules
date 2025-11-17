@@ -12,6 +12,7 @@
  * - /orders/{orderId}: Stores order data.
  * - /transports/{transportId}: Stores transport data.
  * - /users/{userId}/soilAnalyses/{soilAnalysisId}: Stores soil analysis data, accessible only to the user.
+ * - /soilKitOrders/{orderId}: Stores orders for physical soil testing kits.
  * - /users/{userId}/pestDetections/{pestDetectionId}: Stores pest detection data, accessible only to the user.
  * - /auctions/{auctionId}: Stores auction data.
  * - /traceability/{traceabilityId}: Stores traceability data.
@@ -139,6 +140,20 @@ service cloud.firestore {
       allow create: if isOwner(userId) && request.resource.data.farmerId == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.farmerId == userId;
       allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for soil kit orders.
+     * @path /soilKitOrders/{orderId}
+     * @allow (create) Any authenticated user can create an order for a soil kit.
+     * @allow (read) Users can only read their own soil kit orders.
+     * @principle Enforces ownership for creating and reading soil kit orders.
+     */
+    match /soilKitOrders/{orderId} {
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow read, list: if isSignedIn() && isOwner(resource.data.userId);
+        // Admin/system role should update status
+        allow update: if false; 
     }
 
     /**

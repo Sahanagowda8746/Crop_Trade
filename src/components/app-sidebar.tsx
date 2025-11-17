@@ -19,6 +19,7 @@ import {
   Sprout,
   Package,
   Wrench,
+  TestTube,
 } from 'lucide-react';
 
 const navItems = [
@@ -27,6 +28,7 @@ const navItems = [
   { href: '/auctions', label: 'Auctions', icon: Gavel, roles: ['Farmer', 'Buyer', 'Transporter', 'Admin'] },
   { href: '/orders', label: 'My Orders', icon: Package, roles: ['Buyer'] },
   { href: '/ai-tools', label: 'AI Tools', icon: Wrench, roles: ['Farmer'] },
+  { href: '/my-soil-tests', label: 'My Soil Tests', icon: TestTube, roles: ['Farmer'] },
   { href: '/transport', label: 'Transport Jobs', icon: Truck, roles: ['Transporter'] },
   { href: '/traceability', label: 'Traceability', icon: FileCheck2, roles: ['Buyer'] },
 ];

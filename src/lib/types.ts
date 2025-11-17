@@ -147,3 +147,13 @@ export interface SoilAnalysis extends SoilAnalysisFromImageOutput {
     farmerId: string;
     analysisDate: string; // ISO string
 }
+
+export interface SoilKitOrder {
+    id: string;
+    userId: string;
+    status: 'ordered' | 'shipped' | 'received' | 'processing' | 'completed';
+    orderDate: string; // ISO String
+    trackingId: string | null;
+    soilKitQr: string;
+    labReportUrl: string | null;
+}
