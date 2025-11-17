@@ -29,7 +29,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { v4 as uuidv4 } from 'uuid';
+import { Badge } from '@/components/ui/badge';
 
 function LeaveReviewDialog({ order }: { order: Order }) {
     const [rating, setRating] = useState(0);
@@ -123,7 +123,7 @@ function OrderCard({ order, onRequestTransport }: { order: Order; onRequestTrans
                     />
                 </div>
                 <div className="flex-grow">
-                    <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>{order.status}</Badge>
+                    <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'} className="capitalize">{order.status}</Badge>
                     <CardTitle className="font-headline mt-1">{order.cropListing?.cropType}</CardTitle>
                     <CardDescription>
                         From <Link href={`/farmers/${order.cropListing?.farmerId}`} className="text-primary hover:underline">{order.cropListing?.farmerName}</Link>

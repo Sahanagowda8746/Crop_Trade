@@ -1,4 +1,3 @@
-
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -16,7 +15,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { v4 as uuidv4 } from 'uuid';
 
 const bidSchema = z.object({
   bidAmount: z.preprocess(
@@ -50,7 +48,7 @@ function BidCard({ bid }: { bid: TransportBid }) {
 function PlaceBidForm({ requestId, transporterId, transporterName }: { requestId: string; transporterId: string; transporterName: string }) {
   const form = useForm<z.infer<typeof bidSchema>>({
     resolver: zodResolver(bidSchema),
-    defaultValues: { bidAmount: 0, estimatedDeliveryDate: '' },
+    defaultValues: { bidAmount: undefined, estimatedDeliveryDate: '' },
   });
   const firestore = useFirestore();
   const { toast } = useToast();

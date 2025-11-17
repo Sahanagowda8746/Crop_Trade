@@ -16,7 +16,7 @@ function RequestCard({ request }: { request: TransportRequest }) {
             <CardHeader>
                 <CardTitle className="flex items-center justify-between font-headline">
                     Request: #{request.id.substring(0, 7)}...
-                    <span className="text-sm font-medium text-primary">{request.status}</span>
+                    <span className="text-sm font-medium text-primary capitalize">{request.status}</span>
                 </CardTitle>
                 <CardDescription>
                     <span className="font-semibold">Order ID:</span>
