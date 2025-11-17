@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useMemo } from 'react';
 import Image from 'next/image';
@@ -49,7 +50,7 @@ function CropCard({ crop, onBuy }: { crop: CropListing, onBuy: (crop: CropListin
       </CardContent>
       <CardFooter className="p-4 flex justify-between items-center bg-muted/50">
         <div className="font-semibold text-lg text-primary">
-          ${crop.pricePerUnit.toFixed(2)}
+          ₹{crop.pricePerUnit.toFixed(2)}
           <span className="text-xs text-muted-foreground">
             {' '}
             / {crop.unit || 'kg'}

@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect } from 'react';
 import { useAppContext } from '@/context/app-context';
@@ -117,7 +118,7 @@ export default function SoilKitPage() {
                                     </li>
                                 ))}
                             </ul>
-                            <p className="text-4xl font-bold mt-6 text-primary">$49.99</p>
+                            <p className="text-4xl font-bold mt-6 text-primary">₹3999</p>
                             <p className="text-sm text-muted-foreground">Includes shipping and all lab fees.</p>
                             <Button onClick={handleBuyNow} size="lg" className="w-full mt-6">Buy Now</Button>
                         </CardContent>

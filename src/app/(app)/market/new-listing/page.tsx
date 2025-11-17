@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
@@ -116,7 +117,7 @@ export default function NewListingPage() {
       farmerId: user.uid,
       farmerName: user.displayName || 'Anonymous Farmer',
       listingDate: new Date().toISOString(),
-      currency: 'USD',
+      currency: 'INR',
     };
     
     try {
@@ -210,8 +211,8 @@ export default function NewListingPage() {
                   name="pricePerUnit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Price per Unit ($)</FormLabel>
-                      <FormControl><Input type="number" placeholder="e.g., 2.50" {...field} /></FormControl>
+                      <FormLabel>Price per Unit (₹)</FormLabel>
+                      <FormControl><Input type="number" placeholder="e.g., 200.00" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

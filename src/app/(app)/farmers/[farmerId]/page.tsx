@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
@@ -70,7 +71,7 @@ function CropCard({ crop }: { crop: CropListing }) {
       </CardContent>
       <CardFooter className="p-4 flex justify-between items-center bg-muted/50">
         <div className="font-semibold text-lg text-primary">
-          ${crop.pricePerUnit.toFixed(2)}
+          ₹{crop.pricePerUnit.toFixed(2)}
           <span className="text-xs text-muted-foreground"> / {crop.unit || 'kg'}</span>
         </div>
         <Button size="sm">View</Button>

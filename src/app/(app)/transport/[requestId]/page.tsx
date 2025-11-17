@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -88,8 +89,8 @@ function PlaceBidForm({ requestId, transporterId, transporterName }: { requestId
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField control={form.control} name="bidAmount" render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Bid Amount ($)</FormLabel>
-                            <FormControl><Input type="number" placeholder="150.00" {...field} /></FormControl>
+                            <FormLabel>Bid Amount (₹)</FormLabel>
+                            <FormControl><Input type="number" placeholder="10000.00" {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />

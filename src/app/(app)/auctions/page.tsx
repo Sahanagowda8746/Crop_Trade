@@ -87,7 +87,7 @@ function PlaceBidDialog({ auction, userId }: { auction: Auction; userId: string 
             toast({
                 variant: 'destructive',
                 title: 'Invalid Bid',
-                description: `Your bid must be higher than the current bid of $${currentBid.toFixed(2)}.`,
+                description: `Your bid must be higher than the current bid of ₹${currentBid.toFixed(2)}.`,
             });
             return;
         }
@@ -109,7 +109,7 @@ function PlaceBidDialog({ auction, userId }: { auction: Auction; userId: string 
         
         toast({
             title: 'Bid Placed!',
-            description: `You have successfully placed a bid of $${newBid.toFixed(2)}.`,
+            description: `You have successfully placed a bid of ₹${newBid.toFixed(2)}.`,
         });
     };
 
@@ -131,7 +131,7 @@ function PlaceBidDialog({ auction, userId }: { auction: Auction; userId: string 
                 <DialogHeader>
                     <DialogTitle>Place a Bid</DialogTitle>
                     <DialogDescription>
-                        Place a bid on "{auction.cropListing?.cropType} - {auction.cropListing?.variety}". The current bid is ${currentBid.toFixed(2)}.
+                        Place a bid on "{auction.cropListing?.cropType} - {auction.cropListing?.variety}". The current bid is ₹{currentBid.toFixed(2)}.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -238,14 +238,14 @@ export default function AuctionsPage() {
                     <Tag className="h-4 w-4 text-muted-foreground" />
                     <div>
                         <p className="text-muted-foreground">Start Bid</p>
-                        <p className="font-semibold">${auction.startingBid.toFixed(2)}</p>
+                        <p className="font-semibold">₹{auction.startingBid.toFixed(2)}</p>
                     </div>
                   </div>
                    <div className="flex items-center gap-2">
                     <Gavel className="h-4 w-4 text-muted-foreground" />
                     <div>
                         <p className="text-muted-foreground">Current Bid</p>
-                        <p className="font-bold text-lg text-primary">${(auction.currentBid || auction.startingBid).toFixed(2)}</p>
+                        <p className="font-bold text-lg text-primary">₹{(auction.currentBid || auction.startingBid).toFixed(2)}</p>
                     </div>
                   </div>
                    <div className="flex items-center gap-2">
