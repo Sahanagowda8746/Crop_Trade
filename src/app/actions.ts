@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { analyzeSoilFromPrompt } from '@/ai/flows/soil-analysis-from-prompt';
 import { diagnosePestFromImage } from '@/ai/flows/pest-diagnosis-from-image';
+import { askAgronomist } from '@/ai/flows/ask-agronomist';
 
 const soilAnalysisSchema = z.object({
   soilDescription: z.string().min(10, 'Please provide a more detailed soil description.'),
@@ -50,5 +51,19 @@ export async function handlePestDiagnosis(prevState: any, formData: FormData) {
     } catch (error) {
         console.error(error);
         return { message: 'Diagnosis failed. Please try again.', errors: {} };
+    }
+}
+
+export async function handleAskAgronomist(question: string) {
+    if (!question) {
+        return { message: 'Please provide a question.' };
+    }
+
+    try {
+        const result = await askAgronomist({ question });
+        return { message: 'Answer complete.', data: result };
+    } catch (error) {
+        console.error(error);
+        return { message: 'Failed to get answer. Please try again.', errors: {} };
     }
 }
