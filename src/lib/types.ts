@@ -16,6 +16,7 @@ export interface Crop {
   quantity: number;
   imageUrl: string;
   imageHint: string;
+  unit?: string;
 }
 
 export interface Auction {
