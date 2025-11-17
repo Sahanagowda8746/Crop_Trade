@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { analyzeSoilFromPrompt } from '@/ai/flows/soil-analysis-from-prompt';
 import { diagnosePestFromImage } from '@/ai/flows/pest-diagnosis-from-image';
 import { askAgronomist } from '@/ai/flows/ask-agronomist';
+import { generateAdImage } from '@/ai/flows/generate-ad-image';
 
 const soilAnalysisSchema = z.object({
   soilDescription: z.string().min(10, 'Please provide a more detailed soil description.'),
@@ -66,4 +67,29 @@ export async function handleAskAgronomist(question: string) {
         console.error(error);
         return { message: 'Failed to get answer. Please try again.', errors: {} };
     }
+}
+
+const adImageSchema = z.object({
+  description: z.string().min(5, 'Please provide a more detailed description.'),
+});
+
+export async function handleAdImageGeneration(prevState: any, formData: FormData) {
+  const validatedFields = adImageSchema.safeParse({
+    description: formData.get('description'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      message: 'Invalid form data.',
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  
+  try {
+    const result = await generateAdImage(validatedFields.data);
+    return { message: 'Image generated.', data: result };
+  } catch (error) {
+    console.error(error);
+    return { message: 'Image generation failed. Please try again.', errors: {} };
+  }
 }

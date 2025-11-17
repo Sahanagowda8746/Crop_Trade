@@ -20,6 +20,7 @@ import {
   FileCheck2,
   Sprout,
   Bot,
+  GalleryHorizontal,
 } from 'lucide-react';
 
 const navItems = [
@@ -29,6 +30,7 @@ const navItems = [
   { href: '/ai-agent', label: 'AI Agent', icon: Bot, roles: ['Farmer'] },
   { href: '/soil-analysis', label: 'Soil Analysis', icon: Leaf, roles: ['Farmer'] },
   { href: '/pest-detection', label: 'Pest Detection', icon: ScanSearch, roles: ['Farmer'] },
+  { href: '/marketing-suite', label: 'Marketing Suite', icon: GalleryHorizontal, roles: ['Farmer'] },
   { href: '/transport', label: 'Transport', icon: Truck, roles: ['Transporter'] },
   { href: '/traceability', label: 'Traceability', icon: FileCheck2, roles: ['Buyer'] },
 ];
