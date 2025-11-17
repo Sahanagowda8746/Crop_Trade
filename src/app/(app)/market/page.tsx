@@ -19,7 +19,7 @@ import type { CropListing } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initialCrops } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { v4 as uuidv4 } from 'uuid';
+import { PlusCircle } from 'lucide-react';
 
 function CropCard({ crop, onBuy }: { crop: CropListing, onBuy: (crop: CropListing) => void }) {
   return (
@@ -166,7 +166,10 @@ export default function MarketPage() {
         </div>
         {role === 'Farmer' && (
             <Link href="/market/new-listing">
-                <Button>Create Listing</Button>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Listing
+                </Button>
             </Link>
         )}
       </div>
