@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
-import { useFormState } from 'react-dom';
+import { useFormState, useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { handlePestDiagnosis } from '@/app/actions';
 import { ScanSearch, Bug, ShieldCheck, Upload, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 const initialState = {
   message: '',
@@ -48,6 +49,8 @@ export default function PestDetectionPage() {
   const [state, formAction] = useFormState(handlePestDiagnosis, initialState);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const { pending } = useFormStatus();
 
   useEffect(() => {
     setPageTitle('AI Pest Detection');
@@ -56,12 +59,34 @@ export default function PestDetectionPage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if(file.size > 4 * 1024 * 1024) {
+          toast({
+              variant: 'destructive',
+              title: 'File Too Large',
+              description: 'Please upload an image smaller than 4MB.',
+          });
+          return;
+      }
       const dataUri = await fileToDataUri(file);
       setPreview(dataUri);
     } else {
       setPreview(null);
     }
   };
+  
+  const hasRun = useRef(false);
+  useEffect(() => {
+    if(pending && !hasRun.current) {
+      toast({
+        title: 'Diagnosing...',
+        description: 'The AI is analyzing your image. This may take a moment.',
+      });
+      hasRun.current = true;
+    }
+    if(!pending) {
+      hasRun.current = false;
+    }
+  }, [pending, toast]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -72,7 +97,7 @@ export default function PestDetectionPage() {
             AI-Powered Pest Detection
           </CardTitle>
           <CardDescription>
-            Upload an image of a crop leaf, and our AI will identify potential pests or diseases and recommend actions.
+            Upload an image of a crop leaf (max 4MB), and our AI will identify potential pests or diseases and recommend actions.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,7 +129,7 @@ export default function PestDetectionPage() {
         </CardContent>
       </Card>
       
-      {state.message && state.message.startsWith("pending:") && (
+      {pending && (
         <Card>
             <CardHeader>
                 <CardTitle>Diagnosis in Progress</CardTitle>

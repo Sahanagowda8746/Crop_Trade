@@ -8,12 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-context';
-import { traceHistory } from '@/lib/data';
+import { traceHistory as mockTraceHistory } from '@/lib/data';
 import { TraceEvent } from '@/lib/types';
 import { FileCheck2, MapPin, Tractor, Package, Ship, Building2, CheckCircle, Leaf } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formSchema = z.object({
-  traceHash: z.string().min(1, 'Please enter a trace hash.'),
+  traceHash: z.string().min(1, 'Please enter a trace hash.').default('A1B2C3D4E5'),
 });
 
 const eventIcons: Record<string, React.ElementType> = {
@@ -37,22 +38,27 @@ export default function TraceabilityPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      traceHash: '',
+      traceHash: 'A1B2C3D4E5',
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setSearchedHash(values.traceHash);
-    setHistory(traceHistory[values.traceHash] || []);
+    // In a real app, this would be a fetch to a backend/blockchain service.
+    // For now, we simulate it with a lookup in our mock data.
+    setHistory(mockTraceHistory[values.traceHash] || []);
   }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="font-headline text-2xl">Track Your Crop</CardTitle>
+          <CardTitle className="font-headline text-2xl flex items-center gap-2">
+            <FileCheck2 className="text-primary"/>
+            Track Your Crop's Journey
+          </CardTitle>
           <CardDescription>
-            Enter the trace hash found on your product to see its complete journey from farm to you.
+            Enter the trace hash found on your product to see its complete journey from farm to you. Try the demo hash below.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -95,13 +101,13 @@ export default function TraceabilityPage() {
                                     <div className="absolute -left-1.5 top-1 flex items-center justify-center w-12 h-12 bg-card rounded-full ring-4 ring-primary">
                                        <Icon className="w-6 h-6 text-primary" />
                                     </div>
-                                    <div className="pl-4">
+                                    <div className="pl-6">
                                         <p className="font-semibold text-lg">{item.event}</p>
                                         <p className="text-sm text-muted-foreground">
                                             {new Date(item.timestamp).toLocaleString()}
                                         </p>
-                                        <div className="flex items-center text-sm mt-1">
-                                            <MapPin className="w-4 h-4 mr-2 text-muted-foreground"/>
+                                        <div className="flex items-center text-sm mt-2 text-muted-foreground">
+                                            <MapPin className="w-4 h-4 mr-2"/>
                                             <p>{item.location}</p>
                                         </div>
                                         <p className="text-sm text-muted-foreground mt-1 italic">"{item.details}"</p>
@@ -111,7 +117,10 @@ export default function TraceabilityPage() {
                         })}
                     </div>
                 ) : (
-                    <p className="text-center text-muted-foreground py-8">No history found for this trace hash.</p>
+                    <Alert variant="destructive">
+                        <AlertTitle>Not Found</AlertTitle>
+                        <AlertDescription>No history found for this trace hash. Please check the hash and try again.</AlertDescription>
+                    </Alert>
                 )}
             </CardContent>
         </Card>

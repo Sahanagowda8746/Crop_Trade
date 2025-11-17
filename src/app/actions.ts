@@ -57,8 +57,11 @@ export async function handlePestDiagnosis(prevState: any, formData: FormData) {
         }
     }
     
+    // Using a pending message to give user feedback that the action has started
+    const flowPromise = diagnosePestFromImage(validatedFields.data);
+    
     try {
-        const result = await diagnosePestFromImage(validatedFields.data);
+        const result = await flowPromise;
         return { message: 'Diagnosis complete.', data: result };
     } catch (error) {
         console.error(error);
