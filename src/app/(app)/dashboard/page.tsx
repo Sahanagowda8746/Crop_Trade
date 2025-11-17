@@ -3,7 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppContext } from '@/context/app-context';
 import { Gavel, List, Users } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { Auction, CropListing } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,20 +11,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function DashboardPage() {
   const { setPageTitle } = useAppContext();
   const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
 
   const cropsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || isUserLoading || !user) return null;
     return collection(firestore, 'cropListings');
-  }, [firestore]);
+  }, [firestore, user, isUserLoading]);
   const { data: crops, isLoading: isLoadingCrops } = useCollection<CropListing>(cropsQuery);
 
   const auctionsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || isUserLoading || !user) return null;
     return query(collection(firestore, 'auctions'), where('status', '==', 'open'));
-  }, [firestore]);
+  }, [firestore, user, isUserLoading]);
   const { data: auctions, isLoading: isLoadingAuctions } = useCollection<Auction>(auctionsQuery);
   
-  const isLoading = isLoadingCrops || isLoadingAuctions;
+  const isLoading = isLoadingCrops || isLoadingAuctions || isUserLoading;
 
   useEffect(() => {
     setPageTitle('Dashboard');
