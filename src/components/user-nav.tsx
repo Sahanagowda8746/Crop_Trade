@@ -12,8 +12,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAppContext, UserRole, Language } from '@/context/app-context';
-import { User, Users, Check, Languages } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useAuth, useUser } from '@/firebase';
+import { User, Users, Check, Languages, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const roles: UserRole[] = ['Farmer', 'Buyer', 'Transporter', 'Admin'];
 const languages: Language[] = ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'];
@@ -21,23 +22,31 @@ const languages: Language[] = ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu',
 
 export function UserNav() {
   const { role, setRole, language, setLanguage } = useAppContext();
+  const { user } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await auth.signOut();
+    router.push('/login');
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={`https://avatar.vercel.sh/${role}.png`} alt={role} />
-            <AvatarFallback>{role.charAt(0)}</AvatarFallback>
+            <AvatarImage src={user?.photoURL || `https://avatar.vercel.sh/${user?.uid}.png`} alt={user?.displayName || role} />
+            <AvatarFallback>{user?.displayName?.charAt(0) || role.charAt(0)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Current Role</p>
+            <p className="text-sm font-medium leading-none">{user?.displayName || 'Welcome'}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {role}
+              {user?.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -46,7 +55,7 @@ export function UserNav() {
           <DropdownMenuLabel>Switch Role</DropdownMenuLabel>
           {roles.map(r => (
             <DropdownMenuItem key={r} onSelect={() => setRole(r)} disabled={r === role}>
-              <User className="mr-2 h-4 w-4" />
+              <Users className="mr-2 h-4 w-4" />
               <span>{r}</span>
               {r === role && <Check className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>
@@ -63,9 +72,12 @@ export function UserNav() {
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
-
-    

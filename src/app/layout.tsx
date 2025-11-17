@@ -3,6 +3,7 @@ import './globals.css';
 import { AppProvider } from '@/context/app-context';
 import { Toaster } from "@/components/ui/toaster";
 import { Playfair_Display, PT_Sans } from 'next/font/google';
+import { FirebaseClientProvider } from '@/firebase';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -31,13 +32,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${playfair.variable} ${ptSans.variable}`}>
       <body>
-        <AppProvider>
-          {children}
-          <Toaster />
-        </AppProvider>
+        <FirebaseClientProvider>
+            <AppProvider>
+            {children}
+            <Toaster />
+            </AppProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
 }
-
-    
