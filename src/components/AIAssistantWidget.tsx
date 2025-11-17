@@ -74,7 +74,7 @@ export default function AIAssistantWidget() {
   }, [toast]);
   
   const startListening = () => {
-    if (!recognition) {
+    if (!isSpeechSupported) {
         toast({
           variant: 'destructive',
           title: 'Unsupported Feature',
@@ -83,6 +83,11 @@ export default function AIAssistantWidget() {
         return;
     }
     if (isListening) return;
+
+    if (!isOpen) {
+        setIsOpen(true);
+    }
+
     try {
         recognition.start();
         setIsListening(true);
@@ -161,106 +166,115 @@ export default function AIAssistantWidget() {
     }
   };
 
-  if (!isOpen) {
-    return (
-      <Button 
-        className="fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-lg z-50 bg-accent hover:bg-accent/90 text-accent-foreground"
-        size="icon"
-        onClick={() => setIsOpen(true)}
-      >
-        <Bot className="h-8 w-8" />
-        <span className="sr-only">Open AI Assistant</span>
-      </Button>
-    )
-  }
-
   return (
-    <div className="fixed bottom-8 right-8 z-50">
-      <Card className="w-[400px] h-[600px] flex flex-col shadow-2xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className='flex items-center gap-2'>
-            <MessageSquare className="text-primary" />
-            <CardTitle className="font-headline text-xl">
-                AI Voice Assistant
-            </CardTitle>
-          </div>
-           <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-              <X className="h-5 w-5" />
-              <span className="sr-only">Close</span>
-            </Button>
-        </CardHeader>
-        <CardContent className="flex-grow flex flex-col p-0">
-          <ScrollArea className="flex-grow p-6" ref={scrollAreaRef}>
-            <div className="space-y-4">
-              {messages.length === 0 && (
-                <div className="text-center text-muted-foreground pt-16">
-                  <Bot className="mx-auto h-12 w-12 text-gray-400"/>
-                  <p className="mt-4 text-sm">Ask me anything about farming!</p>
-                  {!isSpeechSupported && <p className="mt-2 text-xs text-amber-600">Your browser does not support voice input.</p>}
-                </div>
-              )}
-              {messages.map((message, index) => (
-                <div key={index} className={cn('flex items-start gap-3', message.role === 'user' ? 'justify-end' : '')}>
-                   {message.role === 'assistant' && (
-                     <Avatar className="h-8 w-8">
-                        <AvatarFallback><Bot /></AvatarFallback>
-                     </Avatar>
-                   )}
-                  <div className={cn('max-w-xs rounded-lg p-3 relative group', message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    {message.role === 'assistant' && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute -bottom-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => playAudio(message.content)}
-                        >
-                           <Volume2 className="h-4 w-4" />
-                        </Button>
-                    )}
-                  </div>
-                  {message.role === 'user' && (
-                     <Avatar className="h-8 w-8">
-                        <AvatarFallback><User /></AvatarFallback>
-                     </Avatar>
-                   )}
-                </div>
-              ))}
-              {isLoading && (
-                 <div className="flex items-start gap-3">
-                    <Avatar className="h-8 w-8">
-                        <AvatarFallback><Bot /></AvatarFallback>
-                    </Avatar>
-                    <div className="max-w-xs rounded-lg p-3 bg-muted">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                    </div>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-          <div className="p-4 border-t">
-            <form ref={formRef} onSubmit={handleSubmit} className="flex items-center gap-2">
-              <Input
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder="Type or click the mic..."
-                disabled={isLoading || isListening}
-                className="flex-grow"
-              />
-              {isSpeechSupported && (
-                <Button type="button" size="icon" variant={isListening ? 'destructive' : 'outline'} onClick={isListening ? stopListening : startListening} disabled={isLoading}>
-                    {isListening ? <StopCircle className="h-5 w-5" /> : <Mic className="h-5 w-5"/>}
-                    <span className="sr-only">{isListening ? 'Stop listening' : 'Start listening'}</span>
+    <>
+      {isOpen && (
+        <div className="fixed bottom-8 right-8 z-50">
+          <Card className="w-[400px] h-[600px] flex flex-col shadow-2xl">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div className='flex items-center gap-2'>
+                <Bot className="text-primary" />
+                <CardTitle className="font-headline text-xl">
+                    AI Agronomist
+                </CardTitle>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Close</span>
                 </Button>
-              )}
-              <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-                <Send className="h-5 w-5" />
-                 <span className="sr-only">Send</span>
-              </Button>
-            </form>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            </CardHeader>
+            <CardContent className="flex-grow flex flex-col p-0">
+              <ScrollArea className="flex-grow p-6" ref={scrollAreaRef}>
+                <div className="space-y-4">
+                  {messages.length === 0 && (
+                    <div className="text-center text-muted-foreground pt-16">
+                      <Bot className="mx-auto h-12 w-12 text-gray-400"/>
+                      <p className="mt-4 text-sm">Ask me anything about farming!</p>
+                      {!isSpeechSupported && <p className="mt-2 text-xs text-amber-600">Your browser does not support voice input.</p>}
+                    </div>
+                  )}
+                  {messages.map((message, index) => (
+                    <div key={index} className={cn('flex items-start gap-3', message.role === 'user' ? 'justify-end' : '')}>
+                      {message.role === 'assistant' && (
+                        <Avatar className="h-8 w-8">
+                            <AvatarFallback><Bot /></AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div className={cn('max-w-xs rounded-lg p-3 relative group', message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        {message.role === 'assistant' && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute -bottom-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => playAudio(message.content)}
+                            >
+                              <Volume2 className="h-4 w-4" />
+                            </Button>
+                        )}
+                      </div>
+                      {message.role === 'user' && (
+                        <Avatar className="h-8 w-8">
+                            <AvatarFallback><User /></AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className="flex items-start gap-3">
+                        <Avatar className="h-8 w-8">
+                            <AvatarFallback><Bot /></AvatarFallback>
+                        </Avatar>
+                        <div className="max-w-xs rounded-lg p-3 bg-muted">
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                        </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+              <div className="p-4 border-t">
+                <form ref={formRef} onSubmit={handleSubmit} className="flex items-center gap-2">
+                  <Input
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    placeholder="Ask a question..."
+                    disabled={isLoading || isListening}
+                    className="flex-grow"
+                  />
+                  <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+                    <Send className="h-5 w-5" />
+                    <span className="sr-only">Send</span>
+                  </Button>
+                </form>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
+      <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-3">
+        {isSpeechSupported && (
+            <Button 
+                size="icon"
+                onClick={isListening ? stopListening : startListening}
+                className={cn(
+                    'h-16 w-16 rounded-full shadow-lg text-white',
+                    isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary/90'
+                )}
+                aria-label={isListening ? 'Stop listening' : 'Start listening'}
+            >
+                {isListening ? <StopCircle className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
+            </Button>
+        )}
+         <Button 
+            className="h-16 w-16 rounded-full shadow-lg bg-accent hover:bg-accent/90 text-accent-foreground"
+            size="icon"
+            onClick={() => setIsOpen(prev => !prev)}
+          >
+            {isOpen ? <X className="h-8 w-8" /> : <MessageSquare className="h-8 w-8" />}
+            <span className="sr-only">{isOpen ? 'Close chat' : 'Open chat'}</span>
+          </Button>
+      </div>
+    </>
   );
 }
