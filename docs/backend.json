@@ -409,6 +409,85 @@
         "transportDetails",
         "deliveryDate"
       ]
+    },
+    "TransportRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TransportRequest",
+      "type": "object",
+      "description": "Represents a request for transport for a confirmed order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transport request."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to the Order. (Relationship: Order 1:1 TransportRequest)"
+        },
+        "pickupLocation": {
+          "type": "string",
+          "description": "The pickup location for the transport."
+        },
+        "deliveryLocation": {
+          "type": "string",
+          "description": "The delivery location for the transport."
+        },
+        "requiredVehicle": {
+          "type": "string",
+          "description": "The type of vehicle required for transport."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the transport request (e.g., open, in-progress, completed)."
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "pickupLocation",
+        "deliveryLocation",
+        "status"
+      ]
+    },
+    "TransportBid": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TransportBid",
+      "type": "object",
+      "description": "Represents a bid made by a transporter for a transport request.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transport bid."
+        },
+        "transportRequestId": {
+          "type": "string",
+          "description": "Reference to the TransportRequest. (Relationship: TransportRequest 1:N TransportBid)"
+        },
+        "transporterId": {
+          "type": "string",
+          "description": "Reference to the User (Transporter) making the bid. (Relationship: User 1:N TransportBid)"
+        },
+        "bidAmount": {
+          "type": "number",
+          "description": "The amount bid by the transporter."
+        },
+        "estimatedDeliveryDate": {
+          "type": "string",
+          "description": "The estimated delivery date for the transport.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the bid (e.g., pending, accepted, rejected)."
+        }
+      },
+      "required": [
+        "id",
+        "transportRequestId",
+        "transporterId",
+        "bidAmount",
+        "status"
+      ]
     }
   },
   "auth": {
@@ -554,8 +633,44 @@
             }
           ]
         }
+      },
+      {
+        "path": "/transportRequests/{transportRequestId}",
+        "definition": {
+          "entityName": "TransportRequest",
+          "schema": {
+            "$ref": "#/backend/entities/TransportRequest"
+          },
+          "description": "Stores transport requests for confirmed orders.",
+          "params": [
+            {
+              "name": "transportRequestId",
+              "description": "The unique identifier of the transport request."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/transportRequests/{transportRequestId}/bids/{bidId}",
+        "definition": {
+          "entityName": "TransportBid",
+          "schema": {
+            "$ref": "#/backend/entities/TransportBid"
+          },
+          "description": "Stores bids from transporters for a specific transport request.",
+          "params": [
+            {
+              "name": "transportRequestId",
+              "description": "The unique identifier of the transport request."
+            },
+            {
+              "name": "bidId",
+              "description": "The unique identifier of the bid."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization of authorization data. Path-based ownership (`/users/{userId}/...`) is used where possible to simplify security rules. Membership Maps are used for collaborative data where applicable, ensuring clear ownership and access control.  The structure also incorporates explicit state modeling using a `status` field and adheres to predictable schema conventions.\n\nSpecifically:\n\n*   **Users:** User data is stored in `/users/{userId}` to ensure that user-specific data is easily secured and managed.\n*   **Crop Listings:**  Crop listings are stored under `/cropListings/{cropListingId}`. The `farmerId` field in each crop listing denormalizes the owner relationship, enabling rules to secure these listings.\n*   **Orders:** Orders are stored in `/orders/{orderId}`. The `buyerId` and `cropListingId` fields allow for easy querying of orders by buyers and sellers.\n*   **Transports:** Transport data is stored under `/transports/{transportId}`. The `transporterId` allows for straightforward access control based on the transporter.\n*   **Soil Analyses, Pest Detections:**  These are stored under `/users/{userId}/soilAnalyses/{soilAnalysisId}` and `/users/{userId}/pestDetections/{pestDetectionId}`, respectively, using path-based ownership to easily secure user-specific analyses and detections.\n*   **Auctions:** Auctions are stored under `/auctions/{auctionId}`. The `cropListingId` links the auction to the respective crop listing.\n*   **Traceability:** Traceability data is stored under `/traceability/{traceabilityId}`. The `cropListingId` allows to retrieve all traceability data for a given crop listing.\n\nThis design achieves authorization independence by denormalizing user and role information where needed, eliminating the need for `get()` calls in security rules. It supports QAPs by segregating data based on access requirements and by using membership models for collaborative resources."
+    "reasoning": "The Firestore structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization of authorization data. Path-based ownership (`/users/{userId}/...`) is used where possible to simplify security rules. Membership Maps are used for collaborative data where applicable, ensuring clear ownership and access control. The structure also incorporates explicit state modeling using a `status` field and adheres to predictable schema conventions.\n\nSpecifically:\n\n* **Users:** User data is stored in `/users/{userId}` to ensure that user-specific data is easily secured and managed.\n* **Crop Listings:** Crop listings are stored under `/cropListings/{cropListingId}`. The `farmerId` field in each crop listing denormalizes the owner relationship, enabling rules to secure these listings.\n* **Orders:** Orders are stored in `/orders/{orderId}`. The `buyerId` and `cropListingId` fields allow for easy querying of orders by buyers and sellers.\n* **Transports:** Transport data is stored under `/transports/{transportId}`. The `transporterId` allows for straightforward access control based on the transporter.\n* **Soil Analyses, Pest Detections:** These are stored under `/users/{userId}/soilAnalyses/{soilAnalysisId}` and `/users/{userId}/pestDetections/{pestDetectionId}`, respectively, using path-based ownership to easily secure user-specific analyses and detections.\n* **Auctions:** Auctions are stored under `/auctions/{auctionId}`. The `cropListingId` links the auction to the respective crop listing.\n* **Traceability:** Traceability data is stored under `/traceability/{traceabilityId}`.\n* **Transport Requests & Bids**: Transport requests are stored in a top-level collection `/transportRequests`. Bids for a specific request are stored in a subcollection (`/transportRequests/{transportRequestId}/bids/{bidId}`) to model the one-to-many relationship and allow for efficient querying of bids for a single request.\n\nThis design achieves authorization independence by denormalizing user and role information where needed, eliminating the need for `get()` calls in security rules. It supports QAPs by segregating data based on access requirements and by using membership models for collaborative resources."
   }
 }

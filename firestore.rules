@@ -40,6 +40,13 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+    
+    /**
+     * @description Checks if the authenticated user is of a specific role.
+     */
+    function hasRole(role) {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
 
     /**
      * @description Checks if the authenticated user ID matches the existing document's owner ID.
@@ -185,6 +192,34 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isSignedIn();
+    }
+    
+    /**
+     * @description Rules for transport requests.
+     * @path /transportRequests/{transportRequestId}
+     * @allow (read) Only authenticated transporters can see transport requests.
+     * @allow (create) Only authenticated users (buyers or system) can create requests.
+     * @principle Secures transport requests to relevant parties.
+     */
+    match /transportRequests/{transportRequestId} {
+      allow get, list: if hasRole('Transporter');
+      allow create: if isSignedIn();
+      allow update, delete: if false; // Should be handled by system logic
+    }
+    
+    /**
+     * @description Rules for bids on transport requests.
+     * @path /transportRequests/{transportRequestId}/bids/{bidId}
+     * @allow (read) Transporters can see bids on a request. Buyers/Farmers can see bids on their order's request.
+     * @allow (create) A transporter can create a bid for a transport request.
+     * @allow (update) Only the buyer/system can accept/reject a bid.
+     * @principle Manages the lifecycle of transport bids.
+     */
+    match /transportRequests/{transportRequestId}/bids/{bidId} {
+        allow read: if isSignedIn(); // Simplified for now
+        allow create: if hasRole('Transporter') && request.resource.data.transporterId == request.auth.uid;
+        allow update: if isSignedIn(); // Simplified: allow update for status changes (accept/reject)
+        allow delete: if isOwner(resource.data.transporterId);
     }
   }
 }

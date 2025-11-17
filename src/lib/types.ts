@@ -63,3 +63,35 @@ export interface TraceEvent {
   location: string;
   details: string;
 }
+
+export interface Order {
+  id: string;
+  buyerId: string;
+  cropListingId: string;
+  quantity: number;
+  orderDate: string;
+  deliveryAddress: string;
+  status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
+  transportId?: string;
+  // Denormalized data for easier display
+  cropListing?: CropListing;
+  buyer?: UserProfile;
+}
+
+export interface TransportRequest {
+    id: string;
+    orderId: string;
+    pickupLocation: string;
+    deliveryLocation: string;
+    requiredVehicle: string;
+    status: 'open' | 'in-progress' | 'completed';
+}
+
+export interface TransportBid {
+    id: string;
+    transportRequestId: string;
+    transporterId: string;
+    bidAmount: number;
+    estimatedDeliveryDate: string;
+    status: 'pending' | 'accepted' | 'rejected';
+}
