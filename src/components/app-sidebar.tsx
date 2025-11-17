@@ -32,7 +32,7 @@ const navItems = [
   { href: '/soil-analysis', label: 'Soil Analysis', icon: Leaf, roles: ['Farmer'] },
   { href: '/pest-detection', label: 'Pest Detection', icon: ScanSearch, roles: ['Farmer'] },
   { href: '/marketing-suite', label: 'Marketing Suite', icon: GalleryHorizontal, roles: ['Farmer'] },
-  { href: '/transport', label: 'Transport', icon: Truck, roles: ['Transporter'] },
+  { href: '/transport', label: 'Transport Jobs', icon: Truck, roles: ['Transporter'] },
   { href: '/traceability', label: 'Traceability', icon: FileCheck2, roles: ['Buyer'] },
 ];
 
@@ -58,7 +58,7 @@ export default function AppSidebar() {
             <SidebarMenuItem key={item.href}>
               <Link href={item.href}>
                 <SidebarMenuButton
-                  isActive={pathname === item.href}
+                  isActive={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')}
                   tooltip={item.label}
                 >
                   <item.icon />

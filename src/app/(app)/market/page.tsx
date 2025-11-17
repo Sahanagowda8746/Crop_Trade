@@ -159,6 +159,17 @@ export default function MarketPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Marketplace</h1>
+          <p className="text-muted-foreground">Browse fresh crops directly from farmers.</p>
+        </div>
+        {role === 'Farmer' && (
+            <Link href="/market/new-listing">
+                <Button>Create Listing</Button>
+            </Link>
+        )}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {effectiveIsLoading && Array.from({ length: 8 }).map((_, i) => <CropSkeleton key={i} />)}
         {crops && crops.map(crop => <CropCard key={crop.id} crop={crop} onBuy={handleBuy} />)}

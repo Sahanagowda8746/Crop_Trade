@@ -16,7 +16,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, addDocumentNonBl
 import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import type { Order, Review } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Package, Star, Calendar, ShoppingCart } from 'lucide-react';
+import { Package, Star, Calendar, ShoppingCart, Truck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -109,7 +109,7 @@ function LeaveReviewDialog({ order }: { order: Order }) {
     )
 }
 
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({ order, onRequestTransport }: { order: Order; onRequestTransport: (order: Order) => void; }) {
     return (
         <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-start gap-4">
@@ -141,7 +141,10 @@ function OrderCard({ order }: { order: Order }) {
                 </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
-                <Button variant="outline" size="sm">View Details</Button>
+                <Button variant="outline" size="sm" onClick={() => onRequestTransport(order)}>
+                    <Truck className="mr-2 h-4 w-4" />
+                    Request Transport
+                </Button>
                 {order.status === 'delivered' && <LeaveReviewDialog order={order} />}
             </CardFooter>
         </Card>
@@ -152,6 +155,7 @@ export default function OrdersPage() {
     const { setPageTitle } = useAppContext();
     const firestore = useFirestore();
     const { user, isUserLoading } = useUser();
+    const { toast } = useToast();
 
     useEffect(() => {
         setPageTitle('My Orders');
@@ -164,6 +168,25 @@ export default function OrdersPage() {
 
     const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
     
+    const handleRequestTransport = async (order: Order) => {
+        if (!firestore) return;
+        toast({ title: "Creating Transport Request", description: "Please wait..." });
+
+        const transportRequestCollection = collection(firestore, 'transportRequests');
+        const newRequest = {
+            orderId: order.id,
+            pickupLocation: order.cropListing?.location || 'Unknown Location',
+            deliveryLocation: order.deliveryAddress,
+            requiredVehicle: 'Standard Truck', // Placeholder
+            status: 'open',
+            bidCount: 0,
+        };
+
+        await addDocumentNonBlocking(transportRequestCollection, newRequest);
+        
+        toast({ title: "Success", description: "Transport request has been created for transporters to bid on." });
+    };
+
     const effectiveIsLoading = isLoading || isUserLoading;
 
     return (
@@ -174,7 +197,7 @@ export default function OrdersPage() {
                         <Package className="text-primary" />
                         My Orders
                     </CardTitle>
-                    <CardDescription>Track your past and current purchases.</CardDescription>
+                    <CardDescription>Track your past and current purchases. You can request transport for pending orders.</CardDescription>
                 </CardHeader>
             </Card>
             
@@ -186,7 +209,7 @@ export default function OrdersPage() {
 
             {!effectiveIsLoading && orders && orders.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {orders.map(order => <OrderCard key={order.id} order={order} />)}
+                    {orders.map(order => <OrderCard key={order.id} order={order} onRequestTransport={handleRequestTransport} />)}
                 </div>
             ) : null}
 

@@ -18,7 +18,7 @@ function StarRating({ rating, reviewCount }: { rating: number, reviewCount: numb
     return (
         <div className="flex items-center gap-1 text-yellow-500">
             {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`h-5 w-5 ${i < Math.round(rating) ? 'fill-current' : 'fill-muted-foreground stroke-muted-foreground'}`} />
+                <Star key={i} className={`h-5 w-5 ${i < Math.round(rating) ? 'fill-current' : 'fill-muted stroke-muted-foreground'}`} />
             ))}
             {reviewCount > 0 && <span className="text-sm text-muted-foreground ml-2">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>}
         </div>
