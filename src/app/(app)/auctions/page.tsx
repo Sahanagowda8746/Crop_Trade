@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -166,9 +167,9 @@ export default function AuctionsPage() {
   const { user, isUserLoading } = useUser();
 
   const auctionsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return query(collection(firestore, 'auctions'), where('status', '==', 'open'));
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: auctions, isLoading } = useCollection<Auction>(auctionsQuery);
 
