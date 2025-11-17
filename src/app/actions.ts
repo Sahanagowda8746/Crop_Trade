@@ -351,8 +351,8 @@ const listingSchema = z.object({
 });
 
 
-export async function handleUpdateListing(prevState: any, data: unknown) {
-  const validatedFields = listingSchema.safeParse(data);
+export async function handleUpdateListing(prevState: any, formData: FormData) {
+  const validatedFields = listingSchema.safeParse(Object.fromEntries(formData));
 
   if (!validatedFields.success) {
     return {
