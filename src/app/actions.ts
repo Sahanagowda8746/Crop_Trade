@@ -9,6 +9,7 @@ import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { generateCropDescription } from '@/ai/flows/crop-description-generator';
 import { calculateFertilizer } from '@/ai/flows/fertilizer-calculator';
 import { predictYield } from '@/ai/flows/yield-prediction';
+import { forecastDemand } from '@/ai/flows/demand-forecast';
 
 // This is a simplified way to get the currently logged-in user's ID on the server.
 // In a real app, you'd get this from the session.
@@ -194,6 +195,34 @@ export async function handleCropDescription(prevState: any, formData: FormData) 
     }
 }
 
+const fertilizerCalculatorSchema = z.object({
+  nitrogen: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Nitrogen cannot be negative.")),
+  phosphorus: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Phosphorus cannot be negative.")),
+  potassium: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Potassium cannot be negative.")),
+  ph: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "pH must be between 0 and 14.").max(14)),
+  soilType: z.string().min(1, "Please select a soil type."),
+  targetCrop: z.string().min(2, "Please enter a target crop."),
+});
+
+export async function handleFertilizerCalculation(prevState: any, formData: FormData) {
+    const validatedFields = fertilizerCalculatorSchema.safeParse(Object.fromEntries(formData));
+    if (!validatedFields.success) {
+      return {
+        message: 'Invalid form data.',
+        errors: validatedFields.error.flatten().fieldErrors,
+        data: null,
+      };
+    }
+
+    try {
+      const result = await calculateFertilizer(validatedFields.data);
+      return { message: "Calculation complete.", data: result, errors: null };
+    } catch (e: any) {
+      return { message: `error: ${e.message}`, data: null, errors: null };
+    }
+}
+
+
 const yieldPredictionSchema = z.object({
     cropType: z.string().min(2, "Please enter a crop type."),
     acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be a positive number.")),
@@ -221,4 +250,28 @@ export async function handleYieldPrediction(prevState: any, formData: FormData) 
     } catch (e: any) {
       return { message: `error: ${e.message}`, data: null, errors: null };
     }
+}
+
+const demandForecastSchema = z.object({
+  cropType: z.string().min(2, "Please enter a crop type."),
+  region: z.string().min(2, "Please enter a region."),
+  month: z.string().min(1, "Please select a month."),
+});
+
+export async function handleDemandForecast(prevState: any, formData: FormData) {
+  const validatedFields = demandForecastSchema.safeParse(Object.fromEntries(formData));
+  if (!validatedFields.success) {
+    return {
+      message: 'error:Invalid form data.',
+      errors: validatedFields.error.flatten().fieldErrors,
+      data: null,
+    };
+  }
+
+  try {
+    const result = await forecastDemand(validatedFields.data);
+    return { message: "Forecast complete.", data: result, errors: null };
+  } catch (e: any) {
+    return { message: `error: ${e.message}`, data: null, errors: null };
+  }
 }

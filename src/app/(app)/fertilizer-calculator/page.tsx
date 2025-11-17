@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAppContext } from '@/context/app-context';
 import { useToast } from '@/hooks/use-toast';
 import { Calculator, Sparkles, Loader2, FlaskConical, Beaker, Leaf, Siren } from 'lucide-react';
-import { calculateFertilizer } from '@/ai/flows/fertilizer-calculator';
+import { handleFertilizerCalculation } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
@@ -51,25 +51,7 @@ export default function FertilizerCalculatorPage() {
   const { setPageTitle } = useAppContext();
   const { toast } = useToast();
   
-  const [state, formAction, isPending] = useActionState(async (prevState: typeof initialState, formData: FormData) => {
-    const validatedFields = formSchema.safeParse(Object.fromEntries(formData));
-    if (!validatedFields.success) {
-      return {
-        message: 'Invalid form data.',
-        errors: validatedFields.error.flatten().fieldErrors,
-        data: null,
-      };
-    }
-
-    try {
-      const result = await calculateFertilizer(validatedFields.data);
-      toast({ title: "Plan Calculated!", description: "Your custom fertilizer plan is ready." });
-      return { message: "Calculation complete.", data: result, errors: null };
-    } catch (e: any) {
-      toast({ variant: 'destructive', title: "Calculation Failed", description: e.message || "An unknown error occurred." });
-      return { message: `error: ${e.message}`, data: null, errors: null };
-    }
-  }, initialState);
+  const [state, formAction, isPending] = useActionState(handleFertilizerCalculation, initialState);
 
 
   const form = useForm<FormSchema>({
