@@ -8,6 +8,7 @@ import { generateAdImage } from '@/ai/flows/generate-ad-image';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { generateCropDescription } from '@/ai/flows/crop-description-generator';
 import { calculateFertilizer } from '@/ai/flows/fertilizer-calculator';
+import { predictYield } from '@/ai/flows/yield-prediction';
 
 // This is a simplified way to get the currently logged-in user's ID on the server.
 // In a real app, you'd get this from the session.
@@ -190,5 +191,34 @@ export async function handleCropDescription(prevState: any, formData: FormData) 
         console.error(error);
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
         return { message: `error: Failed to generate description. ${errorMessage}`, errors: {}, data: null };
+    }
+}
+
+const yieldPredictionSchema = z.object({
+    cropType: z.string().min(2, "Please enter a crop type."),
+    acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be a positive number.")),
+    soilType: z.string().min(1, "Please select a soil type."),
+    nitrogenLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Nitrogen cannot be negative.")),
+    phosphorusLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Phosphorus cannot be negative.")),
+    potassiumLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Potassium cannot be negative.")),
+    region: z.string().min(2, "Region is required."),
+    historicalYield: z.string().optional(),
+});
+
+export async function handleYieldPrediction(prevState: any, formData: FormData) {
+    const validatedFields = yieldPredictionSchema.safeParse(Object.fromEntries(formData));
+    if (!validatedFields.success) {
+      return {
+        message: 'error:Invalid form data.',
+        errors: validatedFields.error.flatten().fieldErrors,
+        data: null,
+      };
+    }
+
+    try {
+      const result = await predictYield(validatedFields.data);
+      return { message: "Prediction complete.", data: result, errors: null };
+    } catch (e: any) {
+      return { message: `error: ${e.message}`, data: null, errors: null };
     }
 }
