@@ -99,10 +99,9 @@ export default function DashboardPage() {
             <CardContent className="space-y-4 text-sm text-muted-foreground">
                 <p>Use the sidebar to navigate through the application's features. Your available options will change based on your selected role.</p>
                 <ul className="list-disc pl-5 space-y-2">
-                    <li>As a <span className="font-semibold text-foreground">Farmer</span>, you can analyze your soil and detect pests in your crops using our AI tools.</li>
-                    <li>As a <span className="font-semibold text-foreground">Buyer</span>, you can track your purchases using the traceability feature.</li>
+                    <li>As a <span className="font-semibold text-foreground">Farmer</span>, you can analyze your soil, detect pests, and generate marketing materials for your crops using our AI tools.</li>
+                    <li>As a <span className="font-semibold text-foreground">Buyer</span>, you can browse the marketplace, participate in auctions, and track your purchases.</li>
                     <li>As a <span className="font-semibold text-foreground">Transporter</span>, you can view transport-related information.</li>
-                    <li>Anyone can browse the <span className="font-semibold text-foreground">Marketplace</span> and view ongoing <span className="font-semibold text-foreground">Auctions</span>.</li>
                 </ul>
                 <p>Switch your role using the avatar in the top-right corner to explore different perspectives.</p>
             </CardContent>

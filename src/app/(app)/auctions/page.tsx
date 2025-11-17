@@ -166,9 +166,9 @@ export default function AuctionsPage() {
   const { user, isUserLoading } = useUser();
 
   const auctionsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore) return null;
     return query(collection(firestore, 'auctions'), where('status', '==', 'open'));
-  }, [firestore, user]);
+  }, [firestore]);
 
   const { data: auctions, isLoading } = useCollection<Auction>(auctionsQuery);
 
