@@ -1,6 +1,6 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useState, useRef, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -187,7 +187,7 @@ function ResultsDisplay({ data, imagePreview }: { data: SoilAnalysisFromImageOut
 
 export default function SoilAnalysisPage() {
   const { setPageTitle } = useAppContext();
-  const [state, formAction] = useFormState(handleSoilAnalysis, initialState);
+  const [state, formAction] = useActionState(handleSoilAnalysis, initialState);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();

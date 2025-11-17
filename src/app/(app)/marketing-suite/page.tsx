@@ -1,6 +1,6 @@
 'use client';
-import { useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,7 +34,7 @@ function SubmitButton() {
 
 export default function MarketingSuitePage() {
   const { setPageTitle } = useAppContext();
-  const [state, formAction] = useFormState(handleAdImageGeneration, initialState);
+  const [state, formAction] = useActionState(handleAdImageGeneration, initialState);
   const { pending } = useFormStatus();
 
   useEffect(() => {
