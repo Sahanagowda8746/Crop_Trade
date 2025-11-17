@@ -145,14 +145,6 @@ export default function AppSidebar() {
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <Link href="/tutorials">
-                        <SidebarMenuButton isActive={pathname.startsWith('/tutorials')} tooltip="Video Tutorials">
-                        <Video />
-                        <span>Video Tutorials</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
             </SidebarGroup>
 
         </SidebarMenu>
