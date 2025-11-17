@@ -136,6 +136,10 @@ export default function EditListingPage() {
       form.setValue('imageUrl', dataUri);
     }
   };
+  
+  const onFormSubmit = (data: FormSchema) => {
+    formAction(data);
+  };
 
   if (isLoadingListing) {
       return (
@@ -164,7 +168,7 @@ export default function EditListingPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <Form {...form}>
-        <form action={formAction}>
+        <form onSubmit={form.handleSubmit(onFormSubmit)}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline text-2xl">
