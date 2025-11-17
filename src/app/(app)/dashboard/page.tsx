@@ -1,8 +1,9 @@
+
 'use client';
 import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/context/app-context';
-import { DollarSign, List, Calendar, Bell, LineChart, Thermometer, Wind, Droplet, Clock, PackageCheck, Tractor, CheckCircle, Wheat } from 'lucide-react';
+import { DollarSign, List, Calendar, Bell, LineChart, Thermometer, Wind, Droplet, Clock, PackageCheck, Tractor, CheckCircle, Wheat, Cloudy } from 'lucide-react';
 import MonthlyHarvestChart from '@/components/charts/monthly-harvest-chart';
 import RevenueOverviewChart from '@/components/charts/revenue-overview-chart';
 import { Progress } from '@/components/ui/progress';
