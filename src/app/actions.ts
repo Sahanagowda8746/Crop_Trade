@@ -12,6 +12,9 @@ import { predictYield } from '@/ai/flows/yield-prediction';
 import { forecastDemand } from '@/ai/flows/demand-forecast';
 import { assessCreditScore } from '@/ai/flows/credit-score-flow';
 import { assessInsuranceRisk } from '@/ai/flows/insurance-risk-flow';
+import { getFirestore, doc } from 'firebase/firestore';
+import { initializeFirebase, setDocumentNonBlocking } from '@/firebase';
+
 
 // This is a simplified way to get the currently logged-in user's ID on the server.
 // In a real app, you'd get this from the session.
@@ -326,4 +329,51 @@ export async function handleInsuranceRisk(prevState: any, formData: FormData) {
     } catch (e: any) {
         return { message: `error: ${e.message}`, data: null, errors: null };
     }
+}
+
+const listingSchema = z.object({
+  listingId: z.string().min(1),
+  cropType: z.string().min(2, "Crop type is required."),
+  variety: z.string().min(2, "Variety is required."),
+  quantity: z.preprocess(
+    (a) => parseFloat(z.string().parse(a)),
+    z.number().positive("Quantity must be a positive number.")
+  ),
+  unit: z.string().min(1, "Unit is required."),
+  pricePerUnit: z.preprocess(
+    (a) => parseFloat(z.string().parse(a)),
+    z.number().positive("Price must be a positive number.")
+  ),
+  location: z.string().min(3, "Location is required."),
+  harvestDate: z.string().min(1, "Harvest date is required."),
+  description: z.string().min(10, "Description must be at least 10 characters."),
+  imageUrl: z.string().optional(),
+});
+
+
+export async function handleUpdateListing(prevState: any, formData: FormData) {
+  const validatedFields = listingSchema.safeParse(Object.fromEntries(formData));
+
+  if (!validatedFields.success) {
+    return {
+      message: 'error:Invalid form data.',
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { listingId, ...listingData } = validatedFields.data;
+
+  try {
+    const { firestore } = initializeFirebase();
+    const listingRef = doc(firestore, 'cropListings', listingId);
+
+    // Using set with merge:true to update the document.
+    // This is generally safer than updateDoc as it won't fail if the document doesn't exist.
+    await setDocumentNonBlocking(listingRef, listingData, { merge: true });
+
+    return { message: 'Listing updated successfully.' };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { message: `error:Update failed. ${errorMessage}` };
+  }
 }
