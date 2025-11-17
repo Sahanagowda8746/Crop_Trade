@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -341,7 +342,7 @@ const listingSchema = z.object({
   location: z.string().min(3, "Location is required."),
   harvestDate: z.string().min(1, "Harvest date is required."),
   description: z.string().min(10, "Description must be at least 10 characters."),
-  imageUrl: z.string().optional(),
+  imageUrl: z.string().url().optional().or(z.literal('')),
 });
 
 
@@ -349,8 +350,9 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
   const validatedFields = listingSchema.safeParse(Object.fromEntries(formData));
 
   if (!validatedFields.success) {
+    console.error("Zod validation failed:", validatedFields.error.flatten());
     return {
-      message: 'error:Invalid form data.',
+      message: 'error:Invalid form data. Check console for details.',
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
@@ -369,3 +371,5 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
     return { message: `error:Update failed. ${errorMessage}` };
   }
 }
+
+    
