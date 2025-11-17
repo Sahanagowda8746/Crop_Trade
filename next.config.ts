@@ -30,6 +30,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Add the allowedDevOrigins configuration to resolve the cross-origin warning
+  // that is causing server instability in the development environment.
+  allowedDevOrigins: [
+    'https://6000-firebase-studio-1763366724609.cluster-ejd22kqny5htuv5dfowoyipt52.cloudworkstations.dev',
+  ],
 };
 
 export default nextConfig;
