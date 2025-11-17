@@ -98,16 +98,9 @@ export default function EditListingPage() {
   useEffect(() => {
     if (listing) {
       form.reset({
+        ...listing,
         listingId: listing.id,
-        cropType: listing.cropType,
-        variety: listing.variety,
-        quantity: listing.quantity,
-        unit: listing.unit,
-        pricePerUnit: listing.pricePerUnit,
-        location: listing.location,
         harvestDate: new Date(listing.harvestDate).toISOString().split('T')[0], // Format for date input
-        description: listing.description,
-        imageUrl: listing.imageUrl,
       });
       setPreview(listing.imageUrl || null);
     }

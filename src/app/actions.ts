@@ -335,15 +335,9 @@ const listingSchema = z.object({
   listingId: z.string().min(1),
   cropType: z.string().min(2, "Crop type is required."),
   variety: z.string().min(2, "Variety is required."),
-  quantity: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
-    z.number().positive("Quantity must be a positive number.")
-  ),
+  quantity: z.coerce.number().positive("Quantity must be a positive number."),
   unit: z.string().min(1, "Unit is required."),
-  pricePerUnit: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
-    z.number().positive("Price must be a positive number.")
-  ),
+  pricePerUnit: z.coerce.number().positive("Price must be a positive number."),
   location: z.string().min(3, "Location is required."),
   harvestDate: z.string().min(1, "Harvest date is required."),
   description: z.string().min(10, "Description must be at least 10 characters."),
