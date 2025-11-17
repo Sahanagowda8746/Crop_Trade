@@ -1,0 +1,190 @@
+/**
+ * @fileoverview Firestore Security Rules for CropTrade application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for user-specific data
+ * and a public-read, owner-write model for crop listings. All write operations
+ * require authentication.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores individual user profiles. Only the user can read/write their own profile.
+ * - /cropListings/{cropListingId}: Stores crop listings. Publicly readable, but only the owner (farmer) can modify.
+ * - /orders/{orderId}: Stores order data.
+ * - /transports/{transportId}: Stores transport data.
+ * - /users/{userId}/soilAnalyses/{soilAnalysisId}: Stores soil analysis data, accessible only to the user.
+ * - /users/{userId}/pestDetections/{pestDetectionId}: Stores pest detection data, accessible only to the user.
+ * - /auctions/{auctionId}: Stores auction data.
+ * - /traceability/{traceabilityId}: Stores traceability data.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed.
+ * - Default security posture for ambiguous relationships is strict owner-only access.
+ *
+ * Denormalization for Authorization:
+ * - Crop listings include a `farmerId` field to enable owner-based write rules without extra `get()` calls.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Checks if the request is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user ID matches the provided user ID.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the authenticated user ID matches the existing document's owner ID.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rules for user profiles.
+     * @path /users/{userId}
+     * @allow (create) User with ID 'user123' can create their own profile if authenticated as 'user123'.
+     * @allow (get) User with ID 'user123' can read their own profile if authenticated as 'user123'.
+     * @deny (create) User with ID 'user456' cannot create a profile for 'user123'.
+     * @deny (update) User with ID 'user456' cannot update the profile for 'user123'.
+     * @principle Enforces document ownership for writes and reads.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // User listing is not allowed.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for crop listings.
+     * @path /cropListings/{cropListingId}
+     * @allow (get) Any user can read a crop listing.
+     * @allow (list) Any user can list crop listings.
+     * @allow (create) User with ID 'farmer123' can create a crop listing if authenticated as 'farmer123' and farmerId matches.
+     * @allow (update) User with ID 'farmer123' can update a crop listing if authenticated as 'farmer123' and farmerId matches.
+     * @deny (update) User with ID 'buyer456' cannot update a crop listing owned by 'farmer123'.
+     * @principle Allows public read access but restricts writes to the owner (farmer).
+     */
+    match /cropListings/{cropListingId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.farmerId == request.auth.uid;
+      allow update: if isExistingOwner(resource.data.farmerId);
+      allow delete: if isExistingOwner(resource.data.farmerId);
+    }
+
+    /**
+     * @description Rules for orders.
+     * @path /orders/{orderId}
+     * @allow (create) Any authenticated user can create an order.
+     * @allow (get) Any authenticated user can get an order.
+     * @allow (list) Any authenticated user can list orders.
+     * @allow (update) Only the buyer can update an order.
+     * @allow (delete) Only the buyer can delete an order.
+     * @principle Allows authenticated users to create, read, and list orders.
+     */
+    match /orders/{orderId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && request.auth.uid == resource.data.buyerId;
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.buyerId && resource != null;
+    }
+
+    /**
+     * @description Rules for transports.
+     * @path /transports/{transportId}
+     * @allow (create) Any authenticated user can create a transport.
+     * @allow (get) Any authenticated user can get a transport.
+     * @allow (list) Any authenticated user can list transports.
+     * @allow (update) Only the transporter can update transport details.
+     * @allow (delete) Only the transporter can delete a transport record.
+     * @principle Transporter-based access control for transport records.
+     */
+    match /transports/{transportId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && request.auth.uid == resource.data.transporterId;
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.transporterId && resource != null;
+    }
+
+    /**
+     * @description Rules for soil analyses under a user's profile.
+     * @path /users/{userId}/soilAnalyses/{soilAnalysisId}
+     * @allow (create) User with ID 'user123' can create soil analysis data if authenticated as 'user123'.
+     * @allow (get) User with ID 'user123' can read soil analysis data if authenticated as 'user123'.
+     * @deny (update) User with ID 'user456' cannot update soil analysis data for 'user123'.
+     * @principle Enforces document ownership based on the path for soil analyses.
+     */
+    match /users/{userId}/soilAnalyses/{soilAnalysisId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.farmerId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.farmerId == userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for pest detections under a user's profile.
+     * @path /users/{userId}/pestDetections/{pestDetectionId}
+     * @allow (create) User with ID 'user123' can create pest detection data if authenticated as 'user123'.
+     * @allow (get) User with ID 'user123' can read pest detection data if authenticated as 'user123'.
+     * @deny (update) User with ID 'user456' cannot update pest detection data for 'user123'.
+     * @principle Enforces document ownership based on the path for pest detections.
+     */
+    match /users/{userId}/pestDetections/{pestDetectionId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.farmerId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.farmerId == userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for auctions.
+     * @path /auctions/{auctionId}
+     * @allow (create) Any authenticated user can create an auction.
+     * @allow (get) Any authenticated user can get an auction.
+     * @allow (list) Any authenticated user can list auctions.
+     * @allow (update) Any authenticated user can update auction details.
+     * @allow (delete) Any authenticated user can delete an auction.
+     * @principle Allows authenticated users to manage auctions.
+     */
+    match /auctions/{auctionId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Rules for traceability data.
+     * @path /traceability/{traceabilityId}
+     * @allow (create) Any authenticated user can create traceability data.
+     * @allow (get) Any authenticated user can get traceability data.
+     * @allow (list) Any authenticated user can list traceability data.
+     * @allow (update) Any authenticated user can update traceability data.
+     * @allow (delete) Any authenticated user can delete traceability data.
+     * @principle Allows authenticated users to manage traceability data.
+     */
+    match /traceability/{traceabilityId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+  }
+}

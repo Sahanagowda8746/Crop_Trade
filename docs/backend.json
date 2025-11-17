@@ -1,0 +1,561 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the CropTrade application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user (e.g., farmer, buyer, transporter, admin).",
+          "format": "string"
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "contactNumber": {
+          "type": "string",
+          "description": "The contact number of the user."
+        },
+        "location": {
+          "type": "string",
+          "description": "The location of the user."
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "email",
+        "firstName",
+        "lastName"
+      ]
+    },
+    "CropListing": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CropListing",
+      "type": "object",
+      "description": "Represents a listing of a crop for sale by a farmer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the crop listing."
+        },
+        "farmerId": {
+          "type": "string",
+          "description": "Reference to the User (Farmer) who created the listing. (Relationship: User 1:N CropListing)"
+        },
+        "cropType": {
+          "type": "string",
+          "description": "The type of crop being listed."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the crop available (e.g., in kg, tons)."
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit of crop quantity"
+        },
+        "pricePerUnit": {
+          "type": "number",
+          "description": "The price per unit of the crop."
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency the listing is listed in"
+        },
+        "location": {
+          "type": "string",
+          "description": "The location where the crop is located."
+        },
+        "harvestDate": {
+          "type": "string",
+          "description": "The date when the crop was harvested.",
+          "format": "date-time"
+        },
+        "listingDate": {
+          "type": "string",
+          "description": "The date when the crop listing was created.",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the crop and listing."
+        },
+        "traceHash": {
+          "type": "string",
+          "description": "Reference to Traceability information. (Relationship: CropListing 1:1 Traceability)"
+        }
+      },
+      "required": [
+        "id",
+        "farmerId",
+        "cropType",
+        "quantity",
+        "unit",
+        "pricePerUnit",
+        "currency",
+        "location",
+        "harvestDate"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents an order placed by a buyer for a crop listing.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the order."
+        },
+        "buyerId": {
+          "type": "string",
+          "description": "Reference to the User (Buyer) who placed the order. (Relationship: User 1:N Order)"
+        },
+        "cropListingId": {
+          "type": "string",
+          "description": "Reference to the CropListing being ordered. (Relationship: CropListing 1:N Order)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the crop being ordered."
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "The date when the order was placed.",
+          "format": "date-time"
+        },
+        "deliveryAddress": {
+          "type": "string",
+          "description": "The delivery address for the order."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the order (e.g., pending, shipped, delivered)."
+        },
+        "transportId": {
+          "type": "string",
+          "description": "Reference to Transport information. (Relationship: Order 1:1 Transport)"
+        }
+      },
+      "required": [
+        "id",
+        "buyerId",
+        "cropListingId",
+        "quantity",
+        "orderDate",
+        "deliveryAddress",
+        "status"
+      ]
+    },
+    "Transport": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transport",
+      "type": "object",
+      "description": "Represents transport details for the order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transport."
+        },
+        "transporterId": {
+          "type": "string",
+          "description": "Reference to the User (Transporter) responsible for the transport. (Relationship: User 1:N Transport)"
+        },
+        "pickupLocation": {
+          "type": "string",
+          "description": "The pickup location for the transport."
+        },
+        "deliveryLocation": {
+          "type": "string",
+          "description": "The delivery location for the transport."
+        },
+        "estimatedDeliveryDate": {
+          "type": "string",
+          "description": "The estimated delivery date for the transport.",
+          "format": "date-time"
+        },
+        "vehicleType": {
+          "type": "string",
+          "description": "The type of vehicle used for transport."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the transport (e.g., en route, delivered)."
+        }
+      },
+      "required": [
+        "id",
+        "transporterId",
+        "pickupLocation",
+        "deliveryLocation",
+        "estimatedDeliveryDate",
+        "vehicleType",
+        "status"
+      ]
+    },
+    "SoilAnalysis": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SoilAnalysis",
+      "type": "object",
+      "description": "Represents the soil analysis data and recommendations.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the soil analysis."
+        },
+        "farmerId": {
+          "type": "string",
+          "description": "Reference to the User (Farmer) who requested the analysis. (Relationship: User 1:N SoilAnalysis)"
+        },
+        "analysisDate": {
+          "type": "string",
+          "description": "The date when the soil analysis was performed.",
+          "format": "date-time"
+        },
+        "pH": {
+          "type": "number",
+          "description": "The pH level of the soil."
+        },
+        "nitrogen": {
+          "type": "number",
+          "description": "The nitrogen content of the soil."
+        },
+        "phosphorus": {
+          "type": "number",
+          "description": "The phosphorus content of the soil."
+        },
+        "potassium": {
+          "type": "number",
+          "description": "The potassium content of the soil."
+        },
+        "recommendations": {
+          "type": "string",
+          "description": "Crop recommendations and fertilizer plan based on the soil analysis."
+        }
+      },
+      "required": [
+        "id",
+        "farmerId",
+        "analysisDate",
+        "pH",
+        "nitrogen",
+        "phosphorus",
+        "potassium",
+        "recommendations"
+      ]
+    },
+    "PestDetection": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PestDetection",
+      "type": "object",
+      "description": "Represents the results of pest detection via image analysis.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the pest detection result."
+        },
+        "farmerId": {
+          "type": "string",
+          "description": "Reference to the User (Farmer) who uploaded the image. (Relationship: User 1:N PestDetection)"
+        },
+        "detectionDate": {
+          "type": "string",
+          "description": "The date when the pest detection was performed.",
+          "format": "date-time"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "The URL of the image uploaded for pest detection."
+        },
+        "detectedPests": {
+          "type": "string",
+          "description": "The pests detected in the image."
+        },
+        "confidenceLevel": {
+          "type": "number",
+          "description": "The confidence level of the pest detection."
+        },
+        "recommendations": {
+          "type": "string",
+          "description": "Recommendations for pest control."
+        }
+      },
+      "required": [
+        "id",
+        "farmerId",
+        "detectionDate",
+        "imageUrl",
+        "detectedPests",
+        "confidenceLevel",
+        "recommendations"
+      ]
+    },
+    "Auction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Auction",
+      "type": "object",
+      "description": "Represents an auction for a crop listing.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the auction."
+        },
+        "cropListingId": {
+          "type": "string",
+          "description": "Reference to the CropListing being auctioned. (Relationship: CropListing 1:N Auction)"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The start date of the auction.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "The end date of the auction.",
+          "format": "date-time"
+        },
+        "startingBid": {
+          "type": "number",
+          "description": "The starting bid for the auction."
+        },
+        "currentBid": {
+          "type": "number",
+          "description": "The current highest bid for the auction."
+        },
+        "currentBidderId": {
+          "type": "string",
+          "description": "Reference to the User (Buyer) who placed the current highest bid. (Relationship: User 1:N Auction)"
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the auction (e.g., open, closed)."
+        }
+      },
+      "required": [
+        "id",
+        "cropListingId",
+        "startDate",
+        "endDate",
+        "startingBid",
+        "status"
+      ]
+    },
+    "Traceability": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Traceability",
+      "type": "object",
+      "description": "Represents the traceability information for a crop from planting to delivery.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the traceability information."
+        },
+        "plantingDate": {
+          "type": "string",
+          "description": "The date when the crop was planted.",
+          "format": "date-time"
+        },
+        "location": {
+          "type": "string",
+          "description": "The location where the crop was planted."
+        },
+        "fertilizerUsed": {
+          "type": "string",
+          "description": "The type of fertilizer used for the crop."
+        },
+        "pesticidesUsed": {
+          "type": "string",
+          "description": "The pesticides used for the crop."
+        },
+        "harvestDate": {
+          "type": "string",
+          "description": "The date when the crop was harvested.",
+          "format": "date-time"
+        },
+        "transportDetails": {
+          "type": "string",
+          "description": "Details about the transport of the crop."
+        },
+        "deliveryDate": {
+          "type": "string",
+          "description": "The date when the crop was delivered.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "plantingDate",
+        "location",
+        "fertilizerUsed",
+        "pesticidesUsed",
+        "harvestDate",
+        "transportDetails",
+        "deliveryDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user data. Path-based ownership simplifies security rules.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/cropListings/{cropListingId}",
+        "definition": {
+          "entityName": "CropListing",
+          "schema": {
+            "$ref": "#/backend/entities/CropListing"
+          },
+          "description": "Stores crop listings. The 'farmerId' field is present for authorization purposes.",
+          "params": [
+            {
+              "name": "cropListingId",
+              "description": "The unique identifier of the crop listing."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores order data. Includes 'buyerId' and 'cropListingId' for querying and authorization.",
+          "params": [
+            {
+              "name": "orderId",
+              "description": "The unique identifier of the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/transports/{transportId}",
+        "definition": {
+          "entityName": "Transport",
+          "schema": {
+            "$ref": "#/backend/entities/Transport"
+          },
+          "description": "Stores transport data. The 'transporterId' field is used for authorization.",
+          "params": [
+            {
+              "name": "transportId",
+              "description": "The unique identifier of the transport."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/soilAnalyses/{soilAnalysisId}",
+        "definition": {
+          "entityName": "SoilAnalysis",
+          "schema": {
+            "$ref": "#/backend/entities/SoilAnalysis"
+          },
+          "description": "Stores soil analysis data for a specific user. Path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "soilAnalysisId",
+              "description": "The unique identifier of the soil analysis."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/pestDetections/{pestDetectionId}",
+        "definition": {
+          "entityName": "PestDetection",
+          "schema": {
+            "$ref": "#/backend/entities/PestDetection"
+          },
+          "description": "Stores pest detection data for a specific user. Path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "pestDetectionId",
+              "description": "The unique identifier of the pest detection."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/auctions/{auctionId}",
+        "definition": {
+          "entityName": "Auction",
+          "schema": {
+            "$ref": "#/backend/entities/Auction"
+          },
+          "description": "Stores auction data. Includes 'cropListingId' to link to crop listing.",
+          "params": [
+            {
+              "name": "auctionId",
+              "description": "The unique identifier of the auction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/traceability/{traceabilityId}",
+        "definition": {
+          "entityName": "Traceability",
+          "schema": {
+            "$ref": "#/backend/entities/Traceability"
+          },
+          "description": "Stores traceability data.",
+          "params": [
+            {
+              "name": "traceabilityId",
+              "description": "The unique identifier of the traceability data."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization of authorization data. Path-based ownership (`/users/{userId}/...`) is used where possible to simplify security rules. Membership Maps are used for collaborative data where applicable, ensuring clear ownership and access control.  The structure also incorporates explicit state modeling using a `status` field and adheres to predictable schema conventions.\n\nSpecifically:\n\n*   **Users:** User data is stored in `/users/{userId}` to ensure that user-specific data is easily secured and managed.\n*   **Crop Listings:**  Crop listings are stored under `/cropListings/{cropListingId}`. The `farmerId` field in each crop listing denormalizes the owner relationship, enabling rules to secure these listings.\n*   **Orders:** Orders are stored in `/orders/{orderId}`. The `buyerId` and `cropListingId` fields allow for easy querying of orders by buyers and sellers.\n*   **Transports:** Transport data is stored under `/transports/{transportId}`. The `transporterId` allows for straightforward access control based on the transporter.\n*   **Soil Analyses, Pest Detections:**  These are stored under `/users/{userId}/soilAnalyses/{soilAnalysisId}` and `/users/{userId}/pestDetections/{pestDetectionId}`, respectively, using path-based ownership to easily secure user-specific analyses and detections.\n*   **Auctions:** Auctions are stored under `/auctions/{auctionId}`. The `cropListingId` links the auction to the respective crop listing.\n*   **Traceability:** Traceability data is stored under `/traceability/{traceabilityId}`. The `cropListingId` allows to retrieve all traceability data for a given crop listing.\n\nThis design achieves authorization independence by denormalizing user and role information where needed, eliminating the need for `get()` calls in security rules. It supports QAPs by segregating data based on access requirements and by using membership models for collaborative resources."
+  }
+}
