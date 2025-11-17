@@ -1,10 +1,10 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where } from 'firebase/firestore';
-import type { CropListing, UserProfile } from '@/lib/types';
+import { doc, collection, query, where, orderBy } from 'firebase/firestore';
+import type { CropListing, UserProfile, Review } from '@/lib/types';
 import { useAppContext } from '@/context/app-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,37 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star } from 'lucide-react';
 import Link from 'next/link';
+
+function StarRating({ rating, reviewCount }: { rating: number, reviewCount: number }) {
+    return (
+        <div className="flex items-center gap-1 text-yellow-500">
+            {[...Array(5)].map((_, i) => (
+                <Star key={i} className={`h-5 w-5 ${i < Math.round(rating) ? 'fill-current' : 'fill-muted-foreground stroke-muted-foreground'}`} />
+            ))}
+            {reviewCount > 0 && <span className="text-sm text-muted-foreground ml-2">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>}
+        </div>
+    )
+}
+
+function ReviewCard({ review }: { review: Review }) {
+    return (
+        <Card className="bg-muted/50">
+            <CardHeader className="flex-row items-center gap-4 space-y-0 pb-2">
+                 <Avatar className="h-10 w-10">
+                    <AvatarFallback>{review.buyerName?.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                    <CardTitle className="text-base">{review.buyerName || 'Anonymous'}</CardTitle>
+                    <StarRating rating={review.rating} reviewCount={0} />
+                </div>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground italic">"{review.comment}"</p>
+                <p className="text-xs text-muted-foreground mt-2 text-right">{new Date(review.reviewDate).toLocaleDateString()}</p>
+            </CardContent>
+        </Card>
+    );
+}
 
 function CropCard({ crop }: { crop: CropListing }) {
   return (
@@ -61,8 +92,24 @@ export default function FarmerProfilePage() {
       if (!firestore || !farmerId) return null;
       return query(collection(firestore, 'cropListings'), where('farmerId', '==', farmerId));
   }, [firestore, farmerId]);
-
   const { data: crops, isLoading: isLoadingCrops } = useCollection<CropListing>(cropsQuery);
+  
+  const reviewsQuery = useMemoFirebase(() => {
+    if (!firestore || !farmerId) return null;
+    return query(collection(firestore, `users/${farmerId}/reviews`), orderBy('reviewDate', 'desc'));
+  }, [firestore, farmerId]);
+  const { data: reviews, isLoading: isLoadingReviews } = useCollection<Review>(reviewsQuery);
+  
+  const { avgRating, reviewCount } = useMemo(() => {
+    if (!reviews || reviews.length === 0) {
+        return { avgRating: 0, reviewCount: 0 };
+    }
+    const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return {
+        avgRating: totalRating / reviews.length,
+        reviewCount: reviews.length
+    };
+  }, [reviews]);
   
   useEffect(() => {
     if (farmer) {
@@ -71,6 +118,8 @@ export default function FarmerProfilePage() {
         setPageTitle('Farmer Profile');
     }
   }, [farmer, setPageTitle]);
+  
+  const isLoading = isLoadingFarmer || isLoadingCrops || isLoadingReviews;
 
   if (isLoadingFarmer) {
       return (
@@ -114,13 +163,8 @@ export default function FarmerProfilePage() {
           <div className="text-center md:text-left">
             <h1 className="text-3xl font-headline font-bold">{farmer.firstName} {farmer.lastName}</h1>
             <p className="text-muted-foreground">{farmer.location}</p>
-            <div className="flex items-center justify-center md:justify-start gap-1 mt-2 text-yellow-500">
-                <Star className="h-5 w-5 fill-current" />
-                <Star className="h-5 w-5 fill-current" />
-                <Star className="h-5 w-5 fill-current" />
-                <Star className="h-5 w-5 fill-current" />
-                <Star className="h-5 w-5 fill-muted-foreground stroke-muted-foreground" />
-                <span className="text-sm text-muted-foreground ml-2">(12 reviews)</span>
+            <div className="mt-2 flex justify-center md:justify-start">
+               <StarRating rating={avgRating} reviewCount={reviewCount} />
             </div>
           </div>
         </CardContent>
@@ -143,11 +187,22 @@ export default function FarmerProfilePage() {
 
        <div>
         <h2 className="text-2xl font-headline font-bold mb-4">Reviews</h2>
-        <Card>
-            <CardContent className="pt-6">
-                <p className="text-muted-foreground">Reviews and rating system coming soon!</p>
-            </CardContent>
-        </Card>
+        {isLoadingReviews ? (
+             <div className="space-y-4">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+            </div>
+        ) : reviews && reviews.length > 0 ? (
+             <div className="space-y-4">
+                {reviews.map(review => <ReviewCard key={review.id} review={review} />)}
+            </div>
+        ) : (
+            <Card>
+                <CardContent className="pt-6">
+                    <p className="text-muted-foreground">This farmer has not been reviewed yet.</p>
+                </CardContent>
+            </Card>
+        )}
       </div>
 
     </div>

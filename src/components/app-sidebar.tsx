@@ -21,12 +21,14 @@ import {
   Sprout,
   Bot,
   GalleryHorizontal,
+  Package,
 } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Farmer', 'Buyer', 'Transporter', 'Admin'] },
   { href: '/market', label: 'Marketplace', icon: Store, roles: ['Farmer', 'Buyer', 'Transporter', 'Admin'] },
   { href: '/auctions', label: 'Auctions', icon: Gavel, roles: ['Farmer', 'Buyer', 'Transporter', 'Admin'] },
+  { href: '/orders', label: 'My Orders', icon: Package, roles: ['Buyer'] },
   { href: '/ai-agent', label: 'AI Agent', icon: Bot, roles: ['Farmer'] },
   { href: '/soil-analysis', label: 'Soil Analysis', icon: Leaf, roles: ['Farmer'] },
   { href: '/pest-detection', label: 'Pest Detection', icon: ScanSearch, roles: ['Farmer'] },

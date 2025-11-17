@@ -101,9 +101,8 @@ service cloud.firestore {
      * @principle Allows authenticated users to create, read, and list orders.
      */
     match /orders/{orderId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
       allow update: if isSignedIn() && request.auth.uid == resource.data.buyerId;
       allow delete: if isSignedIn() && request.auth.uid == resource.data.buyerId && resource != null;
     }
@@ -156,6 +155,26 @@ service cloud.firestore {
       allow create: if isOwner(userId) && request.resource.data.farmerId == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.farmerId == userId;
       allow delete: if isExistingOwner(userId);
+    }
+    
+    /**
+     * @description Rules for reviews. Reviews are stored under the farmer being reviewed.
+     * @path /users/{farmerId}/reviews/{reviewId}
+     * @allow (read) Anyone can read reviews for a farmer.
+     * @allow (create) Only a buyer who has a completed order can write a review.
+     * @principle Public read for transparency, but strict write access to maintain integrity.
+     */
+    match /users/{farmerId}/reviews/{reviewId} {
+        allow read: if true;
+        allow list: if true;
+        allow create: if isSignedIn()
+                      && request.resource.data.buyerId == request.auth.uid
+                      && request.resource.data.farmerId == farmerId
+                      // Check that a corresponding 'delivered' order exists for this buyer and item.
+                      && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
+                      && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.buyerId == request.auth.uid
+                      && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.status == 'delivered';
+        allow update, delete: if isOwner(resource.data.buyerId);
     }
 
     /**

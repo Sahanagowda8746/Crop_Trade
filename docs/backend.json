@@ -488,6 +488,52 @@
         "bidAmount",
         "status"
       ]
+    },
+    "Review": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Review",
+      "type": "object",
+      "description": "Represents a review and rating left by a buyer for a farmer after a completed order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the review."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to the Order being reviewed. (Relationship: Order 1:1 Review)"
+        },
+        "buyerId": {
+          "type": "string",
+          "description": "Reference to the User (Buyer) who wrote the review. (Relationship: User 1:N Review)"
+        },
+        "farmerId": {
+          "type": "string",
+          "description": "Reference to the User (Farmer) being reviewed. (Relationship: User 1:N Review)"
+        },
+        "rating": {
+          "type": "number",
+          "description": "A numerical rating from 1 to 5."
+        },
+        "comment": {
+          "type": "string",
+          "description": "The text content of the review."
+        },
+        "reviewDate": {
+          "type": "string",
+          "description": "The date the review was submitted.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "buyerId",
+        "farmerId",
+        "rating",
+        "comment",
+        "reviewDate"
+      ]
     }
   },
   "auth": {
@@ -669,8 +715,28 @@
             }
           ]
         }
+      },
+      {
+        "path": "/users/{userId}/reviews/{reviewId}",
+        "definition": {
+          "entityName": "Review",
+          "schema": {
+            "$ref": "#/backend/entities/Review"
+          },
+          "description": "Stores reviews for a specific farmer. The path is based on the farmer being reviewed, which simplifies querying for a farmer's reviews.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the farmer being reviewed."
+            },
+            {
+              "name": "reviewId",
+              "description": "The unique identifier of the review."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization of authorization data. Path-based ownership (`/users/{userId}/...`) is used where possible to simplify security rules. Membership Maps are used for collaborative data where applicable, ensuring clear ownership and access control. The structure also incorporates explicit state modeling using a `status` field and adheres to predictable schema conventions.\n\nSpecifically:\n\n* **Users:** User data is stored in `/users/{userId}` to ensure that user-specific data is easily secured and managed.\n* **Crop Listings:** Crop listings are stored under `/cropListings/{cropListingId}`. The `farmerId` field in each crop listing denormalizes the owner relationship, enabling rules to secure these listings.\n* **Orders:** Orders are stored in `/orders/{orderId}`. The `buyerId` and `cropListingId` fields allow for easy querying of orders by buyers and sellers.\n* **Transports:** Transport data is stored under `/transports/{transportId}`. The `transporterId` allows for straightforward access control based on the transporter.\n* **Soil Analyses, Pest Detections:** These are stored under `/users/{userId}/soilAnalyses/{soilAnalysisId}` and `/users/{userId}/pestDetections/{pestDetectionId}`, respectively, using path-based ownership to easily secure user-specific analyses and detections.\n* **Auctions:** Auctions are stored under `/auctions/{auctionId}`. The `cropListingId` links the auction to the respective crop listing.\n* **Traceability:** Traceability data is stored under `/traceability/{traceabilityId}`.\n* **Transport Requests & Bids**: Transport requests are stored in a top-level collection `/transportRequests`. Bids for a specific request are stored in a subcollection (`/transportRequests/{transportRequestId}/bids/{bidId}`) to model the one-to-many relationship and allow for efficient querying of bids for a single request.\n\nThis design achieves authorization independence by denormalizing user and role information where needed, eliminating the need for `get()` calls in security rules. It supports QAPs by segregating data based on access requirements and by using membership models for collaborative resources."
+    "reasoning": "The Firestore structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization of authorization data. Path-based ownership (`/users/{userId}/...`) is used where possible to simplify security rules. Membership Maps are used for collaborative data where applicable, ensuring clear ownership and access control. The structure also incorporates explicit state modeling using a `status` field and adheres to predictable schema conventions.\n\nSpecifically:\n\n* **Users:** User data is stored in `/users/{userId}` to ensure that user-specific data is easily secured and managed.\n* **Crop Listings:** Crop listings are stored under `/cropListings/{cropListingId}`. The `farmerId` field in each crop listing denormalizes the owner relationship, enabling rules to secure these listings.\n* **Orders:** Orders are stored in `/orders/{orderId}`. The `buyerId` and `cropListingId` fields allow for easy querying of orders by buyers and sellers.\n* **Transports:** Transport data is stored under `/transports/{transportId}`. The `transporterId` allows for straightforward access control based on the transporter.\n* **Soil Analyses, Pest Detections:** These are stored under `/users/{userId}/soilAnalyses/{soilAnalysisId}` and `/users/{userId}/pestDetections/{pestDetectionId}`, respectively, using path-based ownership to easily secure user-specific analyses and detections.\n* **Auctions:** Auctions are stored under `/auctions/{auctionId}`. The `cropListingId` links the auction to the respective crop listing.\n* **Traceability:** Traceability data is stored under `/traceability/{traceabilityId}`.\n* **Transport Requests & Bids**: Transport requests are stored in a top-level collection `/transportRequests`. Bids for a specific request are stored in a subcollection (`/transportRequests/{transportRequestId}/bids/{bidId}`) to model the one-to-many relationship and allow for efficient querying of bids for a single request.\n* **Reviews**: Reviews are stored in a subcollection under the farmer being reviewed (`/users/{farmerId}/reviews/{reviewId}`). This makes it very efficient to query for all reviews for a specific farmer's profile page and secure write access. The `buyerId` and `orderId` within the review document provide the necessary context for authorization rules.\n\nThis design achieves authorization independence by denormalizing user and role information where needed, eliminating the need for `get()` calls in security rules. It supports QAPs by segregating data based on access requirements and by using membership models for collaborative resources."
   }
 }

@@ -109,3 +109,15 @@ export interface TransportBid {
     estimatedDeliveryDate: string;
     status: 'pending' | 'accepted' | 'rejected';
 }
+
+export interface Review {
+  id: string;
+  orderId: string;
+  buyerId: string;
+  farmerId: string;
+  rating: number; // e.g., 1 to 5
+  comment: string;
+  reviewDate: string;
+  // Denormalized data
+  buyerName?: string;
+}
