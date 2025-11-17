@@ -91,18 +91,18 @@ export const initialCrops: CropListing[] = [
     id: '6',
     farmerId: 'farmer-3',
     farmerName: 'Harvest Moon Fields',
-    cropType: 'Lettuce',
-    variety: 'Iceberg',
-    quantity: 800,
-    unit: 'head',
-    pricePerUnit: 120,
+    cropType: 'Avocado',
+    variety: 'Hass',
+    quantity: 300,
+    unit: 'kg',
+    pricePerUnit: 400,
     currency: 'INR',
-    location: 'Arizona, USA',
+    location: 'Mexico',
     harvestDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     listingDate: new Date().toISOString(),
-    description: 'Crisp and refreshing Iceberg lettuce.',
-    imageUrl: 'https://picsum.photos/seed/7/600/400',
-    imageHint: 'lettuce'
+    description: 'Creamy and delicious Hass avocados, perfect for guacamole.',
+    imageUrl: 'https://picsum.photos/seed/6/600/400',
+    imageHint: 'avocado'
   },
 ];
 
