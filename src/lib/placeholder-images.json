@@ -1,3 +1,58 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "wheat",
+      "description": "A golden field of wheat ready for harvest.",
+      "imageUrl": "https://images.unsplash.com/photo-1514481043218-e965c5886f06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx3aGVhdCUyMGZpZWxkfGVufDB8fHx8MTc2MzMwNzY0MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wheat field"
+    },
+    {
+      "id": "corn",
+      "description": "Lush green corn stalks growing in a field.",
+      "imageUrl": "https://images.unsplash.com/photo-1567547921486-f280c2f53b5d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjb3JuJTIwZmllbGR8ZW58MHx8fHwxNzYzMzEyOTUxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "corn field"
+    },
+    {
+      "id": "tomatoes",
+      "description": "Ripe red tomatoes on the vine.",
+      "imageUrl": "https://images.unsplash.com/photo-1623375477547-c73c4f274922?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxyaXBlJTIwdG9tYXRvZXN8ZW58MHx8fHwxNzYzMzQzOTMzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ripe tomatoes"
+    },
+    {
+      "id": "carrots",
+      "description": "Freshly harvested carrots with green tops.",
+      "imageUrl": "https://images.unsplash.com/photo-1717959159782-98c42b1d4f37?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxmcmVzaCUyMGNhcnJvdHN8ZW58MHx8fHwxNzYzMjczMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh carrots"
+    },
+    {
+      "id": "potatoes",
+      "description": "A pile of freshly dug potatoes.",
+      "imageUrl": "https://images.unsplash.com/photo-1741517628528-718bd73c8ad5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8ZnJlc2glMjBwb3RhdG9lc3xlbnwwfHx8fDE3NjMzMDk1OTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh potatoes"
+    },
+    {
+      "id": "diseased-leaf",
+      "description": "A leaf showing signs of a plant disease.",
+      "imageUrl": "https://images.unsplash.com/photo-1606782998290-ae137b816d55?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxkaXNlYXNlZCUyMGxlYWZ8ZW58MHx8fHwxNzYzMzI1MTgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "diseased leaf"
+    },
+    {
+      "id": "lettuce",
+      "description": "Fresh green lettuce heads.",
+      "imageUrl": "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxsZXR0dWNlfGVufDB8fHx8MTc2MzMzODk2OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "lettuce"
+    },
+    {
+      "id": "soybeans",
+      "description": "Soybean pods on a plant.",
+      "imageUrl": "https://images.unsplash.com/photo-1600747476236-76579658b1b1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzb3liZWFuc3xlbnwwfHx8fDE3NjMzNjc0MTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "soybeans"
+    },
+    {
+      "id": "barley",
+      "description": "Golden barley field under the sun.",
+      "imageUrl": "https://images.unsplash.com/photo-1437252611977-07f74518abd7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxiYXJsZXklMjBmaWVsZHxlbnwwfHx8fDE3NjMzNjc0MTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "barley field"
+    }
+  ]
 }
