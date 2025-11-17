@@ -11,6 +11,7 @@ import { calculateFertilizer } from '@/ai/flows/fertilizer-calculator';
 import { predictYield } from '@/ai/flows/yield-prediction';
 import { forecastDemand } from '@/ai/flows/demand-forecast';
 import { assessCreditScore } from '@/ai/flows/credit-score-flow';
+import { assessInsuranceRisk } from '@/ai/flows/insurance-risk-flow';
 
 // This is a simplified way to get the currently logged-in user's ID on the server.
 // In a real app, you'd get this from the session.
@@ -296,6 +297,31 @@ export async function handleCreditScore(prevState: any, formData: FormData) {
 
     try {
         const result = await assessCreditScore(validatedFields.data);
+        return { message: "Assessment complete.", data: result, errors: null };
+    } catch (e: any) {
+        return { message: `error: ${e.message}`, data: null, errors: null };
+    }
+}
+
+const insuranceRiskSchema = z.object({
+  cropType: z.string().min(2, "Please enter a crop type."),
+  region: z.string().min(2, "Please enter a region."),
+  acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be positive.")),
+  historicalEvents: z.string().min(1, "Please select a historical event likelihood."),
+});
+
+export async function handleInsuranceRisk(prevState: any, formData: FormData) {
+    const validatedFields = insuranceRiskSchema.safeParse(Object.fromEntries(formData));
+    if (!validatedFields.success) {
+        return {
+            message: 'error:Invalid form data.',
+            errors: validatedFields.error.flatten().fieldErrors,
+            data: null,
+        };
+    }
+
+    try {
+        const result = await assessInsuranceRisk(validatedFields.data);
         return { message: "Assessment complete.", data: result, errors: null };
     } catch (e: any) {
         return { message: `error: ${e.message}`, data: null, errors: null };
