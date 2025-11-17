@@ -1,5 +1,113 @@
-import type { Crop, Auction, TraceEvent } from './types';
+import type { Crop, Auction, TraceEvent, CropListing } from './types';
 
+// This is now used for seeding the database
+export const initialCrops: CropListing[] = [
+  {
+    id: '1',
+    farmerId: 'farmer-1',
+    farmerName: 'Green Valley Farms',
+    cropType: 'Wheat',
+    variety: 'Winter Red',
+    quantity: 1000,
+    unit: 'ton',
+    pricePerUnit: 250,
+    currency: 'USD',
+    location: 'California, USA',
+    harvestDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
+    listingDate: new Date().toISOString(),
+    description: 'High-quality winter red wheat, perfect for baking.',
+    imageUrl: 'https://picsum.photos/seed/1/600/400',
+    imageHint: 'wheat field'
+  },
+  {
+    id: '2',
+    farmerId: 'farmer-2',
+    farmerName: 'Sunshine Acres',
+    cropType: 'Corn',
+    variety: 'Golden Bantam',
+    quantity: 2500,
+    unit: 'bushel',
+    pricePerUnit: 180,
+    currency: 'USD',
+    location: 'Iowa, USA',
+    harvestDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    listingDate: new Date().toISOString(),
+    description: 'Sweet and juicy Golden Bantam corn.',
+    imageUrl: 'https://picsum.photos/seed/2/600/400',
+    imageHint: 'corn field'
+  },
+  {
+    id: '3',
+    farmerId: 'farmer-3',
+    farmerName: 'Harvest Moon Fields',
+    cropType: 'Tomatoes',
+    variety: 'Roma',
+    quantity: 500,
+    unit: 'kg',
+    pricePerUnit: 3.5,
+    currency: 'USD',
+    location: 'Florida, USA',
+    harvestDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    listingDate: new Date().toISOString(),
+    description: 'Firm and flavorful Roma tomatoes, ideal for sauces.',
+    imageUrl: 'https://picsum.photos/seed/3/600/400',
+    imageHint: 'ripe tomatoes'
+  },
+  {
+    id: '4',
+    farmerId: 'farmer-1',
+    farmerName: 'Green Valley Farms',
+    cropType: 'Carrots',
+    variety: 'Danvers',
+    quantity: 1200,
+    unit: 'kg',
+    pricePerUnit: 1.2,
+    currency: 'USD',
+    location: 'California, USA',
+    harvestDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+    listingDate: new Date().toISOString(),
+    description: 'Crisp and sweet Danvers carrots.',
+    imageUrl: 'https://picsum.photos/seed/4/600/400',
+    imageHint: 'fresh carrots'
+  },
+  {
+    id: '5',
+    farmerId: 'farmer-2',
+    farmerName: 'Sunshine Acres',
+    cropType: 'Potatoes',
+    variety: 'Russet',
+    quantity: 5000,
+    unit: 'kg',
+    pricePerUnit: 0.8,
+    currency: 'USD',
+    location: 'Idaho, USA',
+    harvestDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+    listingDate: new Date().toISOString(),
+    description: 'Starchy Russet potatoes, great for baking and frying.',
+    imageUrl: 'https://picsum.photos/seed/5/600/400',
+    imageHint: 'fresh potatoes'
+  },
+    {
+    id: '6',
+    farmerId: 'farmer-3',
+    farmerName: 'Harvest Moon Fields',
+    cropType: 'Lettuce',
+    variety: 'Iceberg',
+    quantity: 800,
+    unit: 'head',
+    pricePerUnit: 1.5,
+    currency: 'USD',
+    location: 'Arizona, USA',
+    harvestDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    listingDate: new Date().toISOString(),
+    description: 'Crisp and refreshing Iceberg lettuce.',
+    imageUrl: 'https://picsum.photos/seed/7/600/400',
+    imageHint: 'lettuce'
+  },
+];
+
+
+// MOCK DATA - This will be replaced by Firestore data
 export const crops: Crop[] = [
   {
     id: '1',
@@ -31,37 +139,8 @@ export const crops: Crop[] = [
     imageUrl: 'https://picsum.photos/seed/3/600/400',
     imageHint: 'ripe tomatoes'
   },
-  {
-    id: '4',
-    name: 'Carrots',
-    variety: 'Danvers',
-    farmer: 'Green Valley Farms',
-    price: 1.2,
-    quantity: 1200,
-    imageUrl: 'https://picsum.photos/seed/4/600/400',
-    imageHint: 'fresh carrots'
-  },
-  {
-    id: '5',
-    name: 'Potatoes',
-    variety: 'Russet',
-    farmer: 'Sunshine Acres',
-    price: 0.8,
-    quantity: 5000,
-    imageUrl: 'https://picsum.photos/seed/5/600/400',
-    imageHint: 'fresh potatoes'
-  },
-    {
-    id: '6',
-    name: 'Lettuce',
-    variety: 'Iceberg',
-    farmer: 'Harvest Moon Fields',
-    price: 1.5,
-    quantity: 800,
-    imageUrl: 'https://picsum.photos/seed/7/600/400',
-    imageHint: 'lettuce'
-  },
 ];
+
 
 export const auctions: Auction[] = [
     {
@@ -78,13 +157,6 @@ export const auctions: Auction[] = [
         endTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 day from now
         bidderCount: 12,
     },
-    {
-        id: 'auc3',
-        crop: crops[4],
-        currentBid: 0.85,
-        endTime: new Date(Date.now() + 5 * 60 * 60 * 1000), // 5 hours from now
-        bidderCount: 8,
-    }
 ]
 
 export const traceHistory: Record<string, TraceEvent[]> = {

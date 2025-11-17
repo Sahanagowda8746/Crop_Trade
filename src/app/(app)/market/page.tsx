@@ -12,22 +12,24 @@ import {
 } from '@/components/ui/card';
 import { useAppContext } from '@/context/app-context';
 import { Badge } from '@/components/ui/badge';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import type { Crop } from '@/lib/types';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import type { CropListing } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { initialCrops } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 
-function CropCard({ crop }: { crop: Crop }) {
+function CropCard({ crop }: { crop: CropListing }) {
   return (
     <Card className="flex flex-col overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="p-0">
         <div className="relative h-48 w-full">
           <Image
-            src={crop.imageUrl}
-            alt={crop.name}
+            src={crop.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
+            alt={crop.cropType}
             fill
             className="object-cover"
-            data-ai-hint={crop.imageHint}
+            data-ai-hint={crop.imageHint || 'crop'}
           />
         </div>
       </CardHeader>
@@ -35,14 +37,14 @@ function CropCard({ crop }: { crop: Crop }) {
         <Badge variant="secondary" className="mb-2">
           {crop.variety}
         </Badge>
-        <CardTitle className="font-headline text-2xl">{crop.name}</CardTitle>
+        <CardTitle className="font-headline text-2xl">{crop.cropType}</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
-          Sold by {crop.farmer}
+          Sold by {crop.farmerName}
         </CardDescription>
       </CardContent>
       <CardFooter className="p-4 flex justify-between items-center bg-muted/50">
         <div className="font-semibold text-lg text-primary">
-          ${crop.price.toFixed(2)}
+          ${crop.pricePerUnit.toFixed(2)}
           <span className="text-xs text-muted-foreground">
             {' '}
             / {crop.unit || 'kg'}
@@ -76,29 +78,60 @@ function CropSkeleton() {
 export default function MarketPage() {
   const { setPageTitle } = useAppContext();
   const firestore = useFirestore();
+  const { toast } = useToast();
   
-  const cropsCollection = useMemoFirebase(() => collection(firestore, 'cropListings'), [firestore]);
-  const { data: crops, isLoading } = useCollection<Crop>(cropsCollection);
+  const cropsCollectionRef = useMemoFirebase(() => collection(firestore, 'cropListings'), [firestore]);
+  const { data: crops, isLoading } = useCollection<CropListing>(cropsCollectionRef);
 
   useEffect(() => {
     setPageTitle('Marketplace');
   }, [setPageTitle]);
 
+  const handleSeedData = () => {
+    toast({
+        title: 'Seeding Data',
+        description: 'Adding initial crop data to the database...',
+    });
+
+    const promises = initialCrops.map((crop) => {
+        const docRef = doc(cropsCollectionRef, crop.id);
+        // Using setDocumentNonBlocking to ensure we use the predefined IDs
+        // and avoid duplicates on multiple clicks.
+        setDocumentNonBlocking(docRef, crop, {});
+    });
+    
+    toast({
+        title: 'Success',
+        description: `${initialCrops.length} crop listings have been added to the database.`,
+        variant: 'default',
+    });
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {isLoading && Array.from({ length: 8 }).map((_, i) => <CropSkeleton key={i} />)}
-      {crops && crops.map(crop => <CropCard key={crop.id} crop={crop} />)}
-       {!isLoading && crops?.length === 0 && (
-        <div className="col-span-full text-center py-12">
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle>No Crops Available</CardTitle>
-              <CardDescription>
-                There are currently no crop listings in the marketplace. Check back later or add new listings if you're a farmer.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {isLoading && Array.from({ length: 8 }).map((_, i) => <CropSkeleton key={i} />)}
+        {crops && crops.map(crop => <CropCard key={crop.id} crop={crop} />)}
+        {!isLoading && crops?.length === 0 && (
+          <div className="col-span-full text-center py-12">
+            <Card className="max-w-md mx-auto">
+              <CardHeader>
+                <CardTitle>No Crops Available</CardTitle>
+                <CardDescription>
+                  The marketplace is currently empty. Click the button below to add some sample data.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <Button onClick={handleSeedData}>Seed Data</Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+      {crops && crops.length > 0 && (
+          <div className="text-center pt-4">
+              <Button onClick={handleSeedData} variant="outline">Re-seed Data</Button>
+          </div>
       )}
     </div>
   );

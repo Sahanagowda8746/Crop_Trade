@@ -19,6 +19,26 @@ export interface Crop {
   unit?: string;
 }
 
+export interface CropListing {
+  id: string;
+  farmerId: string;
+  farmerName: string;
+  cropType: string;
+  variety: string;
+  quantity: number;
+  unit: string;
+  pricePerUnit: number;
+  currency: string;
+  location: string;
+  harvestDate: string;
+  listingDate: string;
+  description: string;
+  imageUrl?: string;
+  imageHint?: string;
+  traceHash?: string;
+}
+
+
 export interface Auction {
   id: string;
   crop: Crop;
