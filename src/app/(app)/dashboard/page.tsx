@@ -1,6 +1,6 @@
 
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/context/app-context';
 import { DollarSign, List, Calendar, Bell, LineChart, Thermometer, Wind, Droplet, Clock, PackageCheck, Tractor, CheckCircle, Wheat, Cloudy } from 'lucide-react';
@@ -18,9 +18,41 @@ const marketRates = [
 
 export default function DashboardPage() {
   const { setPageTitle } = useAppContext();
-  
+  const [location, setLocation] = useState<{ latitude: number, longitude: number } | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
   useEffect(() => {
     setPageTitle('Dashboard');
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          setLocationError(null);
+        },
+        (error) => {
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              setLocationError("Location access denied.");
+              break;
+            case error.POSITION_UNAVAILABLE:
+              setLocationError("Location information is unavailable.");
+              break;
+            case error.TIMEOUT:
+              setLocationError("The request to get user location timed out.");
+              break;
+            default:
+              setLocationError("An unknown error occurred.");
+              break;
+          }
+        }
+      );
+    } else {
+      setLocationError("Geolocation is not supported by this browser.");
+    }
   }, [setPageTitle]);
 
 
@@ -162,7 +194,9 @@ export default function DashboardPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-xl">Weather & Forecast</CardTitle>
-                    <CardDescription>Pune, Maharashtra</CardDescription>
+                    <CardDescription>
+                       {location ? `Lat: ${location.latitude.toFixed(2)}, Lon: ${location.longitude.toFixed(2)}` : locationError ? locationError : 'Loading location...'}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                      <div className="flex justify-between items-center pb-4 border-b">
