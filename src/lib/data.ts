@@ -117,3 +117,5 @@ export const traceHistory: Record<string, TraceEvent[]> = {
         { event: 'Delivered', timestamp: new Date('2023-08-06T16:00:00Z').toISOString(), location: 'Buyer Warehouse, Cityville', details: 'Signed by: John Doe' }
     ]
 }
+
+    
