@@ -2,60 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer base {
   :root {
-    --background: 38 43% 88%; /* Light Earth / Background Neutral: #E6D8C3 */
-    --foreground: 28 33% 22%; /* Dark Soil Brown: #4A3728 */
-    --card: 38 40% 92%; /* A slightly lighter version of background */
-    --card-foreground: 28 33% 22%;
-    --popover: 38 40% 92%;
-    --popover-foreground: 28 33% 22%;
-    --primary: 148 60% 23%; /* Organic Farmland Green: #166F46 */
-    --primary-foreground: 148 20% 95%;
-    --secondary: 147 25% 65%; /* Light Eco Green: #8BD693 */
-    --secondary-foreground: 148 60% 15%;
-    --muted: 33 25% 75%; /* Harvest Wheat Brown: #A57A52 */
-    --muted-foreground: 28 33% 30%;
-    --accent: 43 89% 60%; /* Golden Wheat / Harvest Accent: #F4C542 */
-    --accent-foreground: 28 33% 15%;
+    --background: 45 33% 95%; /* #f5f5dc light beige */
+    --foreground: 24 10% 25%;
+    --card: 45 33% 97%;
+    --card-foreground: 24 10% 25%;
+    --popover: 45 33% 97%;
+    --popover-foreground: 24 10% 25%;
+    --primary: 114 24% 54%; /* #70a96a earthy green */
+    --primary-foreground: 120 100% 10%;
+    --secondary: 114 15% 75%;
+    --secondary-foreground: 120 100% 10%;
+    --muted: 45 20% 85%;
+    --muted-foreground: 24 10% 45%;
+    --accent: 34 100% 63%; /* #ffb347 golden yellow */
+    --accent-foreground: 24 10% 15%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 32 25% 65%; /* Rich Clay Brown: #6B4F3A */
-    --input: 32 25% 70%;
-    --ring: 148 60% 23%; /* Organic Farmland Green */
-    --chart-1: 148 60% 23%;
-    --chart-2: 43 89% 60%;
-    --chart-3: 151 55% 42%;
-    --chart-4: 33 25% 75%;
-    --chart-5: 27 87% 67%;
+    --border: 45 20% 88%;
+    --input: 45 20% 90%;
+    --ring: 114 24% 54%;
     --radius: 0.5rem;
+    --chart-1: 114 30% 50%;
+    --chart-2: 34 90% 60%;
+    --chart-3: 114 20% 70%;
+    --chart-4: 34 80% 80%;
+    --chart-5: 114 15% 85%;
   }
+
   .dark {
-    --background: 28 33% 10%; /* Dark Soil Brown, very dark variant */
-    --foreground: 38 43% 88%; /* Light Earth / Background Neutral */
-    --card: 28 33% 12%;
-    --card-foreground: 38 43% 88%;
-    --popover: 28 33% 12%;
-    --popover-foreground: 38 43% 88%;
-    --primary: 147 30% 60%; /* Lighter Fresh Crop Green for dark mode */
-    --primary-foreground: 148 60% 15%;
-    --secondary: 32 25% 40%; /* Rich Clay Brown */
-    --secondary-foreground: 38 43% 88%;
-    --muted: 32 25% 25%; /* Darker Clay Brown */
-    --muted-foreground: 38 43% 70%;
-    --accent: 43 89% 60%; /* Golden Wheat / Harvest Accent */
-    --accent-foreground: 28 33% 15%;
+    --background: 24 10% 10%;
+    --foreground: 45 33% 95%;
+    --card: 24 10% 12%;
+    --card-foreground: 45 33% 95%;
+    --popover: 24 10% 12%;
+    --popover-foreground: 45 33% 95%;
+    --primary: 114 24% 64%;
+    --primary-foreground: 120 100% 10%;
+    --secondary: 114 15% 35%;
+    --secondary-foreground: 45 33% 95%;
+    --muted: 24 10% 25%;
+    --muted-foreground: 45 20% 75%;
+    --accent: 34 100% 63%;
+    --accent-foreground: 24 10% 15%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 32 25% 30%; /* Darker Rich Clay Brown */
-    --input: 32 25% 30%;
-    --ring: 147 30% 60%;
-    --chart-1: 147 30% 60%;
-    --chart-2: 43 89% 60%;
+    --border: 24 10% 20%;
+    --input: 24 10% 22%;
+    --ring: 114 24% 64%;
+    --chart-1: 114 30% 50%;
+    --chart-2: 34 90% 60%;
+    --chart-3: 114 20% 70%;
+    --chart-4: 34 80% 80%;
+    --chart-5: 114 15% 85%;
   }
 }
 
