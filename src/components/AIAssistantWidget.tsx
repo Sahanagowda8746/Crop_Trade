@@ -26,7 +26,7 @@ export default function AIAssistantWidget() {
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  
   const recognitionRef = useRef<any>(null);
 
 
@@ -51,20 +51,26 @@ export default function AIAssistantWidget() {
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         setInput(transcript);
-        // Use a small delay to allow state to update before submitting
+        
+        // The form submission will be triggered by the user or by this event
+        // We set the input and can programmatically submit if desired
+        // A small delay ensures React state updates before form submission.
         setTimeout(() => {
-            formRef.current?.requestSubmit();
+            const form = document.getElementById('ai-assistant-form') as HTMLFormElement;
+            form?.requestSubmit();
         }, 100);
       };
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
+        if (event.error !== 'aborted') { // Don't show toast if we intentionally stop it
+             toast({
+              variant: 'destructive',
+              title: 'Speech Recognition Error',
+              description: event.error === 'not-allowed' ? 'Microphone access was denied.' : `An error occurred: ${event.error}`,
+            });
+        }
         setIsListening(false);
-        toast({
-          variant: 'destructive',
-          title: 'Speech Recognition Error',
-          description: event.error === 'not-allowed' ? 'Microphone access was denied.' : `An error occurred: ${event.error}`,
-        });
       };
       
       recognitionRef.current = recognition;
@@ -107,7 +113,6 @@ export default function AIAssistantWidget() {
         console.error("Could not start recognition", e);
         if ((e as Error).name === 'InvalidStateError') {
           // This can happen if start() is called while it's already running.
-          // The `isListening` state should prevent this, but as a fallback:
           console.log("Recognition is already active.");
         } else {
           toast({
@@ -158,6 +163,9 @@ export default function AIAssistantWidget() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isListening) {
+        stopListening();
+    }
     if (!input.trim()) return;
 
     const userMessage: Message = { role: 'user', content: input };
@@ -250,7 +258,7 @@ export default function AIAssistantWidget() {
                 </div>
               </ScrollArea>
               <div className="p-4 border-t">
-                <form ref={formRef} onSubmit={handleSubmit} className="flex items-center gap-2">
+                <form id="ai-assistant-form" onSubmit={handleSubmit} className="flex items-center gap-2">
                   <Input
                     value={input}
                     onChange={e => setInput(e.target.value)}
