@@ -1,3 +1,4 @@
+
 import type { UserRole } from "@/context/app-context";
 import { z } from "zod";
 
@@ -86,6 +87,7 @@ export interface Order {
   deliveryAddress: string;
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
   transportId?: string;
+  paymentMethod?: 'UPI' | 'Card';
   // Denormalized data for easier display
   cropListing?: CropListing;
   buyer?: UserProfile;
@@ -157,5 +159,3 @@ export interface SoilKitOrder {
     soilKitQr: string;
     labReportUrl: string | null;
 }
-
-    

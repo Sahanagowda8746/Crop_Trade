@@ -1,6 +1,6 @@
 
 'use client';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,7 @@ import type { CropListing } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initialCrops } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, Pencil } from 'lucide-react';
+import { PlusCircle, Trash2, Pencil, CreditCard, Send } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,8 +32,66 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
-function CropCard({ crop, onBuy, onRemove, currentUserId }: { crop: CropListing, onBuy: (crop: CropListing) => void, onRemove: (cropId: string) => void, currentUserId?: string }) {
+function PaymentDialog({ crop, onConfirm }: { crop: CropListing; onConfirm: (crop: CropListing, paymentMethod: 'UPI' | 'Card') => void; }) {
+    const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Card'>('UPI');
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleConfirm = () => {
+        onConfirm(crop, paymentMethod);
+        setIsOpen(false);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button disabled={crop.quantity <= 0}>Buy Now</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Complete Your Purchase</DialogTitle>
+                    <DialogDescription>Select a payment method for '{crop.cropType}'.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <RadioGroup defaultValue="upi" onValueChange={(value: 'UPI' | 'Card') => setPaymentMethod(value)}>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="UPI" id="upi" />
+                            <Label htmlFor="upi" className="flex items-center gap-2 cursor-pointer">
+                                <Send className="h-5 w-5 text-primary" />
+                                UPI
+                            </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Card" id="card" />
+                            <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer">
+                                <CreditCard className="h-5 w-5 text-primary" />
+                                Card (Credit/Debit)
+                            </Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                    <Button onClick={handleConfirm}>Confirm Order</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function CropCard({ crop, onBuy, onRemove, currentUserId }: { crop: CropListing, onBuy: (crop: CropListing, paymentMethod: 'UPI' | 'Card') => void, onRemove: (cropId: string) => void, currentUserId?: string }) {
   const isOwner = crop.farmerId === currentUserId;
   const isOutOfStock = crop.quantity <= 0;
 
@@ -104,7 +162,7 @@ function CropCard({ crop, onBuy, onRemove, currentUserId }: { crop: CropListing,
               </AlertDialog>
             </>
         ) : (
-            <Button onClick={() => onBuy(crop)} disabled={isOutOfStock}>Buy Now</Button>
+            <PaymentDialog crop={crop} onConfirm={onBuy} />
         )}
         </div>
       </CardFooter>
@@ -175,7 +233,7 @@ export default function MarketPage() {
     });
   };
   
-  const handleBuy = async (crop: CropListing) => {
+  const handleBuy = async (crop: CropListing, paymentMethod: 'UPI' | 'Card') => {
     if (role !== 'Buyer') {
       toast({
         variant: 'destructive',
@@ -208,6 +266,7 @@ export default function MarketPage() {
         deliveryAddress: '123 Main St, Anytown, USA', // Placeholder address
         status: 'pending',
         cropListing: crop, // Denormalize for easy display
+        paymentMethod,
     };
     
     await addDocumentNonBlocking(ordersCollectionRef, newOrder);
