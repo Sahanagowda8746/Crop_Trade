@@ -11,3 +11,4 @@ import '@/ai/flows/soil-analysis-from-prompt.ts';
 import '@/ai/flows/fertilizer-calculator.ts';
 import '@/ai/flows/yield-prediction.ts';
 import '@/ai/flows/demand-forecast.ts';
+import '@/ai/flows/credit-score-flow.ts';
