@@ -121,7 +121,7 @@ export default function FarmerProfilePage() {
   
   const isLoading = isLoadingFarmer || isLoadingCrops || isLoadingReviews;
 
-  if (isLoadingFarmer) {
+  if (isLoadingFarmer || !farmerId) {
       return (
           <div className="space-y-6">
               <Card className="flex flex-col md:flex-row items-center p-6 space-y-4 md:space-y-0 md:space-x-6">

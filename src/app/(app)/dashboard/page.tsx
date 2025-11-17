@@ -14,15 +14,15 @@ export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
 
   const cropsQuery = useMemoFirebase(() => {
-    if (!firestore || isUserLoading || !user) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, 'cropListings');
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, user]);
   const { data: crops, isLoading: isLoadingCrops } = useCollection<CropListing>(cropsQuery);
 
   const auctionsQuery = useMemoFirebase(() => {
-    if (!firestore || isUserLoading || !user) return null;
+    if (!firestore || !user) return null;
     return query(collection(firestore, 'auctions'), where('status', '==', 'open'));
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, user]);
   const { data: auctions, isLoading: isLoadingAuctions } = useCollection<Auction>(auctionsQuery);
   
   const isLoading = isLoadingCrops || isLoadingAuctions || isUserLoading;

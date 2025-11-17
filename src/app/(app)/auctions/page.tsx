@@ -166,10 +166,9 @@ export default function AuctionsPage() {
   const { user, isUserLoading } = useUser();
 
   const auctionsQuery = useMemoFirebase(() => {
-    // We must wait for the user to be loaded and present.
-    if (!firestore || isUserLoading || !user) return null;
+    if (!firestore || !user) return null;
     return query(collection(firestore, 'auctions'), where('status', '==', 'open'));
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, user]);
 
   const { data: auctions, isLoading } = useCollection<Auction>(auctionsQuery);
 

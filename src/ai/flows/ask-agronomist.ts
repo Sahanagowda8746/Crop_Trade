@@ -29,7 +29,7 @@ export async function askAgronomist(
   return askAgronomistFlow(input);
 }
 
-const prompt = ai.definePrompt({
+const agronomistPrompt = ai.definePrompt({
   name: 'askAgronomistPrompt',
   input: {schema: AskAgronomistInputSchema},
   output: {schema: AskAgronomistOutputSchema},
@@ -48,7 +48,7 @@ const askAgronomistFlow = ai.defineFlow(
     outputSchema: AskAgronomistOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await agronomistPrompt(input);
     return output!;
   }
 );
