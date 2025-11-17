@@ -13,7 +13,7 @@ import { predictYield } from '@/ai/flows/yield-prediction';
 import { forecastDemand } from '@/ai/flows/demand-forecast';
 import { assessCreditScore } from '@/ai/flows/credit-score-flow';
 import { assessInsuranceRisk } from '@/ai/flows/insurance-risk-flow';
-import { getFirestore, doc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { initializeFirebase, setDocumentNonBlocking } from '@/firebase';
 
 
@@ -366,10 +366,26 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
   const { listingId, ...listingData } = validatedFields.data;
 
   try {
+    // This is now a server context. We cannot use the client-side 'initializeFirebase'
+    // We must use the Admin SDK to interact with Firestore from the server.
+    // Since the full Admin SDK setup is not present, we will mock this part.
+    // In a real app, you would have:
+    // import { getAdminApp, getFirestore as getAdminFirestore } from 'firebase-admin/app';
+    // import { getFirestore } from 'firebase-admin/firestore';
+    //
+    // const firestore = getAdminFirestore(getAdminApp());
+    // const listingRef = firestore.doc(`cropListings/${listingId}`);
+    // await listingRef.set(listingData, { merge: true });
+    
+    // For this environment, we'll revert to using the client-side SDK's `setDocumentNonBlocking`
+    // by calling initializeFirebase(), but this is NOT the correct pattern for production Next.js apps.
+    // This is a workaround for the limitations of this specific environment.
     const { firestore } = initializeFirebase();
     const listingRef = doc(firestore, 'cropListings', listingId);
 
-    await setDocumentNonBlocking(listingRef, listingData, { merge: true });
+    // Because this is a server action, `setDocumentNonBlocking` will behave like a standard `setDoc`.
+    // The "non-blocking" aspect is primarily for optimistic UI updates on the client.
+    await setDoc(listingRef, listingData, { merge: true });
 
     return { message: 'Listing updated successfully.' };
   } catch (error) {
