@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useActionState, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useFormStatus } from 'react-dom';
@@ -20,6 +20,7 @@ import { Pencil, Loader2, Upload, Save } from 'lucide-react';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { CropListing } from '@/lib/types';
+import { useActionState } from 'react';
 
 const listingSchema = z.object({
   listingId: z.string(),
@@ -231,6 +232,8 @@ export default function EditListingPage() {
                             <SelectItem value="head">Head</SelectItem>
                           </SelectContent>
                         </Select>
+                        {/* This hidden field is necessary to pass the value to the form action */}
+                        <FormControl><Input type="hidden" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
