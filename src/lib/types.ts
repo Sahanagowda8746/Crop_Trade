@@ -58,6 +58,7 @@ export interface Auction {
   currentBid?: number;
   currentBidderId?: string;
   status: 'open' | 'closed';
+  bidderCount?: number;
 
   // Denormalized data
   cropListing?: CropListing;
@@ -96,12 +97,14 @@ export interface TransportRequest {
     deliveryLocation: string;
     requiredVehicle: string;
     status: 'open' | 'in-progress' | 'completed';
+    bidCount?: number;
 }
 
 export interface TransportBid {
     id: string;
     transportRequestId: string;
     transporterId: string;
+    transporterName: string;
     bidAmount: number;
     estimatedDeliveryDate: string;
     status: 'pending' | 'accepted' | 'rejected';

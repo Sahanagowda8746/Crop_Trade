@@ -7,7 +7,7 @@ import { collection, query, where } from 'firebase/firestore';
 import type { TransportRequest } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { MapPin, Package, Truck, User, HardHat, Info } from 'lucide-react';
+import { MapPin, Truck, Info } from 'lucide-react';
 import Link from 'next/link';
 
 function RequestCard({ request }: { request: TransportRequest }) {
@@ -24,15 +24,15 @@ function RequestCard({ request }: { request: TransportRequest }) {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                 <div className="flex items-center gap-4">
-                    <MapPin className="text-muted-foreground" />
+                 <div className="flex items-start gap-4">
+                    <MapPin className="text-muted-foreground mt-1" />
                     <div>
                         <p className="font-semibold">From: {request.pickupLocation}</p>
                         <p className="text-sm text-muted-foreground">To: {request.deliveryLocation}</p>
                     </div>
                 </div>
                  <div className="flex items-center gap-4">
-                    <HardHat className="text-muted-foreground" />
+                    <Truck className="text-muted-foreground" />
                     <div>
                         <p className="font-semibold">Vehicle Required</p>
                         <p className="text-sm text-muted-foreground">{request.requiredVehicle || 'Not specified'}</p>
@@ -42,15 +42,17 @@ function RequestCard({ request }: { request: TransportRequest }) {
                     <Info className="text-muted-foreground" />
                     <div>
                          <p className="font-semibold">Bids</p>
-                        <p className="text-sm text-muted-foreground">3 bids placed</p>
+                        <p className="text-sm text-muted-foreground">{request.bidCount || 0} bids placed</p>
                     </div>
                 </div>
             </CardContent>
             <CardContent>
-                 <Button className="w-full">
-                    <Truck className="mr-2 h-4 w-4" />
-                    View Bids & Place Offer
-                </Button>
+                <Link href={`/transport/${request.id}`} className="w-full">
+                    <Button className="w-full">
+                        <Truck className="mr-2 h-4 w-4" />
+                        View Bids & Place Offer
+                    </Button>
+                 </Link>
             </CardContent>
         </Card>
     );

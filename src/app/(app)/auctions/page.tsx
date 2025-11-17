@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { useAppContext } from '@/context/app-context';
 import type { Auction } from '@/lib/types';
-import { Gavel, Clock, Tag, Package } from 'lucide-react';
+import { Gavel, Clock, Users, Tag, Package } from 'lucide-react';
 import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase, useUser, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
@@ -166,9 +166,10 @@ export default function AuctionsPage() {
   const { user, isUserLoading } = useUser();
 
   const auctionsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    // We must wait for the user to be loaded and present.
+    if (!firestore || isUserLoading || !user) return null;
     return query(collection(firestore, 'auctions'), where('status', '==', 'open'));
-  }, [firestore, user]);
+  }, [firestore, user, isUserLoading]);
 
   const { data: auctions, isLoading } = useCollection<Auction>(auctionsQuery);
 
@@ -262,6 +263,12 @@ export default function AuctionsPage() {
                     </div>
                   </div>
                </div>
+                <div className="flex items-center gap-2 text-sm pt-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    {auction.bidderCount || 0} {auction.bidderCount === 1 ? 'bidder' : 'bidders'}
+                  </span>
+                </div>
             </CardContent>
             <CardFooter>
               {user && <PlaceBidDialog auction={auction} userId={user.uid} />}
