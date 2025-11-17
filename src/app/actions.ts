@@ -106,7 +106,8 @@ export async function handleAskAgronomist(question: string) {
     }
 
     try {
-        const result = await askAgronomist({ question });
+        const userId = await getUserId();
+        const result = await askAgronomist({ question, userId });
         return { message: 'Answer complete.', data: result };
     } catch (error) {
         console.error(error);
