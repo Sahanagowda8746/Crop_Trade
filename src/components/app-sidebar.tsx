@@ -34,29 +34,36 @@ import {
   Bot,
   Radar,
   Cloudy,
-  Waypoints
+  Waypoints,
+  LifeBuoy
 } from 'lucide-react';
+
+const mainNavItems = [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Farmer', 'Admin'] },
+    { href: '/market', label: 'Marketplace', icon: Store, roles: ['Farmer', 'Buyer', 'Admin'] },
+    { href: '/auctions', label: 'Auctions', icon: Gavel, roles: ['Farmer', 'Buyer', 'Admin'] },
+    { href: '/orders', label: 'My Orders', icon: Package, roles: ['Buyer'] },
+    { href: '/transport', label: 'Transport Jobs', icon: Truck, roles: ['Transporter'] },
+    { href: '/my-soil-tests', label: 'My Tests', icon: TestTube, roles: ['Farmer', 'Admin'] },
+    { href: '/traceability', label: 'Traceability', icon: FileCheck2, roles: ['Farmer', 'Buyer', 'Admin'] },
+]
 
 const aiAdvisoryItems = [
     { href: '/soil-analysis', label: 'Soil Analysis', icon: TestTube, roles: ['Farmer', 'Admin'] },
-    { href: '/demand-forecast', label: 'Demand Forecast', icon: LineChart, roles: ['Farmer', 'Admin'] },
     { href: '/pest-detection', label: 'Disease Detection', icon: Radar, roles: ['Farmer', 'Admin'] },
     { href: '/fertilizer-calculator', label: 'Fertilizer Calculator', icon: Calculator, roles: ['Farmer', 'Admin'] },
-    { href: '/crop-calendar', label: 'Crop Calendar', icon: Calendar, roles: ['Farmer', 'Admin'] },
     { href: '/yield-prediction', label: 'Yield Prediction', icon: AreaChart, roles: ['Farmer', 'Admin'] },
+    { href: '/demand-forecast', label: 'Demand Forecast', icon: LineChart, roles: ['Farmer', 'Admin'] },
     { href: '/credit-score', label: 'Credit Score', icon: CircleDollarSign, roles: ['Farmer', 'Admin'] },
     { href: '/insurance-risk', label: 'Insurance Risk', icon: ShieldCheck, roles: ['Farmer', 'Admin'] },
-    { href: '/profit-calculator', label: 'Profit Calculator', icon: CircleDollarSign, roles: ['Farmer', 'Admin'] },
-    { href: '/expert-matchmaking', label: 'Expert Matchmaking', icon: Users, roles: ['Farmer'] },
-    { href: '/video-tutorials', label: 'Video Tutorials', icon: Video, roles: ['Farmer', 'Buyer', 'Transporter', 'Admin'] },
+    
 ];
 
 const smartFarmingItems = [
-    { href: '/smart-dashboard', label: 'Smart Dashboard', icon: LayoutDashboard, roles: ['Farmer'] },
+    { href: '/smart-dashboard', label: 'IoT Dashboard', icon: LayoutDashboard, roles: ['Farmer'] },
     { href: '/smart-irrigation', label: 'Smart Irrigation', icon: Cloudy, roles: ['Farmer'] },
     { href: '/drone-mapping', label: 'Drone Mapping', icon: Waypoints, roles: ['Farmer'] },
 ];
-
 
 export default function AppSidebar() {
   const { role } = useAppContext();
@@ -74,11 +81,24 @@ export default function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
+            {mainNavItems.map(item => (
+                item.roles.includes(role) && (
+                    <SidebarMenuItem key={item.href}>
+                        <Link href={item.href}>
+                            <SidebarMenuButton isActive={pathname.startsWith(item.href)} tooltip={item.label}>
+                            <item.icon />
+                            <span>{item.label}</span>
+                            </SidebarMenuButton>
+                        </Link>
+                    </SidebarMenuItem>
+                )
+            ))}
+            
             <SidebarMenuItem>
-              <Link href="/dashboard">
-                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Dashboard">
-                  <LayoutDashboard />
-                  <span>Dashboard</span>
+              <Link href="/ai-tools">
+                <SidebarMenuButton isActive={pathname === '/ai-tools'} tooltip="AI & Lab Tools">
+                  <BrainCircuit />
+                  <span>AI & Lab Tools</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -113,6 +133,26 @@ export default function AppSidebar() {
                         </SidebarMenuItem>
                     )
                 ))}
+            </SidebarGroup>
+            
+            <SidebarGroup>
+                <SidebarGroupLabel>Support</SidebarGroupLabel>
+                 <SidebarMenuItem>
+                    <Link href="/support">
+                        <SidebarMenuButton isActive={pathname.startsWith('/support')} tooltip="Help & Support">
+                        <LifeBuoy />
+                        <span>Help & Support</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Link href="/tutorials">
+                        <SidebarMenuButton isActive={pathname.startsWith('/tutorials')} tooltip="Video Tutorials">
+                        <Video />
+                        <span>Video Tutorials</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
             </SidebarGroup>
 
         </SidebarMenu>
