@@ -1,16 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/app-context';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import type { SoilAnalysis, SoilKitOrder } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TestTube, FlaskConical, Bot, CheckCircle, Clock, Package, Truck } from 'lucide-react';
+import { TestTube, FlaskConical, Bot, CheckCircle, Clock, Package, Truck, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 function SoilAnalysisCard({ report }: { report: SoilAnalysis }) {
     return (
@@ -48,14 +49,28 @@ function SoilAnalysisCard({ report }: { report: SoilAnalysis }) {
     )
 }
 
-function SoilKitOrderCard({ order }: { order: SoilKitOrder }) {
+function SoilKitOrderCard({ order, role }: { order: SoilKitOrder, role: string }) {
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
     const statusIcons = {
         ordered: <Package className="w-4 h-4 mr-2" />,
         shipped: <Truck className="w-4 h-4 mr-2" />,
         received: <CheckCircle className="w-4 h-4 mr-2" />,
-        processing: <FlaskConical className="w-4 h-4 mr-2" />,
+        processing: <FlaskConical className="w-4 h-4 mr-2 animate-pulse" />,
         completed: <CheckCircle className="w-4 h-4 mr-2 text-green-500" />,
     }
+    
+    const handleUploadReport = () => {
+        if (!firestore) return;
+        toast({ title: 'Simulating Upload...', description: 'Updating order status to completed and adding report URL.'});
+        const orderRef = doc(firestore, 'soilKitOrders', order.id);
+        updateDocumentNonBlocking(orderRef, {
+            status: 'completed',
+            labReportUrl: 'https://example.com/sample-lab-report.pdf' // Placeholder URL
+        });
+        toast({ title: 'Report "Uploaded"!', description: 'The farmer can now view their report.'});
+    };
 
     return (
         <Card>
@@ -80,18 +95,23 @@ function SoilKitOrderCard({ order }: { order: SoilKitOrder }) {
                         Tracking ID: <span className="font-mono text-primary">{order.trackingId}</span>
                     </p>
                 )}
-                 {order.status === 'completed' && order.labReportUrl && (
+                 {order.status === 'completed' && order.labReportUrl ? (
                     <Button asChild size="sm">
                         <Link href={order.labReportUrl} target="_blank">View Lab Report</Link>
                     </Button>
-                )}
+                ) : role === 'Admin' && order.status === 'processing' ? (
+                     <Button size="sm" variant="secondary" onClick={handleUploadReport}>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload Report
+                    </Button>
+                ) : null}
             </CardContent>
         </Card>
     );
 }
 
 export default function MySoilTestsPage() {
-    const { setPageTitle } = useAppContext();
+    const { setPageTitle, role } = useAppContext();
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
@@ -106,8 +126,12 @@ export default function MySoilTestsPage() {
 
     const kitOrdersQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
+        // Admins should see all orders to manage them
+        if (role === 'Admin') {
+            return query(collection(firestore, 'soilKitOrders'), orderBy('orderDate', 'desc'));
+        }
         return query(collection(firestore, 'soilKitOrders'), where('userId', '==', user.uid), orderBy('orderDate', 'desc'));
-    }, [user, firestore]);
+    }, [user, firestore, role]);
 
     const { data: aiReports, isLoading: isLoadingAiReports } = useCollection<SoilAnalysis>(aiReportsQuery);
     const { data: kitOrders, isLoading: isLoadingKitOrders } = useCollection<SoilKitOrder>(kitOrdersQuery);
@@ -119,7 +143,7 @@ export default function MySoilTestsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl">My Soil Tests</CardTitle>
-                    <CardDescription>View your AI-driven soil analyses and track your physical soil kit orders.</CardDescription>
+                    <CardDescription>View your AI-driven soil analyses and track your physical soil kit orders. {role === 'Admin' && <span className="font-bold text-primary">(Admin View)</span>}</CardDescription>
                 </CardHeader>
             </Card>
 
@@ -143,7 +167,7 @@ export default function MySoilTestsPage() {
                             </CardHeader>
                             <CardContent>
                                 <Button asChild>
-                                    <Link href="/ai-tools/soil-analysis">Run First Analysis</Link>
+                                    <Link href="/ai-tools">Run First Analysis</Link>
                                 </Button>
                             </CardContent>
                         </Card>
@@ -173,12 +197,10 @@ export default function MySoilTestsPage() {
                         </Card>
                     )}
                     <div className="grid md:grid-cols-2 gap-4">
-                        {kitOrders?.map(order => <SoilKitOrderCard key={order.id} order={order} />)}
+                        {kitOrders?.map(order => <SoilKitOrderCard key={order.id} order={order} role={role}/>)}
                     </div>
                 </TabsContent>
             </Tabs>
         </div>
     );
 }
-
-    

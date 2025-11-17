@@ -146,14 +146,16 @@ service cloud.firestore {
      * @description Rules for soil kit orders.
      * @path /soilKitOrders/{orderId}
      * @allow (create) Any authenticated user can create an order for a soil kit.
-     * @allow (read) Users can only read their own soil kit orders.
-     * @principle Enforces ownership for creating and reading soil kit orders.
+     * @allow (read) Users can only read their own soil kit orders. Admins can read all orders.
+     * @allow (update) Admins can update the status and report URL.
+     * @principle Enforces ownership for creating and reading soil kit orders, with admin override.
      */
     match /soilKitOrders/{orderId} {
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        allow read, list: if isSignedIn() && isOwner(resource.data.userId);
-        // Admin/system role should update status
-        allow update: if false; 
+        allow read: if isSignedIn() && (isOwner(resource.data.userId) || hasRole('Admin'));
+        allow list: if hasRole('Admin'); // Allow admins to list all orders
+        allow update: if hasRole('Admin')
+                      && request.resource.data.userId == resource.data.userId; // Ensure userId is not changed
     }
 
     /**
@@ -256,5 +258,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
