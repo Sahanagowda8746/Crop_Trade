@@ -13,7 +13,7 @@ import { useAppContext } from '@/context/app-context';
 import type { Auction } from '@/lib/types';
 import { Gavel, Clock, Users, Tag, Package } from 'lucide-react';
 import Image from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
@@ -63,11 +63,12 @@ const TimeLeft = ({ endTime }: { endTime: string }) => {
 export default function AuctionsPage() {
   const { setPageTitle } = useAppContext();
   const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
 
   const auctionsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return query(collection(firestore, 'auctions'), where('status', '==', 'open'));
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: auctions, isLoading } = useCollection<Auction>(auctionsQuery);
 
@@ -75,7 +76,9 @@ export default function AuctionsPage() {
     setPageTitle('Live Auctions');
   }, [setPageTitle]);
   
-  if (isLoading) {
+  const effectiveIsLoading = isLoading || isUserLoading;
+
+  if (effectiveIsLoading) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Array.from({length: 4}).map((_, i) => (
@@ -100,7 +103,7 @@ export default function AuctionsPage() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {!isLoading && auctions?.length === 0 && (
+      {!effectiveIsLoading && auctions?.length === 0 && (
           <div className="col-span-full">
             <Card className="text-center py-12">
               <CardHeader>
