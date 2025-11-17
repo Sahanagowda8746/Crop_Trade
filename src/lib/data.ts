@@ -1,4 +1,3 @@
-
 import type { TraceEvent, CropListing } from './types';
 
 // This is now used for seeding the database

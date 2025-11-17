@@ -157,5 +157,3 @@ export interface SoilKitOrder {
     soilKitQr: string;
     labReportUrl: string | null;
 }
-
-    
