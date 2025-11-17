@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/app-context';
@@ -24,7 +25,7 @@ interface IrrigationZone {
 const initialZones: IrrigationZone[] = [
     { id: 'zone-a', name: 'Zone A - North Field', crop: 'Corn', status: 'idle', soilMoisture: 45, nextRun: 'Today at 4:00 PM' },
     { id: 'zone-b', name: 'Zone B - West Field', crop: 'Wheat', status: 'watering', soilMoisture: 55, nextRun: null },
-    { id: 'zone-c', name: 'Zone C - Greenhouse', crop: 'Tomatoes', status: 'scheduled', soil moisture: 62, nextRun: 'Tomorrow at 6:00 AM' },
+    { id: 'zone-c', name: 'Zone C - Greenhouse', crop: 'Tomatoes', status: 'scheduled', soilMoisture: 62, nextRun: 'Tomorrow at 6:00 AM' },
     { id: 'zone-d', name: 'Zone D - South End', crop: 'Potatoes', status: 'error', soilMoisture: 25, nextRun: null },
 ];
 
