@@ -5,6 +5,7 @@ import { analyzeSoilFromPrompt } from '@/ai/flows/soil-analysis-from-prompt';
 import { diagnosePestFromImage } from '@/ai/flows/pest-diagnosis-from-image';
 import { askAgronomist } from '@/ai/flows/ask-agronomist';
 import { generateAdImage } from '@/ai/flows/generate-ad-image';
+import { textToSpeech } from '@/ai/flows/text-to-speech';
 
 const soilAnalysisSchema = z.object({
   soilDescription: z.string().min(10, 'Please provide a more detailed soil description.'),
@@ -109,4 +110,19 @@ export async function handleAdImageGeneration(prevState: any, formData: FormData
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return { message: `error:Image generation failed. ${errorMessage}`, errors: {} };
   }
+}
+
+export async function handleTextToSpeech(text: string) {
+    if (!text) {
+        return { message: 'Please provide text.' };
+    }
+
+    try {
+        const result = await textToSpeech(text);
+        return { message: 'Audio generated.', data: result };
+    } catch (error) {
+        console.error(error);
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { message: `error:Failed to generate audio. ${errorMessage}`, errors: {} };
+    }
 }
