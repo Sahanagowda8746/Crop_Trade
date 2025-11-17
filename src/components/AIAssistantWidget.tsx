@@ -59,6 +59,7 @@ export default function AIAssistantWidget() {
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
+        setIsListening(false);
         toast({
           variant: 'destructive',
           title: 'Speech Recognition Error',
@@ -81,7 +82,8 @@ export default function AIAssistantWidget() {
         currentAudio = null;
       }
     }
-  }, [toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const startListening = () => {
     if (!isSpeechSupported || !recognitionRef.current || isListening) {
@@ -293,5 +295,3 @@ export default function AIAssistantWidget() {
     </>
   );
 }
-
-    
