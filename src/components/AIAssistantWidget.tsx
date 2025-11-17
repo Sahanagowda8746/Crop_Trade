@@ -16,7 +16,6 @@ interface Message {
 }
 
 let currentAudio: HTMLAudioElement | null = null;
-let recognition: any = null;
 
 export default function AIAssistantWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -28,13 +27,15 @@ export default function AIAssistantWidget() {
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const recognitionRef = useRef<any>(null);
+
 
   useEffect(() => {
     // Check for browser support on component mount
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       setIsSpeechSupported(true);
-      recognition = new SpeechRecognition();
+      const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.lang = 'en-US';
       recognition.interimResults = false;
@@ -58,13 +59,16 @@ export default function AIAssistantWidget() {
         });
         stopListening();
       };
+      
+      recognitionRef.current = recognition;
+
     } else {
         setIsSpeechSupported(false);
     }
 
     return () => {
-      if(recognition) {
-        recognition.abort();
+      if(recognitionRef.current) {
+        recognitionRef.current.abort();
       }
       if (currentAudio) {
         currentAudio.pause();
@@ -74,7 +78,7 @@ export default function AIAssistantWidget() {
   }, [toast]);
   
   const startListening = () => {
-    if (!isSpeechSupported) {
+    if (!isSpeechSupported || !recognitionRef.current) {
         toast({
           variant: 'destructive',
           title: 'Unsupported Feature',
@@ -89,7 +93,7 @@ export default function AIAssistantWidget() {
     }
 
     try {
-        recognition.start();
+        recognitionRef.current.start();
         setIsListening(true);
     } catch (e) {
         console.error("Could not start recognition", e);
@@ -102,8 +106,8 @@ export default function AIAssistantWidget() {
   };
 
   const stopListening = () => {
-    if (!isListening || !recognition) return;
-    recognition.stop();
+    if (!isListening || !recognitionRef.current) return;
+    recognitionRef.current.stop();
     setIsListening(false);
   };
   
