@@ -27,6 +27,7 @@ export default function AIAssistantWidget() {
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     // Check for browser support on component mount
@@ -44,8 +45,7 @@ export default function AIAssistantWidget() {
         stopListening();
         // Use a small delay to allow state to update before submitting
         setTimeout(() => {
-            const form = document.getElementById('ai-agent-form') as HTMLFormElement;
-            form?.requestSubmit();
+            formRef.current?.requestSubmit();
         }, 100);
       };
 
@@ -239,7 +239,7 @@ export default function AIAssistantWidget() {
             </div>
           </ScrollArea>
           <div className="p-4 border-t">
-            <form id="ai-agent-form" onSubmit={handleSubmit} className="flex items-center gap-2">
+            <form ref={formRef} onSubmit={handleSubmit} className="flex items-center gap-2">
               <Input
                 value={input}
                 onChange={e => setInput(e.target.value)}
