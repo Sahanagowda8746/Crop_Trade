@@ -11,14 +11,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAppContext, UserRole } from '@/context/app-context';
-import { User, Users, Check } from 'lucide-react';
+import { useAppContext, UserRole, Language } from '@/context/app-context';
+import { User, Users, Check, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const roles: UserRole[] = ['Farmer', 'Buyer', 'Transporter', 'Admin'];
+const languages: Language[] = ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'];
+
 
 export function UserNav() {
-  const { role, setRole } = useAppContext();
+  const { role, setRole, language, setLanguage } = useAppContext();
 
   return (
     <DropdownMenu>
@@ -47,6 +49,17 @@ export function UserNav() {
               <User className="mr-2 h-4 w-4" />
               <span>{r}</span>
               {r === role && <Check className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Language</DropdownMenuLabel>
+           {languages.map(l => (
+            <DropdownMenuItem key={l} onSelect={() => setLanguage(l)} disabled={l === language}>
+              <Languages className="mr-2 h-4 w-4" />
+              <span>{l}</span>
+              {l === language && <Check className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>
