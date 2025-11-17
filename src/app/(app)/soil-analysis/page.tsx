@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import type { SoilAnalysisFromImageOutput } from '@/ai/flows/soil-analysis-from-image';
+import type { SoilAnalysisFromImageOutput } from '@/lib/types';
 
 const initialState: {
     message: string;

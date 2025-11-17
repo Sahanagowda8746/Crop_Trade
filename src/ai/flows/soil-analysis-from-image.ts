@@ -11,6 +11,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import { getSdks, initializeFirebase } from '@/firebase';
+import type { SoilAnalysisFromImageOutput } from '@/lib/types';
 
 const SoilAnalysisFromImageInputSchema = z.object({
   photoDataUri: z
@@ -22,7 +23,7 @@ const SoilAnalysisFromImageInputSchema = z.object({
 });
 export type SoilAnalysisFromImageInput = z.infer<typeof SoilAnalysisFromImageInputSchema>;
 
-export const SoilAnalysisFromImageOutputSchema = z.object({
+const SoilAnalysisFromImageOutputSchema = z.object({
     soilType: z.string().describe("The identified type of the soil (e.g., Sandy Loam, Clay, Silt)."),
     moisture: z.string().describe("An estimation of the soil's moisture level (e.g., Dry, Moist, Wet)."),
     texture: z.string().describe("The classified texture of the soil (e.g., Fine, Medium, Coarse)."),
@@ -37,7 +38,6 @@ export const SoilAnalysisFromImageOutputSchema = z.object({
     fertilizerPlan: z.array(z.string()).describe("A list of recommended fertilizers and application advice."),
     generalAdvice: z.string().describe("Simple, actionable advice for the farmer to improve soil health."),
 });
-export type SoilAnalysisFromImageOutput = z.infer<typeof SoilAnalysisFromImageOutputSchema>;
 
 
 export async function analyzeSoilFromImage(
@@ -78,19 +78,16 @@ const analyzeSoilFromImageFlow = ai.defineFlow(
       throw new Error("AI analysis failed to produce a valid output.");
     }
     
-    // This is where we save the result to Firestore
-    // Note: In a real serverless environment, initializing admin should be handled carefully.
-    const { firestore } = getSdks(initializeApp(undefined, `backend-action-soil-analysis-${Date.now()}`));
+    const { firestore } = getSdks(initializeFirebase(undefined, `backend-action-soil-analysis-${Date.now()}`));
     const analysisCollectionRef = collection(firestore, `users/${input.userId}/soilAnalyses`);
     
-    // The AI output schema matches the Firestore schema
     const analysisData = {
         ...output,
         farmerId: input.userId,
         analysisDate: new Date().toISOString(),
         recommendations: `Crops: ${output.recommendedCrops.join(', ')}. Fertilizers: ${output.fertilizerPlan.join('; ')}. Advice: ${output.generalAdvice}`,
         pH: output.phEstimate,
-        nitrogen: output.nutrientAnalysis.nitrogen === 'Low' ? 1 : (output.nutrientAnalysis.nitrogen === 'Moderate' ? 2 : 3), // Example conversion
+        nitrogen: output.nutrientAnalysis.nitrogen === 'Low' ? 1 : (output.nutrientAnalysis.nitrogen === 'Moderate' ? 2 : 3), 
         phosphorus: output.nutrientAnalysis.phosphorus === 'Low' ? 1 : (output.nutrientAnalysis.phosphorus === 'Moderate' ? 2 : 3),
         potassium: output.nutrientAnalysis.potassium === 'Low' ? 1 : (output.nutrientAnalysis.potassium === 'Moderate' ? 2 : 3),
     };

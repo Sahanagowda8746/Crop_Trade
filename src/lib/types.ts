@@ -1,5 +1,4 @@
 import type { UserRole } from "@/context/app-context";
-import { SoilAnalysisFromImageOutputSchema } from "@/ai/flows/soil-analysis-from-image";
 import { z } from "zod";
 
 export interface User {
@@ -124,8 +123,26 @@ export interface Review {
   buyerName?: string;
 }
 
+const SoilAnalysisFromImageOutputSchema = z.object({
+    soilType: z.string().describe("The identified type of the soil (e.g., Sandy Loam, Clay, Silt)."),
+    moisture: z.string().describe("An estimation of the soil's moisture level (e.g., Dry, Moist, Wet)."),
+    texture: z.string().describe("The classified texture of the soil (e.g., Fine, Medium, Coarse)."),
+    phEstimate: z.number().describe("An estimated pH level of the soil (e.g., 6.2)."),
+    nutrientAnalysis: z.object({
+        nitrogen: z.enum(['Low', 'Moderate', 'High']).describe("The predicted level of Nitrogen."),
+        phosphorus: z.enum(['Low', 'Moderate', 'High']).describe("The predicted level of Phosphorus."),
+        potassium: z.enum(['Low', 'Moderate', 'High']).describe("The predicted level of Potassium."),
+    }),
+    fertilityScore: z.number().min(0).max(100).describe("An overall soil fertility score out of 100."),
+    recommendedCrops: z.array(z.string()).describe("A list of crop names suitable for the soil."),
+    fertilizerPlan: z.array(z.string()).describe("A list of recommended fertilizers and application advice."),
+    generalAdvice: z.string().describe("Simple, actionable advice for the farmer to improve soil health."),
+});
+export type SoilAnalysisFromImageOutput = z.infer<typeof SoilAnalysisFromImageOutputSchema>;
+
+
 // Represents the data structure for a single soil analysis report stored in Firestore
-export interface SoilAnalysis extends z.infer<typeof SoilAnalysisFromImageOutputSchema> {
+export interface SoilAnalysis extends SoilAnalysisFromImageOutput {
     id: string;
     farmerId: string;
     analysisDate: string; // ISO string
