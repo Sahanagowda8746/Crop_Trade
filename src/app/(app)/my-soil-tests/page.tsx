@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAppContext } from '@/context/app-context';
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
@@ -132,11 +132,18 @@ export default function MySoilTestsPage() {
         if (role === 'Admin') {
             return query(baseCollection, orderBy('orderDate', 'desc'));
         }
-        return query(baseCollection, where('userId', '==', user.uid), orderBy('orderDate', 'desc'));
+        // Simplified query to avoid needing a composite index. Sorting is handled client-side.
+        return query(baseCollection, where('userId', '==', user.uid));
     }, [user, firestore, role]);
 
     const { data: aiReports, isLoading: isLoadingAiReports } = useCollection<SoilAnalysis>(aiReportsQuery);
     const { data: kitOrders, isLoading: isLoadingKitOrders } = useCollection<SoilKitOrder>(kitOrdersQuery);
+
+    const sortedKitOrders = useMemo(() => {
+        if (!kitOrders) return [];
+        // Sort the data on the client-side
+        return [...kitOrders].sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+    }, [kitOrders]);
 
     const isLoading = isUserLoading || isLoadingAiReports || isLoadingKitOrders;
 
@@ -185,7 +192,7 @@ export default function MySoilTestsPage() {
                             <Skeleton className="h-48" />
                         </div>
                     )}
-                    {!isLoading && kitOrders?.length === 0 && (
+                    {!isLoading && sortedKitOrders.length === 0 && (
                         <Card className="text-center py-12">
                             <CardHeader>
                                 <CardTitle>No Soil Kit Orders</CardTitle>
@@ -199,7 +206,7 @@ export default function MySoilTestsPage() {
                         </Card>
                     )}
                     <div className="grid md:grid-cols-2 gap-4">
-                        {kitOrders?.map(order => <SoilKitOrderCard key={order.id} order={order} role={role}/>)}
+                        {sortedKitOrders.map(order => <SoilKitOrderCard key={order.id} order={order} role={role}/>)}
                     </div>
                 </TabsContent>
             </Tabs>
