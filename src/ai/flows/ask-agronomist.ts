@@ -94,7 +94,7 @@ export async function askAgronomist(
 
 const agronomistPrompt = ai.definePrompt({
   name: 'askAgronomistPrompt',
-  input: {schema: z.object({ question: z.string() })},
+  input: {schema: AskAgronomistInputSchema},
   output: {schema: AskAgronomistOutputSchema},
   tools: [getSoilKitOrderStatus],
   system: `You are an expert agronomist and AI assistant for the CropTrade platform. Your role is to provide clear, concise, and accurate advice to farmers.
@@ -115,8 +115,7 @@ const askAgronomistFlow = ai.defineFlow(
   async ({question, userId}) => {
     const {output} = await agronomistPrompt({
         question,
-        // Pass the userId to the context so the tool can use it
-        context: { userId },
+        userId,
     });
     // The 'output' object from a prompt call is the direct response.
     return output!;
