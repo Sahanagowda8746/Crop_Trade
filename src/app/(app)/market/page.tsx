@@ -21,6 +21,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { initialCrops } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 function CropCard({ crop, onBuy, onRemove, currentUserId }: { crop: CropListing, onBuy: (crop: CropListing) => void, onRemove: (cropId: string) => void, currentUserId?: string }) {
   const isOwner = crop.farmerId === currentUserId;
@@ -63,10 +74,26 @@ function CropCard({ crop, onBuy, onRemove, currentUserId }: { crop: CropListing,
           </span>
         </div>
         {isOwner ? (
-             <Button variant="destructive" size="sm" onClick={() => onRemove(crop.id)}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Remove
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Remove
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your crop listing from the marketplace.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onRemove(crop.id)}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
         ) : (
             <Button onClick={() => onBuy(crop)} disabled={isOutOfStock}>Buy Now</Button>
         )}
