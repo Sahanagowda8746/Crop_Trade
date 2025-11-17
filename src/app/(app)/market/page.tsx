@@ -95,7 +95,14 @@ export default function MarketPage() {
   }, [setPageTitle]);
 
   const handleSeedData = () => {
-    if (!firestore) return;
+    if (!firestore || !user) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'You must be logged in to seed data.',
+        });
+        return;
+    }
     toast({
         title: 'Seeding Data',
         description: 'Adding initial crop data to the database...',
@@ -103,7 +110,12 @@ export default function MarketPage() {
 
     initialCrops.forEach((crop) => {
         const docRef = doc(firestore, 'cropListings', crop.id);
-        setDocumentNonBlocking(docRef, crop, { merge: true });
+        const userOwnedCrop = {
+            ...crop,
+            farmerId: user.uid,
+            farmerName: user.displayName || 'Current User',
+        };
+        setDocumentNonBlocking(docRef, userOwnedCrop, { merge: true });
     });
     
     toast({
