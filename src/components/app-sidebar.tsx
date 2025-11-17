@@ -27,7 +27,7 @@ const navItems = [
   { href: '/market', label: 'Marketplace', icon: Store, roles: ['Farmer', 'Buyer', 'Transporter', 'Admin'] },
   { href: '/auctions', label: 'Auctions', icon: Gavel, roles: ['Farmer', 'Buyer', 'Transporter', 'Admin'] },
   { href: '/orders', label: 'My Orders', icon: Package, roles: ['Buyer'] },
-  { href: '/ai-tools', label: 'AI & Lab Tools', icon: Wrench, roles: ['Farmer'] },
+  { href: '/ai-tools', label: 'AI Tools', icon: Wrench, roles: ['Farmer'] },
   { href: '/my-soil-tests', label: 'My Soil Tests', icon: TestTube, roles: ['Farmer'] },
   { href: '/transport', label: 'Transport Jobs', icon: Truck, roles: ['Transporter'] },
   { href: '/traceability', label: 'Traceability', icon: FileCheck2, roles: ['Buyer'] },
