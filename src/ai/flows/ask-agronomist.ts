@@ -118,6 +118,7 @@ const askAgronomistFlow = ai.defineFlow(
         // Pass the userId to the context so the tool can use it
         context: { userId },
     });
+    // The 'output' object from a prompt call is the direct response.
     return output!;
   }
 );
