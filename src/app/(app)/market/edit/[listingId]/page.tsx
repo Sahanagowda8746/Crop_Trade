@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useActionState, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useForm, useFormState } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
+import { useFormStatus } from 'react-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -53,10 +54,10 @@ function fileToDataUri(file: File): Promise<string> {
 }
 
 function SubmitButton() {
-  const { isSubmitting } = useFormState();
+  const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-      {isSubmitting ? (
+    <Button type="submit" size="lg" className="w-full" disabled={pending}>
+      {pending ? (
         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
       ) : (
         <Save className="mr-2 h-5 w-5" />
