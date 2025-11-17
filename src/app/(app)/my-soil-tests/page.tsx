@@ -12,6 +12,7 @@ import { TestTube, FlaskConical, Bot, CheckCircle, Clock, Package, Truck, Upload
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { v4 as uuidv4 } from 'uuid';
 
 function SoilAnalysisCard({ report }: { report: SoilAnalysis }) {
     return (
@@ -53,7 +54,7 @@ function SoilKitOrderCard({ order, role }: { order: SoilKitOrder, role: string }
     const firestore = useFirestore();
     const { toast } = useToast();
 
-    const statusIcons = {
+    const statusIcons: { [key: string]: JSX.Element } = {
         ordered: <Package className="w-4 h-4 mr-2" />,
         shipped: <Truck className="w-4 h-4 mr-2" />,
         received: <CheckCircle className="w-4 h-4 mr-2" />,
