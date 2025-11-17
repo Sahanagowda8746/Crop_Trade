@@ -24,12 +24,15 @@ export default function AIAssistantWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    // Check for browser support on component mount
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      setIsSpeechSupported(true);
       recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.lang = 'en-US';
@@ -39,9 +42,11 @@ export default function AIAssistantWidget() {
         const transcript = event.results[0][0].transcript;
         setInput(transcript);
         stopListening();
+        // Use a small delay to allow state to update before submitting
         setTimeout(() => {
-            document.getElementById('ai-agent-form')?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-        }, 300);
+            const form = document.getElementById('ai-agent-form') as HTMLFormElement;
+            form?.requestSubmit();
+        }, 100);
       };
 
       recognition.onerror = (event: any) => {
@@ -53,6 +58,8 @@ export default function AIAssistantWidget() {
         });
         stopListening();
       };
+    } else {
+        setIsSpeechSupported(false);
     }
 
     return () => {
@@ -189,6 +196,7 @@ export default function AIAssistantWidget() {
                 <div className="text-center text-muted-foreground pt-16">
                   <Bot className="mx-auto h-12 w-12 text-gray-400"/>
                   <p className="mt-4 text-sm">Ask me anything about farming!</p>
+                  {!isSpeechSupported && <p className="mt-2 text-xs text-amber-600">Your browser does not support voice input.</p>}
                 </div>
               )}
               {messages.map((message, index) => (
@@ -239,10 +247,12 @@ export default function AIAssistantWidget() {
                 disabled={isLoading || isListening}
                 className="flex-grow"
               />
-               <Button type="button" size="icon" variant={isListening ? 'destructive' : 'outline'} onClick={isListening ? stopListening : startListening} disabled={isLoading}>
+              {isSpeechSupported && (
+                <Button type="button" size="icon" variant={isListening ? 'destructive' : 'outline'} onClick={isListening ? stopListening : startListening} disabled={isLoading}>
                     {isListening ? <StopCircle className="h-5 w-5" /> : <Mic className="h-5 w-5"/>}
                     <span className="sr-only">{isListening ? 'Stop listening' : 'Start listening'}</span>
                 </Button>
+              )}
               <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
                 <Send className="h-5 w-5" />
                  <span className="sr-only">Send</span>
