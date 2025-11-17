@@ -14,17 +14,23 @@ import {
 } from '@/components/ui/card';
 import { useAppContext } from '@/context/app-context';
 import { Badge } from '@/components/ui/badge';
-import { useCollection, useFirestore, useMemoFirebase, setDocumentNonBlocking, useUser, addDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, setDocumentNonBlocking, useUser, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import type { CropListing } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initialCrops } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Trash2 } from 'lucide-react';
 
-function CropCard({ crop, onBuy }: { crop: CropListing, onBuy: (crop: CropListing) => void }) {
+function CropCard({ crop, onBuy, onRemove, currentUserId }: { crop: CropListing, onBuy: (crop: CropListing) => void, onRemove: (cropId: string) => void, currentUserId?: string }) {
+  const isOwner = crop.farmerId === currentUserId;
+  const isOutOfStock = crop.quantity <= 0;
+
   return (
-    <Card className="flex flex-col overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
+    <Card className="flex flex-col overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 relative">
+       {isOutOfStock && (
+            <Badge variant="destructive" className="absolute top-2 right-2 z-10">Out of Stock</Badge>
+        )}
       <CardHeader className="p-0">
           <div className="relative h-48 w-full">
             <Image
@@ -56,7 +62,14 @@ function CropCard({ crop, onBuy }: { crop: CropListing, onBuy: (crop: CropListin
             / {crop.unit || 'kg'}
           </span>
         </div>
-        <Button onClick={() => onBuy(crop)}>Buy Now</Button>
+        {isOwner ? (
+             <Button variant="destructive" size="sm" onClick={() => onRemove(crop.id)}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Remove
+            </Button>
+        ) : (
+            <Button onClick={() => onBuy(crop)} disabled={isOutOfStock}>Buy Now</Button>
+        )}
       </CardFooter>
     </Card>
   );
@@ -168,6 +181,17 @@ export default function MarketPage() {
     });
   }
 
+  const handleRemove = (cropId: string) => {
+    if (!firestore) return;
+
+    const docRef = doc(firestore, 'cropListings', cropId);
+    deleteDocumentNonBlocking(docRef);
+    toast({
+        title: 'Listing Removed',
+        description: 'The crop listing has been removed from the marketplace.'
+    })
+  }
+
   const effectiveIsLoading = isLoading || isUserLoading;
 
   return (
@@ -188,7 +212,7 @@ export default function MarketPage() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {effectiveIsLoading && Array.from({ length: 8 }).map((_, i) => <CropSkeleton key={i} />)}
-        {crops && crops.map(crop => <CropCard key={crop.id} crop={crop} onBuy={handleBuy} />)}
+        {crops && crops.map(crop => <CropCard key={crop.id} crop={crop} onBuy={handleBuy} onRemove={handleRemove} currentUserId={user?.uid}/>)}
         {!effectiveIsLoading && crops?.length === 0 && (
           <div className="col-span-full text-center py-12">
             <Card className="max-w-md mx-auto">
@@ -213,5 +237,3 @@ export default function MarketPage() {
     </div>
   );
 }
-
-    
