@@ -127,11 +127,12 @@ export default function MySoilTestsPage() {
 
     const kitOrdersQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        // Admins should see all orders to manage them
+        const baseCollection = collection(firestore, 'soilKitOrders');
+        // Admins see all orders to manage them. Other users only see their own.
         if (role === 'Admin') {
-            return query(collection(firestore, 'soilKitOrders'), orderBy('orderDate', 'desc'));
+            return query(baseCollection, orderBy('orderDate', 'desc'));
         }
-        return query(collection(firestore, 'soilKitOrders'), where('userId', '==', user.uid), orderBy('orderDate', 'desc'));
+        return query(baseCollection, where('userId', '==', user.uid), orderBy('orderDate', 'desc'));
     }, [user, firestore, role]);
 
     const { data: aiReports, isLoading: isLoadingAiReports } = useCollection<SoilAnalysis>(aiReportsQuery);
