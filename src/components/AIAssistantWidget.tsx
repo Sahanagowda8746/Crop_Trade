@@ -3,9 +3,8 @@ import { useEffect, useState, useRef, FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useAppContext } from '@/context/app-context';
 import { handleAskAgronomist, handleTextToSpeech } from '@/app/actions';
-import { Bot, User, Send, Loader2, Mic, StopCircle, Volume2 } from 'lucide-react';
+import { Bot, User, Send, Loader2, Mic, StopCircle, Volume2, MessageSquare, X } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -16,22 +15,19 @@ interface Message {
   content: string;
 }
 
-// A global reference to the audio object to control playback
 let currentAudio: HTMLAudioElement | null = null;
 let recognition: any = null;
 
-export default function AIAgentPage() {
-  const { setPageTitle } = useAppContext();
+export default function AIAssistantWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setPageTitle('AI Voice Assistant');
-    // Initialize speech recognition
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRecognition();
@@ -43,8 +39,6 @@ export default function AIAgentPage() {
         const transcript = event.results[0][0].transcript;
         setInput(transcript);
         stopListening();
-        // Automatically submit the form after transcript is received
-        // We add a slight delay to allow the user to see the transcribed text
         setTimeout(() => {
             document.getElementById('ai-agent-form')?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
         }, 300);
@@ -59,19 +53,16 @@ export default function AIAgentPage() {
         });
         stopListening();
       };
-    } else {
-        console.warn('Speech Recognition not supported in this browser.');
     }
-    
-    // Clean up on unmount
+
     return () => {
-        if(recognition) {
-            recognition.abort();
-        }
-        if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
-        }
+      if(recognition) {
+        recognition.abort();
+      }
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
     }
   }, [toast]);
   
@@ -93,7 +84,7 @@ export default function AIAgentPage() {
         toast({
           variant: 'destructive',
           title: 'Could not start listening',
-          description: 'Please ensure microphone permissions are enabled for this site.',
+          description: 'Please ensure microphone permissions are enabled.',
         });
     }
   };
@@ -136,7 +127,6 @@ export default function AIAgentPage() {
     }
   }
 
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -164,24 +154,41 @@ export default function AIAgentPage() {
     }
   };
 
+  if (!isOpen) {
+    return (
+      <Button 
+        className="fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90"
+        size="icon"
+        onClick={() => setIsOpen(true)}
+      >
+        <Bot className="h-8 w-8" />
+        <span className="sr-only">Open AI Assistant</span>
+      </Button>
+    )
+  }
+
   return (
-    <div className="h-full flex flex-col">
-      <Card className="flex-grow flex flex-col shadow-lg">
-        <CardHeader>
-          <CardTitle className="font-headline text-2xl flex items-center gap-2">
-            <Bot className="text-primary" />
-            AI Voice Assistant
-          </CardTitle>
-          <CardDescription>
-            Ask me anything about farming, crops, or market trends. Use the microphone to speak.
-          </CardDescription>
+    <div className="fixed bottom-8 right-8 z-50">
+      <Card className="w-[400px] h-[600px] flex flex-col shadow-2xl">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className='flex items-center gap-2'>
+            <MessageSquare className="text-primary" />
+            <CardTitle className="font-headline text-xl">
+                AI Voice Assistant
+            </CardTitle>
+          </div>
+           <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+              <X className="h-5 w-5" />
+              <span className="sr-only">Close</span>
+            </Button>
         </CardHeader>
         <CardContent className="flex-grow flex flex-col p-0">
           <ScrollArea className="flex-grow p-6" ref={scrollAreaRef}>
             <div className="space-y-4">
               {messages.length === 0 && (
-                <div className="text-center text-muted-foreground">
-                  No messages yet. Start the conversation!
+                <div className="text-center text-muted-foreground pt-16">
+                  <Bot className="mx-auto h-12 w-12 text-gray-400"/>
+                  <p className="mt-4 text-sm">Ask me anything about farming!</p>
                 </div>
               )}
               {messages.map((message, index) => (
@@ -191,13 +198,13 @@ export default function AIAgentPage() {
                         <AvatarFallback><Bot /></AvatarFallback>
                      </Avatar>
                    )}
-                  <div className={cn('max-w-md rounded-lg p-3 relative group', message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
+                  <div className={cn('max-w-xs rounded-lg p-3 relative group', message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                     {message.role === 'assistant' && (
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="absolute -bottom-4 -right-4 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute -bottom-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={() => playAudio(message.content)}
                         >
                            <Volume2 className="h-4 w-4" />
@@ -216,7 +223,7 @@ export default function AIAgentPage() {
                     <Avatar className="h-8 w-8">
                         <AvatarFallback><Bot /></AvatarFallback>
                     </Avatar>
-                    <div className="max-w-md rounded-lg p-3 bg-muted">
+                    <div className="max-w-xs rounded-lg p-3 bg-muted">
                         <Loader2 className="h-5 w-5 animate-spin" />
                     </div>
                 </div>
@@ -228,7 +235,7 @@ export default function AIAgentPage() {
               <Input
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Type or click the mic to talk..."
+                placeholder="Type or click the mic..."
                 disabled={isLoading || isListening}
                 className="flex-grow"
               />
@@ -236,8 +243,9 @@ export default function AIAgentPage() {
                     {isListening ? <StopCircle className="h-5 w-5" /> : <Mic className="h-5 w-5"/>}
                     <span className="sr-only">{isListening ? 'Stop listening' : 'Start listening'}</span>
                 </Button>
-              <Button type="submit" disabled={isLoading || !input.trim()}>
-                <Send className="mr-2 h-4 w-4" /> Send
+              <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+                <Send className="h-5 w-5" />
+                 <span className="sr-only">Send</span>
               </Button>
             </form>
           </div>
