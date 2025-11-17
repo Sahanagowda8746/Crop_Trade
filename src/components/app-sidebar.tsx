@@ -14,14 +14,11 @@ import {
   LayoutDashboard,
   Store,
   Gavel,
-  Leaf,
-  ScanSearch,
   Truck,
   FileCheck2,
   Sprout,
-  Bot,
-  GalleryHorizontal,
   Package,
+  Wrench,
 } from 'lucide-react';
 
 const navItems = [
@@ -29,9 +26,7 @@ const navItems = [
   { href: '/market', label: 'Marketplace', icon: Store, roles: ['Farmer', 'Buyer', 'Transporter', 'Admin'] },
   { href: '/auctions', label: 'Auctions', icon: Gavel, roles: ['Farmer', 'Buyer', 'Transporter', 'Admin'] },
   { href: '/orders', label: 'My Orders', icon: Package, roles: ['Buyer'] },
-  { href: '/soil-analysis', label: 'Soil Analysis', icon: Leaf, roles: ['Farmer'] },
-  { href: '/pest-detection', label: 'Pest Detection', icon: ScanSearch, roles: ['Farmer'] },
-  { href: '/marketing-suite', label: 'Marketing Suite', icon: GalleryHorizontal, roles: ['Farmer'] },
+  { href: '/ai-tools', label: 'AI Tools', icon: Wrench, roles: ['Farmer'] },
   { href: '/transport', label: 'Transport Jobs', icon: Truck, roles: ['Transporter'] },
   { href: '/traceability', label: 'Traceability', icon: FileCheck2, roles: ['Buyer'] },
 ];

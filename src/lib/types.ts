@@ -1,4 +1,6 @@
 import type { UserRole } from "@/context/app-context";
+import { SoilAnalysisFromImageOutputSchema } from "@/ai/flows/soil-analysis-from-image";
+import { z } from "zod";
 
 export interface User {
   id: string;
@@ -120,4 +122,11 @@ export interface Review {
   reviewDate: string;
   // Denormalized data
   buyerName?: string;
+}
+
+// Represents the data structure for a single soil analysis report stored in Firestore
+export interface SoilAnalysis extends z.infer<typeof SoilAnalysisFromImageOutputSchema> {
+    id: string;
+    farmerId: string;
+    analysisDate: string; // ISO string
 }
