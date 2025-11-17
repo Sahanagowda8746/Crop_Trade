@@ -31,7 +31,7 @@ export default function AIAssistantWidget() {
 
 
   useEffect(() => {
-    // Check for browser support on component mount
+    // Check for browser support and initialize recognition object once.
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       setIsSpeechSupported(true);
@@ -40,10 +40,17 @@ export default function AIAssistantWidget() {
       recognition.lang = 'en-US';
       recognition.interimResults = false;
 
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         setInput(transcript);
-        stopListening();
         // Use a small delay to allow state to update before submitting
         setTimeout(() => {
             formRef.current?.requestSubmit();
@@ -57,7 +64,6 @@ export default function AIAssistantWidget() {
           title: 'Speech Recognition Error',
           description: event.error === 'not-allowed' ? 'Microphone access was denied.' : `An error occurred: ${event.error}`,
         });
-        stopListening();
       };
       
       recognitionRef.current = recognition;
@@ -78,37 +84,42 @@ export default function AIAssistantWidget() {
   }, [toast]);
   
   const startListening = () => {
-    if (!isSpeechSupported || !recognitionRef.current) {
-        toast({
-          variant: 'destructive',
-          title: 'Unsupported Feature',
-          description: 'Your browser does not support speech recognition.',
-        });
-        return;
+    if (!isSpeechSupported || !recognitionRef.current || isListening) {
+      if (!isSpeechSupported) {
+          toast({
+              variant: 'destructive',
+              title: 'Unsupported Feature',
+              description: 'Your browser does not support speech recognition.',
+          });
+      }
+      return;
     }
-    if (isListening) return;
-
+    
     if (!isOpen) {
         setIsOpen(true);
     }
 
     try {
         recognitionRef.current.start();
-        setIsListening(true);
     } catch (e) {
         console.error("Could not start recognition", e);
-        toast({
-          variant: 'destructive',
-          title: 'Could not start listening',
-          description: 'Please ensure microphone permissions are enabled.',
-        });
+        if ((e as Error).name === 'InvalidStateError') {
+          // This can happen if start() is called while it's already running.
+          // The `isListening` state should prevent this, but as a fallback:
+          console.log("Recognition is already active.");
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Could not start listening',
+            description: 'Please ensure microphone permissions are enabled and try again.',
+          });
+        }
     }
   };
 
   const stopListening = () => {
-    if (!isListening || !recognitionRef.current) return;
+    if (!recognitionRef.current || !isListening) return;
     recognitionRef.current.stop();
-    setIsListening(false);
   };
   
   useEffect(() => {
@@ -173,7 +184,7 @@ export default function AIAssistantWidget() {
   return (
     <>
       {isOpen && (
-        <div className="fixed bottom-8 right-8 z-50">
+        <div className="fixed bottom-24 right-8 z-50">
           <Card className="w-[400px] h-[600px] flex flex-col shadow-2xl">
             <CardHeader className="flex flex-row items-center justify-between">
               <div className='flex items-center gap-2'>
@@ -256,18 +267,18 @@ export default function AIAssistantWidget() {
         </div>
       )}
       
-      <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-3">
+      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-3">
         {isSpeechSupported && (
             <Button 
                 size="icon"
                 onClick={isListening ? stopListening : startListening}
                 className={cn(
-                    'h-16 w-16 rounded-full shadow-lg text-white',
-                    isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary/90'
+                    'h-14 w-14 rounded-full shadow-lg text-white transition-all duration-200',
+                    isListening ? 'bg-red-500 hover:bg-red-600 scale-110' : 'bg-primary hover:bg-primary/90'
                 )}
                 aria-label={isListening ? 'Stop listening' : 'Start listening'}
             >
-                {isListening ? <StopCircle className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
+                {isListening ? <StopCircle className="h-7 w-7" /> : <Mic className="h-7 w-7" />}
             </Button>
         )}
          <Button 
@@ -282,3 +293,5 @@ export default function AIAssistantWidget() {
     </>
   );
 }
+
+    
