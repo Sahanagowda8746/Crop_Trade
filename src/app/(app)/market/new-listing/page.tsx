@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useActionState } from 'react';
+import { useEffect, useActionState, useState, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,7 +16,8 @@ import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { handleCropDescription } from '@/app/actions';
-import { PlusCircle, Sparkles, Loader2 } from 'lucide-react';
+import { PlusCircle, Sparkles, Loader2, Upload } from 'lucide-react';
+import Image from 'next/image';
 
 const listingSchema = z.object({
   cropType: z.string().min(2, "Crop type is required."),
@@ -33,6 +34,7 @@ const listingSchema = z.object({
   location: z.string().min(3, "Location is required."),
   harvestDate: z.string().min(1, "Harvest date is required."),
   description: z.string().min(10, "Description must be at least 10 characters."),
+  imageUrl: z.string().optional(),
 });
 
 const aiDescriptionInitialState: {
@@ -44,6 +46,15 @@ const aiDescriptionInitialState: {
   errors: null,
   data: null,
 };
+
+function fileToDataUri(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 
 function GenerateDescriptionButton({ onClick, disabled }: { onClick: () => void; disabled: boolean; }) {
   const { pending } = useFormStatus();
@@ -65,6 +76,8 @@ export default function NewListingPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [aiState, formAction, isAiPending] = useActionState(handleCropDescription, aiDescriptionInitialState);
 
@@ -77,6 +90,7 @@ export default function NewListingPage() {
       description: '',
       harvestDate: '',
       location: '',
+      imageUrl: '',
     },
   });
   
@@ -93,6 +107,26 @@ export default function NewListingPage() {
       toast({ variant: 'destructive', title: "AI Error", description: aiState.message.replace('error:', '') });
     }
   }, [aiState, form, toast]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if(file.size > 4 * 1024 * 1024) {
+          toast({
+              variant: 'destructive',
+              title: 'File Too Large',
+              description: 'Please upload an image smaller than 4MB.',
+          });
+          return;
+      }
+      const dataUri = await fileToDataUri(file);
+      setPreview(dataUri);
+      form.setValue('imageUrl', dataUri);
+    } else {
+      setPreview(null);
+      form.setValue('imageUrl', undefined);
+    }
+  };
 
   const handleGenerateDescription = () => {
     const formData = new FormData();
@@ -154,6 +188,24 @@ export default function NewListingPage() {
         <CardContent>
           <Form {...form}>
             <div className="space-y-8">
+               <div>
+                  <FormLabel>Crop Image</FormLabel>
+                  <div className="mt-2 flex items-center gap-4">
+                     <div className="relative w-32 h-32 rounded-md overflow-hidden border bg-muted flex items-center justify-center">
+                        {preview ? (
+                            <Image src={preview} alt="Crop preview" fill className="object-cover" />
+                        ) : (
+                            <span className="text-xs text-muted-foreground">Image Preview</span>
+                        )}
+                    </div>
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                        <Upload className="mr-2 h-4 w-4"/>
+                        Upload Image
+                    </Button>
+                    <Input id="photo" name="photo" type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef} className="hidden" />
+                  </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormField
                   control={form.control}
