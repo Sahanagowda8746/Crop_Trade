@@ -73,7 +73,7 @@ export default function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
             <Sprout className="w-8 h-8 text-primary" />
-            <span className="font-headline text-2xl font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">
+            <span className="font-headline text-2xl font-semibold text-primary group-data-[collapsible=icon]:hidden">
                 CropTrade
             </span>
         </div>
