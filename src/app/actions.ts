@@ -172,15 +172,10 @@ const fertilizerCalculatorSchema = z.object({
   targetCrop: z.string().min(2, "Please enter a target crop."),
 });
 
-export async function handleFertilizerCalculation(prevState: any, formData: FormData) {
-    const validatedFields = fertilizerCalculatorSchema.safeParse({
-    nitrogen: formData.get('nitrogen'),
-    phosphorus: formData.get('phosphorus'),
-    potassium: formData.get('potassium'),
-    ph: formData.get('ph'),
-    soilType: formData.get('soilType'),
-    targetCrop: formData.get('targetCrop'),
-  });
+export async function handleFertilizerCalculation(prevState: any, formData: FormData | z.infer<typeof fertilizerCalculatorSchema>) {
+    const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
+    const validatedFields = fertilizerCalculatorSchema.safeParse(data);
+
     if (!validatedFields.success) {
       return {
         message: 'Invalid form data.',
@@ -209,17 +204,10 @@ const yieldPredictionSchema = z.object({
     historicalYield: z.string().optional(),
 });
 
-export async function handleYieldPrediction(prevState: any, formData: FormData) {
-    const validatedFields = yieldPredictionSchema.safeParse({
-        cropType: formData.get('cropType'),
-        acreage: formData.get('acreage'),
-        soilType: formData.get('soilType'),
-        nitrogenLevel: formData.get('nitrogenLevel'),
-        phosphorusLevel: formData.get('phosphorusLevel'),
-        potassiumLevel: formData.get('potassiumLevel'),
-        region: formData.get('region'),
-        historicalYield: formData.get('historicalYield'),
-    });
+export async function handleYieldPrediction(prevState: any, formData: FormData | z.infer<typeof yieldPredictionSchema>) {
+    const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
+    const validatedFields = yieldPredictionSchema.safeParse(data);
+
     if (!validatedFields.success) {
       return {
         message: 'error:Invalid form data.',
@@ -242,12 +230,14 @@ const demandForecastSchema = z.object({
   month: z.string().min(1, "Please select a month."),
 });
 
-export async function handleDemandForecast(prevState: any, formData: FormData) {
-  const validatedFields = demandForecastSchema.safeParse({
-    cropType: formData.get('cropType'),
-    region: formData.get('region'),
-    month: formData.get('month'),
-  });
+export async function handleDemandForecast(prevState: any, formData: FormData | z.infer<typeof demandForecastSchema>) {
+  const data = formData instanceof FormData ? {
+      cropType: formData.get('cropType'),
+      region: formData.get('region'),
+      month: formData.get('month'),
+  } : formData;
+
+  const validatedFields = demandForecastSchema.safeParse(data);
   if (!validatedFields.success) {
     return {
       message: 'error:Invalid form data.',
@@ -271,13 +261,10 @@ const creditScoreSchema = z.object({
   outstandingDebt: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Outstanding debt cannot be negative.")),
 });
 
-export async function handleCreditScore(prevState: any, formData: FormData) {
-    const validatedFields = creditScoreSchema.safeParse({
-        annualRevenue: formData.get('annualRevenue'),
-        yearsFarming: formData.get('yearsFarming'),
-        loanHistory: formData.get('loanHistory'),
-        outstandingDebt: formData.get('outstandingDebt'),
-    });
+export async function handleCreditScore(prevState: any, formData: FormData | z.infer<typeof creditScoreSchema>) {
+    const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
+    const validatedFields = creditScoreSchema.safeParse(data);
+
     if (!validatedFields.success) {
         return {
             message: 'error:Invalid form data.',
@@ -301,13 +288,9 @@ const insuranceRiskSchema = z.object({
   historicalEvents: z.string().min(1, "Please select a historical event likelihood."),
 });
 
-export async function handleInsuranceRisk(prevState: any, formData: FormData) {
-    const validatedFields = insuranceRiskSchema.safeParse({
-        cropType: formData.get('cropType'),
-        region: formData.get('region'),
-        acreage: formData.get('acreage'),
-        historicalEvents: formData.get('historicalEvents'),
-    });
+export async function handleInsuranceRisk(prevState: any, formData: FormData | z.infer<typeof insuranceRiskSchema>) {
+    const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
+    const validatedFields = insuranceRiskSchema.safeParse(data);
     if (!validatedFields.success) {
         return {
             message: 'error:Invalid form data.',
@@ -369,5 +352,3 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
     return { message: `error:Update failed. ${errorMessage}` };
   }
 }
-
-    

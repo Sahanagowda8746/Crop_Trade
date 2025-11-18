@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
@@ -18,10 +19,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import type { DemandForecastOutput } from '@/ai/flows/demand-forecast';
 
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
 const formSchema = z.object({
   cropType: z.string().min(2, "Please enter a crop type."),
   region: z.string().min(2, "Please enter a region."),
-  month: z.string().min(1, "Please select a month."),
+  month: z.string().min(1, "Please select a month.").default(months[new Date().getMonth()]),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -51,7 +54,6 @@ function TrendIcon({ trend }: { trend: 'Increasing' | 'Decreasing' | 'Stable' })
     return <Minus className="h-8 w-8 text-muted-foreground" />;
 }
 
-const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export default function DemandForecastPage() {
   const { setPageTitle } = useAppContext();
@@ -95,7 +97,7 @@ export default function DemandForecastPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form action={formAction} className="space-y-6">
+              <form onSubmit={form.handleSubmit((data) => formAction(data))} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <FormField control={form.control} name="cropType" render={({ field }) => (
                         <FormItem>
