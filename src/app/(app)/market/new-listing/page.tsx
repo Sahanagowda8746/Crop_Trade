@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useActionState, useState, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
@@ -91,6 +92,8 @@ export default function NewListingPage() {
       harvestDate: '',
       location: '',
       imageUrl: '',
+      pricePerUnit: 0,
+      quantity: 0,
     },
   });
   
@@ -340,3 +343,5 @@ export default function NewListingPage() {
     </div>
   );
 }
+
+    

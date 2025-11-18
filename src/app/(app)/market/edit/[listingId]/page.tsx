@@ -90,6 +90,15 @@ export default function EditListingPage() {
     resolver: zodResolver(listingSchema),
     defaultValues: {
       listingId,
+      cropType: '',
+      variety: '',
+      quantity: 0,
+      unit: '',
+      pricePerUnit: 0,
+      location: '',
+      harvestDate: '',
+      description: '',
+      imageUrl: '',
     },
   });
   
@@ -224,7 +233,7 @@ export default function EditListingPage() {
                    <FormField control={form.control} name="unit" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Unit</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Select a unit" /></SelectTrigger></FormControl>
                           <SelectContent>
                             <SelectItem value="kg">Kilogram (kg)</SelectItem>
@@ -233,7 +242,6 @@ export default function EditListingPage() {
                             <SelectItem value="head">Head</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Input type="hidden" {...field} />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -287,3 +295,5 @@ export default function EditListingPage() {
     </div>
   );
 }
+
+    
