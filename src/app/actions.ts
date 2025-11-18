@@ -7,11 +7,11 @@ import { askAgronomist } from '@/ai/flows/ask-agronomist';
 import { generateAdImage } from '@/ai/flows/generate-ad-image';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { generateCropDescription } from '@/ai/flows/crop-description-generator';
-import { calculateFertilizer } from '@/ai/flows/fertilizer-calculator';
-import { predictYield } from '@/ai/flows/yield-prediction';
-import { forecastDemand } from '@/ai/flows/demand-forecast';
-import { assessCreditScore } from '@/ai/flows/credit-score-flow';
-import { assessInsuranceRisk } from '@/ai/flows/insurance-risk-flow';
+import { calculateFertilizer, FertilizerCalculatorInput } from '@/ai/flows/fertilizer-calculator';
+import { predictYield, YieldPredictionInput } from '@/ai/flows/yield-prediction';
+import { forecastDemand, DemandForecastInput } from '@/ai/flows/demand-forecast';
+import { assessCreditScore, CreditScoreInput } from '@/ai/flows/credit-score-flow';
+import { assessInsuranceRisk, InsuranceRiskInput } from '@/ai/flows/insurance-risk-flow';
 import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 import type { SoilAnalysis } from '@/lib/types';
@@ -163,169 +163,49 @@ export async function handleCropDescription(prevState: any, formData: FormData) 
     }
 }
 
-const fertilizerCalculatorSchema = z.object({
-  nitrogen: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Nitrogen cannot be negative.")),
-  phosphorus: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Phosphorus cannot be negative.")),
-  potassium: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Potassium cannot be negative.")),
-  ph: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "pH must be between 0 and 14.").max(14)),
-  soilType: z.string().min(1, "Please select a soil type."),
-  targetCrop: z.string().min(2, "Please enter a target crop."),
-});
-
-export async function handleFertilizerCalculation(prevState: any, formData: FormData) {
-    const validatedFields = fertilizerCalculatorSchema.safeParse({
-        nitrogen: formData.get('nitrogen'),
-        phosphorus: formData.get('phosphorus'),
-        potassium: formData.get('potassium'),
-        ph: formData.get('ph'),
-        soilType: formData.get('soilType'),
-        targetCrop: formData.get('targetCrop'),
-    });
-
-    if (!validatedFields.success) {
-      return {
-        message: 'error:Invalid form data.',
-        errors: validatedFields.error.flatten().fieldErrors,
-        data: null,
-      };
-    }
-
+export async function handleFertilizerCalculation(data: FertilizerCalculatorInput) {
     try {
-      const result = await calculateFertilizer(validatedFields.data);
-      return { message: "Calculation complete.", data: result, errors: null };
+      const result = await calculateFertilizer(data);
+      return { message: "Calculation complete.", data: result };
     } catch (e: any) {
-      return { message: `error: ${e.message}`, data: null, errors: null };
+      return { message: `error: ${e.message}`, data: null };
     }
 }
 
 
-const yieldPredictionSchema = z.object({
-    cropType: z.string().min(2, "Please enter a crop type."),
-    acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be a positive number.")),
-    soilType: z.string().min(1, "Please select a soil type."),
-    nitrogenLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Nitrogen cannot be negative.")),
-    phosphorusLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Phosphorus cannot be negative.")),
-    potassiumLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Potassium cannot be negative.")),
-    region: z.string().min(2, "Region is required."),
-    historicalYield: z.string().optional(),
-});
-
-export async function handleYieldPrediction(prevState: any, formData: FormData) {
-    const validatedFields = yieldPredictionSchema.safeParse({
-        cropType: formData.get('cropType'),
-        acreage: formData.get('acreage'),
-        soilType: formData.get('soilType'),
-        nitrogenLevel: formData.get('nitrogenLevel'),
-        phosphorusLevel: formData.get('phosphorusLevel'),
-        potassiumLevel: formData.get('potassiumLevel'),
-        region: formData.get('region'),
-        historicalYield: formData.get('historicalYield'),
-    });
-
-    if (!validatedFields.success) {
-      return {
-        message: 'error:Invalid form data.',
-        errors: validatedFields.error.flatten().fieldErrors,
-        data: null,
-      };
-    }
-
+export async function handleYieldPrediction(data: YieldPredictionInput) {
     try {
-      const result = await predictYield(validatedFields.data);
-      return { message: "Prediction complete.", data: result, errors: null };
+      const result = await predictYield(data);
+      return { message: "Prediction complete.", data: result };
     } catch (e: any) {
-      return { message: `error: ${e.message}`, data: null, errors: null };
+      return { message: `error: ${e.message}`, data: null };
     }
 }
 
-const demandForecastSchema = z.object({
-  cropType: z.string().min(2, "Please enter a crop type."),
-  region: z.string().min(2, "Please enter a region."),
-  month: z.string().min(1, "Please select a month."),
-});
-
-export async function handleDemandForecast(prevState: any, formData: FormData) {
-    const validatedFields = demandForecastSchema.safeParse({
-        cropType: formData.get('cropType'),
-        region: formData.get('region'),
-        month: formData.get('month'),
-    });
-
-    if (!validatedFields.success) {
-        return {
-        message: 'error:Invalid form data.',
-        errors: validatedFields.error.flatten().fieldErrors,
-        data: null,
-        };
-    }
-
+export async function handleDemandForecast(data: DemandForecastInput) {
     try {
-        const result = await forecastDemand(validatedFields.data);
-        return { message: "Forecast complete.", data: result, errors: null };
+        const result = await forecastDemand(data);
+        return { message: "Forecast complete.", data: result };
     } catch (e: any) {
-        return { message: `error: ${e.message}`, data: null, errors: null };
+        return { message: `error: ${e.message}`, data: null };
     }
 }
 
-const creditScoreSchema = z.object({
-  annualRevenue: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Annual revenue must be a positive number.")),
-  yearsFarming: z.preprocess((a) => parseInt(z.string().parse(a)), z.number().int().min(0, "Years in farming cannot be negative.")),
-  loanHistory: z.string().min(1, "Please select your loan history."),
-  outstandingDebt: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Outstanding debt cannot be negative.")),
-});
-
-export async function handleCreditScore(prevState: any, formData: FormData) {
-    const validatedFields = creditScoreSchema.safeParse({
-        annualRevenue: formData.get('annualRevenue'),
-        yearsFarming: formData.get('yearsFarming'),
-        loanHistory: formData.get('loanHistory'),
-        outstandingDebt: formData.get('outstandingDebt'),
-    });
-
-    if (!validatedFields.success) {
-        return {
-            message: 'error:Invalid form data.',
-            errors: validatedFields.error.flatten().fieldErrors,
-            data: null,
-        };
-    }
-
+export async function handleCreditScore(data: CreditScoreInput) {
     try {
-        const result = await assessCreditScore(validatedFields.data);
-        return { message: "Assessment complete.", data: result, errors: null };
+        const result = await assessCreditScore(data);
+        return { message: "Assessment complete.", data: result };
     } catch (e: any) {
-        return { message: `error: ${e.message}`, data: null, errors: null };
+        return { message: `error: ${e.message}`, data: null };
     }
 }
 
-const insuranceRiskSchema = z.object({
-  cropType: z.string().min(2, "Please enter a crop type."),
-  region: z.string().min(2, "Please enter a region."),
-  acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be positive.")),
-  historicalEvents: z.string().min(1, "Please select a historical event likelihood."),
-});
-
-export async function handleInsuranceRisk(prevState: any, formData: FormData) {
-    const validatedFields = insuranceRiskSchema.safeParse({
-        cropType: formData.get('cropType'),
-        region: formData.get('region'),
-        acreage: formData.get('acreage'),
-        historicalEvents: formData.get('historicalEvents'),
-    });
-    
-    if (!validatedFields.success) {
-        return {
-            message: 'error:Invalid form data.',
-            errors: validatedFields.error.flatten().fieldErrors,
-            data: null,
-        };
-    }
-
+export async function handleInsuranceRisk(data: InsuranceRiskInput) {
     try {
-        const result = await assessInsuranceRisk(validatedFields.data);
-        return { message: "Assessment complete.", data: result, errors: null };
+        const result = await assessInsuranceRisk(data);
+        return { message: "Assessment complete.", data: result };
     } catch (e: any) {
-        return { message: `error: ${e.message}`, data: null, errors: null };
+        return { message: `error: ${e.message}`, data: null };
     }
 }
 
@@ -381,4 +261,3 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
         return { message: `error:Update failed. ${errorMessage}` };
     }
 }
-

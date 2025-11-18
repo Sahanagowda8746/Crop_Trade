@@ -1,7 +1,6 @@
 
 'use client';
-import { useEffect, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAppContext } from '@/context/app-context';
 import { useToast } from '@/hooks/use-toast';
-import { ShieldCheck, Sparkles, Loader2, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react';
+import { ShieldCheck, Sparkles, Loader2 } from 'lucide-react';
 import { handleInsuranceRisk } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
@@ -23,29 +22,10 @@ const formSchema = z.object({
   cropType: z.string().min(2, "Please enter a crop type."),
   region: z.string().min(2, "Please enter a region."),
   acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be positive.")),
-  historicalEvents: z.string().min(1, "Please select a historical event likelihood."),
+  historicalEvents: z.enum(['None', 'Rare', 'Occasional', 'Frequent']),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
-
-const initialState: {
-    message: string;
-    data: InsuranceRiskOutput | null;
-    errors?: any;
-} = {
-  message: '',
-  data: null,
-};
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" size="lg" className="w-full" disabled={pending}>
-      {pending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
-      Assess Risk
-    </Button>
-  );
-}
 
 function scoreToColor(score: number): string {
     if (score <= 25) return 'text-green-500';
@@ -57,14 +37,15 @@ function scoreToColor(score: number): string {
 export default function InsuranceRiskPage() {
   const { setPageTitle } = useAppContext();
   const { toast } = useToast();
-  
-  const [state, formAction, isPending] = useActionState(handleInsuranceRisk, initialState);
+  const [isPending, setIsPending] = useState(false);
+  const [result, setResult] = useState<InsuranceRiskOutput | null>(null);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       cropType: 'Rice',
       region: 'Coastal Andhra Pradesh, India',
+      acreage: undefined,
       historicalEvents: 'Occasional',
     },
   });
@@ -73,13 +54,18 @@ export default function InsuranceRiskPage() {
     setPageTitle('AI Insurance Risk Assessment');
   }, [setPageTitle]);
   
-  useEffect(() => {
-    if (state.message.startsWith('error:')) {
-      toast({ variant: 'destructive', title: 'Assessment Failed', description: state.message.replace('error:', '') });
-    } else if (state.data) {
+  const onSubmit = async (data: FormSchema) => {
+    setIsPending(true);
+    setResult(null);
+    const response = await handleInsuranceRisk(data);
+    if(response.data) {
+      setResult(response.data);
       toast({ title: 'Assessment Ready!', description: "Your custom insurance risk profile is complete." });
+    } else {
+       toast({ variant: 'destructive', title: 'Assessment Failed', description: response.message.replace('error:', '') });
     }
-  }, [state, toast]);
+    setIsPending(false);
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -96,7 +82,7 @@ export default function InsuranceRiskPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form action={formAction} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <FormField control={form.control} name="cropType" render={({ field }) => (
                         <FormItem>
@@ -119,7 +105,7 @@ export default function InsuranceRiskPage() {
                     <FormField control={form.control} name="acreage" render={({ field }) => (
                             <FormItem>
                             <FormLabel>Acreage</FormLabel>
-                            <FormControl><Input type="number" placeholder="e.g., 50" {...field} /></FormControl>
+                            <FormControl><Input type="number" placeholder="e.g., 50" {...field} value={field.value ?? ''} /></FormControl>
                             <FormMessage />
                             </FormItem>
                         )}
@@ -141,7 +127,10 @@ export default function InsuranceRiskPage() {
                     )}
                     />
                 </div>
-                <SubmitButton />
+                <Button type="submit" size="lg" className="w-full" disabled={isPending}>
+                  {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
+                  Assess Risk
+                </Button>
               </form>
             </Form>
           </CardContent>
@@ -161,18 +150,18 @@ export default function InsuranceRiskPage() {
                 </Card>
             )}
 
-            {state.data && (
+            {result && (
                 <Card className="animate-in fade-in-50">
                     <CardHeader className="items-center text-center">
                         <CardDescription>Overall Risk Score</CardDescription>
-                        <CardTitle className={`text-7xl font-bold ${scoreToColor(state.data.riskScore)}`}>{state.data.riskScore}</CardTitle>
-                        <Progress value={state.data.riskScore} className="w-3/4 mx-auto" />
-                        <p className={`font-semibold text-lg ${scoreToColor(state.data.riskScore)}`}>{state.data.riskLevel} Risk</p>
+                        <CardTitle className={`text-7xl font-bold ${scoreToColor(result.riskScore)}`}>{result.riskScore}</CardTitle>
+                        <Progress value={result.riskScore} className="w-3/4 mx-auto" />
+                        <p className={`font-semibold text-lg ${scoreToColor(result.riskScore)}`}>{result.riskLevel} Risk</p>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <Card className="text-center p-4">
                              <CardDescription>Estimated Premium</CardDescription>
-                             <p className="text-2xl font-bold text-primary">{state.data.premiumEstimate}</p>
+                             <p className="text-2xl font-bold text-primary">{result.premiumEstimate}</p>
                         </Card>
                         
                         <Separator/>
@@ -180,7 +169,7 @@ export default function InsuranceRiskPage() {
                         <div>
                             <h3 className="font-semibold mb-4 text-lg">Key Risk Factors</h3>
                              <div className="space-y-2">
-                                {state.data.riskFactors.map((rec, i) => (
+                                {result.riskFactors.map((rec, i) => (
                                     <div key={i} className="text-sm text-muted-foreground">
                                         <span className={`font-semibold ${rec.impact === 'Positive' ? 'text-green-600' : 'text-destructive'}`}>{rec.impact}:</span> {rec.reason}
                                     </div>
@@ -191,7 +180,7 @@ export default function InsuranceRiskPage() {
                          <div>
                             <h3 className="font-semibold mb-2 text-lg">Risk Mitigation Steps</h3>
                             <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                                {state.data.mitigationSteps.map((rec, i) => (
+                                {result.mitigationSteps.map((rec, i) => (
                                     <li key={i}>{rec}</li>
                                 ))}
                             </ul>
@@ -199,7 +188,7 @@ export default function InsuranceRiskPage() {
                     </CardContent>
                 </Card>
             )}
-             {!isPending && !state.data && (
+             {!isPending && !result && (
                  <Card className="flex items-center justify-center py-20 text-center">
                     <CardContent className="pt-6">
                         <ShieldCheck className="mx-auto h-12 w-12 text-muted-foreground"/>

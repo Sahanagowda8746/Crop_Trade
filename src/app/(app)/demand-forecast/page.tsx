@@ -1,7 +1,6 @@
 
 'use client';
-import { useEffect, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { LineChart, Sparkles, Loader2, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react';
 import { handleDemandForecast } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import type { DemandForecastOutput } from '@/ai/flows/demand-forecast';
 
@@ -29,25 +27,6 @@ const formSchema = z.object({
 
 type FormSchema = z.infer<typeof formSchema>;
 
-const initialState: {
-    message: string;
-    data: DemandForecastOutput | null;
-    errors?: any;
-} = {
-  message: '',
-  data: null,
-};
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" size="lg" className="w-full" disabled={pending}>
-      {pending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
-      Forecast Demand
-    </Button>
-  );
-}
-
 function TrendIcon({ trend }: { trend: 'Increasing' | 'Decreasing' | 'Stable' }) {
     if (trend === 'Increasing') return <TrendingUp className="h-8 w-8 text-green-500" />;
     if (trend === 'Decreasing') return <TrendingDown className="h-8 w-8 text-destructive" />;
@@ -58,8 +37,8 @@ function TrendIcon({ trend }: { trend: 'Increasing' | 'Decreasing' | 'Stable' })
 export default function DemandForecastPage() {
   const { setPageTitle } = useAppContext();
   const { toast } = useToast();
-  
-  const [state, formAction, isPending] = useActionState(handleDemandForecast, initialState);
+  const [isPending, setIsPending] = useState(false);
+  const [result, setResult] = useState<DemandForecastOutput | null>(null);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -74,13 +53,18 @@ export default function DemandForecastPage() {
     setPageTitle('AI Demand Forecast');
   }, [setPageTitle]);
   
-  useEffect(() => {
-    if (state.message.startsWith('error:')) {
-      toast({ variant: 'destructive', title: 'Forecast Failed', description: state.message.replace('error:', '') });
-    } else if (state.data) {
+  const onSubmit = async (data: FormSchema) => {
+    setIsPending(true);
+    setResult(null);
+    const response = await handleDemandForecast(data);
+    if (response.data) {
+      setResult(response.data);
       toast({ title: 'Forecast Ready!', description: "Your custom demand forecast has been generated." });
+    } else {
+       toast({ variant: 'destructive', title: 'Forecast Failed', description: response.message.replace('error:', '') });
     }
-  }, [state, toast]);
+    setIsPending(false);
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -97,7 +81,7 @@ export default function DemandForecastPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form action={formAction} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <FormField control={form.control} name="cropType" render={({ field }) => (
                         <FormItem>
@@ -129,7 +113,10 @@ export default function DemandForecastPage() {
                     </FormItem>
                   )}
                 />
-                <SubmitButton />
+                <Button type="submit" size="lg" className="w-full" disabled={isPending}>
+                  {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
+                  Forecast Demand
+                </Button>
               </form>
             </Form>
           </CardContent>
@@ -149,7 +136,7 @@ export default function DemandForecastPage() {
                 </Card>
             )}
 
-            {state.data && (
+            {result && (
                 <Card className="animate-in fade-in-50">
                     <CardHeader>
                         <CardTitle>Forecast for {form.getValues('cropType')} in {form.getValues('month')}</CardTitle>
@@ -160,22 +147,22 @@ export default function DemandForecastPage() {
                             <Card className="text-center p-4">
                                 <CardDescription>Demand Trend</CardDescription>
                                 <div className="flex justify-center items-center gap-2 mt-2">
-                                    <TrendIcon trend={state.data.demand.trend} />
-                                    <p className="text-2xl font-bold">{state.data.demand.trend}</p>
+                                    <TrendIcon trend={result.demand.trend} />
+                                    <p className="text-2xl font-bold">{result.demand.trend}</p>
                                 </div>
                             </Card>
                              <Card className="text-center p-4">
                                 <CardDescription>Price Trend</CardDescription>
                                  <div className="flex justify-center items-center gap-2 mt-2">
-                                    <TrendIcon trend={state.data.price.trend} />
-                                    <p className="text-2xl font-bold">{state.data.price.trend}</p>
+                                    <TrendIcon trend={result.price.trend} />
+                                    <p className="text-2xl font-bold">{result.price.trend}</p>
                                 </div>
                             </Card>
                         </div>
                         
                         <div>
                             <h3 className="font-semibold mb-2 text-lg">Analysis</h3>
-                             <p className="text-sm text-muted-foreground">{state.data.analysis}</p>
+                             <p className="text-sm text-muted-foreground">{result.analysis}</p>
                         </div>
                         
                         <Separator/>
@@ -183,7 +170,7 @@ export default function DemandForecastPage() {
                         <div>
                             <h3 className="font-semibold mb-4 flex items-center gap-2"><Info className="text-primary"/>Strategic Recommendations</h3>
                              <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
-                                {state.data.recommendations.map((rec, i) => (
+                                {result.recommendations.map((rec, i) => (
                                     <li key={i}>{rec}</li>
                                 ))}
                             </ul>
@@ -191,7 +178,7 @@ export default function DemandForecastPage() {
                     </CardContent>
                 </Card>
             )}
-             {!isPending && !state.data && (
+             {!isPending && !result && (
                  <Card className="flex items-center justify-center py-20 text-center">
                     <CardContent className="pt-6">
                         <LineChart className="mx-auto h-12 w-12 text-muted-foreground"/>

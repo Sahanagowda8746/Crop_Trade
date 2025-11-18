@@ -1,7 +1,6 @@
 
 'use client';
-import { useEffect, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { AreaChart, Sparkles, Loader2, CheckCircle, XCircle, Minus } from 'lucide-react';
 import { handleYieldPrediction } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import type { YieldPredictionOutput } from '@/ai/flows/yield-prediction';
@@ -33,25 +31,6 @@ const formSchema = z.object({
 
 type FormSchema = z.infer<typeof formSchema>;
 
-const initialState: {
-    message: string;
-    data: YieldPredictionOutput | null;
-    errors?: any;
-} = {
-  message: '',
-  data: null,
-};
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" size="lg" className="w-full" disabled={pending}>
-      {pending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
-      Predict Yield
-    </Button>
-  );
-}
-
 function FactorIcon({ impact }: { impact: 'Positive' | 'Negative' | 'Neutral' }) {
     if (impact === 'Positive') return <CheckCircle className="h-5 w-5 text-green-500" />;
     if (impact === 'Negative') return <XCircle className="h-5 w-5 text-destructive" />;
@@ -61,13 +40,17 @@ function FactorIcon({ impact }: { impact: 'Positive' | 'Negative' | 'Neutral' })
 export default function YieldPredictionPage() {
   const { setPageTitle } = useAppContext();
   const { toast } = useToast();
-  
-  const [state, formAction, isPending] = useActionState(handleYieldPrediction, initialState);
+  const [isPending, setIsPending] = useState(false);
+  const [result, setResult] = useState<YieldPredictionOutput | null>(null);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      soilType: 'Loam'
+      soilType: 'Loam',
+      acreage: undefined,
+      nitrogenLevel: undefined,
+      phosphorusLevel: undefined,
+      potassiumLevel: undefined,
     },
   });
 
@@ -75,15 +58,18 @@ export default function YieldPredictionPage() {
     setPageTitle('AI Yield Prediction');
   }, [setPageTitle]);
   
-  useEffect(() => {
-    if (state.message) {
-        if (state.message.startsWith('error:')) {
-            toast({ variant: 'destructive', title: 'Prediction Failed', description: state.message.replace('error:', '') });
-        } else if (state.data) {
-            toast({ title: 'Prediction Ready!', description: "Your custom yield forecast has been generated." });
-        }
+  const onSubmit = async (data: FormSchema) => {
+    setIsPending(true);
+    setResult(null);
+    const response = await handleYieldPrediction(data);
+    if(response.data) {
+        setResult(response.data);
+        toast({ title: 'Prediction Ready!', description: "Your custom yield forecast has been generated." });
+    } else {
+        toast({ variant: 'destructive', title: 'Prediction Failed', description: response.message.replace('error:', '') });
     }
-  }, [state, toast]);
+    setIsPending(false);
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -100,7 +86,7 @@ export default function YieldPredictionPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form action={formAction} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <FormField control={form.control} name="cropType" render={({ field }) => (
                         <FormItem>
@@ -113,7 +99,7 @@ export default function YieldPredictionPage() {
                      <FormField control={form.control} name="acreage" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Acreage</FormLabel>
-                          <FormControl><Input type="number" placeholder="e.g., 100" {...field} /></FormControl>
+                          <FormControl><Input type="number" placeholder="e.g., 100" {...field} value={field.value ?? ''} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -154,7 +140,7 @@ export default function YieldPredictionPage() {
                    <FormField control={form.control} name="nitrogenLevel" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Nitrogen (N)</FormLabel>
-                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 45.5" {...field} /></FormControl>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 45.5" {...field} value={field.value ?? ''} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -162,7 +148,7 @@ export default function YieldPredictionPage() {
                     <FormField control={form.control} name="phosphorusLevel" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Phosphorus (P)</FormLabel>
-                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 25.2" {...field} /></FormControl>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 25.2" {...field} value={field.value ?? ''} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -170,7 +156,7 @@ export default function YieldPredictionPage() {
                     <FormField control={form.control} name="potassiumLevel" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Potassium (K)</FormLabel>
-                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 180.0" {...field} /></FormControl>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 180.0" {...field} value={field.value ?? ''} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -184,7 +170,10 @@ export default function YieldPredictionPage() {
                         </FormItem>
                       )}
                     />
-                <SubmitButton />
+                <Button type="submit" size="lg" className="w-full" disabled={isPending}>
+                  {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
+                  Predict Yield
+                </Button>
               </form>
             </Form>
           </CardContent>
@@ -204,7 +193,7 @@ export default function YieldPredictionPage() {
                 </Card>
             )}
 
-            {state.data && (
+            {result && (
                 <Card className="animate-in fade-in-50">
                     <CardHeader>
                         <CardTitle>Forecast for {form.getValues('cropType')}</CardTitle>
@@ -214,21 +203,21 @@ export default function YieldPredictionPage() {
                         <div className='grid grid-cols-2 gap-4'>
                             <Card className="text-center">
                                 <CardHeader className="pb-2">
-                                    <CardTitle className="text-primary text-3xl font-bold">{state.data.predictedYield}</CardTitle>
+                                    <CardTitle className="text-primary text-3xl font-bold">{result.predictedYield}</CardTitle>
                                     <CardDescription>Total Estimated Yield</CardDescription>
                                 </CardHeader>
                             </Card>
                              <Card className="text-center">
                                 <CardHeader className="pb-2">
-                                    <CardTitle className="text-primary text-3xl font-bold">{state.data.yieldPerAcre}</CardTitle>
+                                    <CardTitle className="text-primary text-3xl font-bold">{result.yieldPerAcre}</CardTitle>
                                     <CardDescription>Estimated Yield per Acre</CardDescription>
                                 </CardHeader>
                             </Card>
                         </div>
                         
                         <div>
-                            <p className="text-sm font-medium">Confidence Score: {state.data.confidenceScore}%</p>
-                            <Progress value={state.data.confidenceScore} className="mt-2" />
+                            <p className="text-sm font-medium">Confidence Score: {result.confidenceScore}%</p>
+                            <Progress value={result.confidenceScore} className="mt-2" />
                         </div>
                         
                         <Separator/>
@@ -236,7 +225,7 @@ export default function YieldPredictionPage() {
                         <div>
                             <h3 className="font-semibold mb-4">Key Influencing Factors</h3>
                              <div className="space-y-4">
-                                {state.data.influencingFactors.map((item, i) => (
+                                {result.influencingFactors.map((item, i) => (
                                     <div key={i} className="flex items-start gap-4 p-3 rounded-lg bg-muted/50">
                                         <FactorIcon impact={item.impact} />
                                         <div>
@@ -251,7 +240,7 @@ export default function YieldPredictionPage() {
                          <div>
                             <h3 className="font-semibold mb-2">Recommendations</h3>
                             <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                                {state.data.recommendations.map((rec, i) => (
+                                {result.recommendations.map((rec, i) => (
                                     <li key={i}>{rec}</li>
                                 ))}
                             </ul>
@@ -259,7 +248,7 @@ export default function YieldPredictionPage() {
                     </CardContent>
                 </Card>
             )}
-             {!isPending && !state.data && (
+             {!isPending && !result && (
                  <Card className="flex items-center justify-center py-20 text-center">
                     <CardContent className="pt-6">
                         <AreaChart className="mx-auto h-12 w-12 text-muted-foreground"/>

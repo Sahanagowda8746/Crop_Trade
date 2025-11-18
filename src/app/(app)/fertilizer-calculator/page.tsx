@@ -1,7 +1,6 @@
 
 'use client';
-import { useEffect, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Calculator, Sparkles, Loader2, FlaskConical, Beaker, Leaf, Siren } from 'lucide-react';
 import { handleFertilizerCalculation } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import type { FertilizerCalculatorOutput } from '@/ai/flows/fertilizer-calculator';
 
@@ -30,36 +29,21 @@ const formSchema = z.object({
 
 type FormSchema = z.infer<typeof formSchema>;
 
-const initialState: {
-    message: string;
-    data: FertilizerCalculatorOutput | null;
-    errors?: any
-} = {
-  message: '',
-  data: null,
-};
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" size="lg" className="w-full" disabled={pending}>
-      {pending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
-      Calculate Plan
-    </Button>
-  );
-}
-
 export default function FertilizerCalculatorPage() {
   const { setPageTitle } = useAppContext();
   const { toast } = useToast();
-  
-  const [state, formAction, isPending] = useActionState(handleFertilizerCalculation, initialState);
-
+  const [isPending, setIsPending] = useState(false);
+  const [result, setResult] = useState<FertilizerCalculatorOutput | null>(null);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      soilType: 'Loam'
+      soilType: 'Loam',
+      nitrogen: undefined,
+      phosphorus: undefined,
+      potassium: undefined,
+      ph: undefined,
+      targetCrop: '',
     },
   });
 
@@ -67,13 +51,18 @@ export default function FertilizerCalculatorPage() {
     setPageTitle('AI Fertilizer Calculator');
   }, [setPageTitle]);
 
-  useEffect(() => {
-    if (state.message.startsWith('error:')) {
-      toast({ variant: 'destructive', title: 'Calculation Failed', description: state.message.replace('error:', '') });
-    } else if (state.data) {
+  const onSubmit = async (data: FormSchema) => {
+    setIsPending(true);
+    setResult(null);
+    const response = await handleFertilizerCalculation(data);
+    if (response.data) {
+      setResult(response.data);
       toast({ title: 'Plan Ready!', description: "Your custom fertilizer plan has been generated." });
+    } else {
+      toast({ variant: 'destructive', title: 'Calculation Failed', description: response.message.replace('error:', '') });
     }
-  }, [state, toast]);
+    setIsPending(false);
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -90,7 +79,7 @@ export default function FertilizerCalculatorPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form action={formAction} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <FormField
                       control={form.control}
@@ -133,7 +122,7 @@ export default function FertilizerCalculatorPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Soil pH</FormLabel>
-                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 6.8" {...field} /></FormControl>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 6.8" {...field} value={field.value ?? ''} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -150,7 +139,7 @@ export default function FertilizerCalculatorPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Nitrogen (N)</FormLabel>
-                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 45.5" {...field} /></FormControl>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 45.5" {...field} value={field.value ?? ''} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -161,7 +150,7 @@ export default function FertilizerCalculatorPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Phosphorus (P)</FormLabel>
-                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 25.2" {...field} /></FormControl>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 25.2" {...field} value={field.value ?? ''} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -172,13 +161,16 @@ export default function FertilizerCalculatorPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Potassium (K)</FormLabel>
-                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 180.0" {...field} /></FormControl>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g., 180.0" {...field} value={field.value ?? ''} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                 </div>
-                <SubmitButton />
+                <Button type="submit" size="lg" className="w-full" disabled={isPending}>
+                  {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
+                  Calculate Plan
+                </Button>
               </form>
             </Form>
           </CardContent>
@@ -199,7 +191,7 @@ export default function FertilizerCalculatorPage() {
                 </Card>
             )}
 
-            {state.data && (
+            {result && (
                 <Card className="animate-in fade-in-50">
                     <CardHeader>
                         <CardTitle>Plan for {form.getValues('targetCrop')}</CardTitle>
@@ -209,7 +201,7 @@ export default function FertilizerCalculatorPage() {
                         <div>
                             <h3 className="font-semibold flex items-center gap-2 mb-4"><FlaskConical className="text-primary"/>Recommendations</h3>
                             <div className="space-y-4">
-                            {state.data.recommendations.map((rec, i) => (
+                            {result.recommendations.map((rec, i) => (
                                 <div key={i} className="p-4 rounded-lg bg-muted/50">
                                     <p className="font-bold text-primary">{rec.name} @ {rec.applicationRate}</p>
                                     <p className="text-sm"><span className="font-semibold">Timing:</span> {rec.timing}</p>
@@ -219,13 +211,13 @@ export default function FertilizerCalculatorPage() {
                             </div>
                         </div>
 
-                        {state.data.warnings && state.data.warnings.length > 0 && (
+                        {result.warnings && result.warnings.length > 0 && (
                             <div>
                                 <h3 className="font-semibold flex items-center gap-2 mb-2"><Siren className="text-destructive"/>Warnings</h3>
                                 <Alert variant="destructive">
                                     <AlertDescription>
                                         <ul className="list-disc pl-4">
-                                        {state.data.warnings.map((warn, i) => <li key={i}>{warn}</li>)}
+                                        {result.warnings.map((warn, i) => <li key={i}>{warn}</li>)}
                                         </ul>
                                     </AlertDescription>
                                 </Alert>
@@ -234,12 +226,12 @@ export default function FertilizerCalculatorPage() {
 
                         <div>
                             <h3 className="font-semibold flex items-center gap-2 mb-2"><Leaf className="text-primary"/>General Advice</h3>
-                            <p className="text-muted-foreground text-sm">{state.data.generalAdvice}</p>
+                            <p className="text-muted-foreground text-sm">{result.generalAdvice}</p>
                         </div>
                     </CardContent>
                 </Card>
             )}
-             {!isPending && !state.data && (
+             {!isPending && !result && (
                  <Card className="flex items-center justify-center py-20 text-center">
                     <CardContent className="pt-6">
                         <Beaker className="mx-auto h-12 w-12 text-muted-foreground"/>
