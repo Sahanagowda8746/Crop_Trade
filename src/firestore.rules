@@ -103,7 +103,8 @@ service cloud.firestore {
      * @principle Allows authenticated users to create, read, and list orders.
      */
     match /orders/{orderId} {
-      allow get, list: if isSignedIn();
+      allow get: if isSignedIn() && isOwner(resource.data.buyerId);
+      allow list: if isSignedIn() && request.query.where.buyerId == request.auth.uid;
       allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
       allow update: if isSignedIn() && request.auth.uid == resource.data.buyerId;
       allow delete: if isSignedIn() && request.auth.uid == resource.data.buyerId && resource != null;
@@ -157,7 +158,7 @@ service cloud.firestore {
         allow read: if isSignedIn() && (isOwner(resource.data.userId) || hasRole('Admin'));
         allow list: if hasRole('Admin') || (isSignedIn() && request.query.where.userId == request.auth.uid);
         allow update: if hasRole('Admin') && request.resource.data.userId == resource.data.userId; // Ensure userId is not changed
-        allow delete: if get(/databases/$(database)/documents/soilKitOrders/$(orderId)).data.userId == request.auth.uid;
+        allow delete: if false;
     }
 
     /**
