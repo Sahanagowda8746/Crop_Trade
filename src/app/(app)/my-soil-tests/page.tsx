@@ -3,52 +3,14 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAppContext } from '@/context/app-context';
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
-import type { SoilAnalysis, SoilKitOrder } from '@/lib/types';
+import type { SoilKitOrder } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TestTube, FlaskConical, Bot, CheckCircle, Clock, Package, Truck, Upload } from 'lucide-react';
+import { TestTube, FlaskConical, CheckCircle, Package, Truck, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { v4 as uuidv4 } from 'uuid';
-
-function SoilAnalysisCard({ report }: { report: SoilAnalysis }) {
-    return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <CardTitle className="font-headline text-xl flex items-center gap-2">
-                        <Bot className="text-primary"/> AI Analysis Report
-                    </CardTitle>
-                    <Badge variant="secondary">AI</Badge>
-                </div>
-                <CardDescription>
-                    Analysis from {new Date(report.analysisDate).toLocaleDateString()}
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
-                 <div>
-                    <p className="text-sm font-medium text-muted-foreground">Soil Type</p>
-                    <p className="font-semibold">{report.soilType}</p>
-                </div>
-                 <div>
-                    <p className="text-sm font-medium text-muted-foreground">Fertility</p>
-                    <p className="font-semibold">{report.fertilityScore} / 100</p>
-                </div>
-                 <div>
-                    <p className="text-sm font-medium text-muted-foreground">pH Estimate</p>
-                    <p className="font-semibold">{report.phEstimate}</p>
-                </div>
-                 <div>
-                    <p className="text-sm font-medium text-muted-foreground">Moisture</p>
-                    <p className="font-semibold">{report.moisture}</p>
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
 
 function SoilKitOrderCard({ order, role }: { order: SoilKitOrder, role: string }) {
     const firestore = useFirestore();
@@ -120,11 +82,6 @@ export default function MySoilTestsPage() {
         setPageTitle('My Soil Tests');
     }, [setPageTitle]);
 
-    const aiReportsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/soilAnalyses`), orderBy('analysisDate', 'desc'));
-    }, [user, firestore]);
-
     const kitOrdersQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         const baseCollection = collection(firestore, 'soilKitOrders');
@@ -136,7 +93,6 @@ export default function MySoilTestsPage() {
         return query(baseCollection, where('userId', '==', user.uid));
     }, [user, firestore, role]);
 
-    const { data: aiReports, isLoading: isLoadingAiReports } = useCollection<SoilAnalysis>(aiReportsQuery);
     const { data: kitOrders, isLoading: isLoadingKitOrders } = useCollection<SoilKitOrder>(kitOrdersQuery);
 
     const sortedKitOrders = useMemo(() => {
@@ -145,71 +101,39 @@ export default function MySoilTestsPage() {
         return [...kitOrders].sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
     }, [kitOrders]);
 
-    const isLoading = isUserLoading || isLoadingAiReports || isLoadingKitOrders;
+    const isLoading = isUserLoading || isLoadingKitOrders;
 
     return (
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline text-2xl">My Soil Tests</CardTitle>
-                    <CardDescription>View your AI-driven soil analyses and track your physical soil kit orders. {role === 'Admin' && <span className="font-bold text-primary">(Admin View)</span>}</CardDescription>
+                    <CardTitle className="font-headline text-2xl">My Soil Kit Orders</CardTitle>
+                    <CardDescription>Track your physical soil kit orders and view lab reports. {role === 'Admin' && <span className="font-bold text-primary">(Admin View)</span>}</CardDescription>
                 </CardHeader>
             </Card>
 
-            <Tabs defaultValue="ai-reports">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="ai-reports">AI Analysis History</TabsTrigger>
-                    <TabsTrigger value="kit-orders">Soil Kit Orders</TabsTrigger>
-                </TabsList>
-                <TabsContent value="ai-reports" className="space-y-4">
-                    {isLoading && (
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <Skeleton className="h-48" />
-                            <Skeleton className="h-48" />
-                        </div>
-                    )}
-                    {!isLoading && aiReports?.length === 0 && (
-                        <Card className="text-center py-12">
-                             <CardHeader>
-                                <CardTitle>No AI Reports</CardTitle>
-                                <CardDescription>You haven't performed any AI soil analyses yet.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Button asChild>
-                                    <Link href="/ai-tools">Run First Analysis</Link>
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    )}
-                    <div className="grid md:grid-cols-2 gap-4">
-                        {aiReports?.map(report => <SoilAnalysisCard key={report.id} report={report} />)}
-                    </div>
-                </TabsContent>
-                <TabsContent value="kit-orders" className="space-y-4">
-                     {isLoading && (
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <Skeleton className="h-48" />
-                            <Skeleton className="h-48" />
-                        </div>
-                    )}
-                    {!isLoading && sortedKitOrders.length === 0 && (
-                        <Card className="text-center py-12">
-                            <CardHeader>
-                                <CardTitle>No Soil Kit Orders</CardTitle>
-                                <CardDescription>Purchase a soil kit for a professional lab analysis.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                 <Button asChild>
-                                    <Link href="/soil-kit">Order a Kit</Link>
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    )}
-                    <div className="grid md:grid-cols-2 gap-4">
-                        {sortedKitOrders.map(order => <SoilKitOrderCard key={order.id} order={order} role={role}/>)}
-                    </div>
-                </TabsContent>
-            </Tabs>
+            {isLoading && (
+                <div className="grid md:grid-cols-2 gap-4">
+                    <Skeleton className="h-48" />
+                    <Skeleton className="h-48" />
+                </div>
+            )}
+            {!isLoading && sortedKitOrders.length === 0 && (
+                <Card className="text-center py-12">
+                    <CardHeader>
+                        <CardTitle>No Soil Kit Orders</CardTitle>
+                        <CardDescription>Purchase a soil kit for a professional lab analysis.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <Button asChild>
+                            <Link href="/soil-kit">Order a Kit</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+            <div className="grid md:grid-cols-2 gap-4">
+                {sortedKitOrders.map(order => <SoilKitOrderCard key={order.id} order={order} role={role}/>)}
+            </div>
         </div>
     );
 }
