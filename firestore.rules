@@ -234,13 +234,12 @@ service cloud.firestore {
     /**
      * @description Rules for transport requests.
      * @path /transportRequests/{transportRequestId}
-     * @allow (read) Only authenticated transporters can see transport requests.
+     * @allow (read) Any authenticated user can see transport requests.
      * @allow (create) Only authenticated users (buyers or system) can create requests.
      * @principle Secures transport requests to relevant parties.
      */
     match /transportRequests/{transportRequestId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow read: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if false; // Should be handled by system logic
     }
