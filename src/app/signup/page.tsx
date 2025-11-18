@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -156,7 +157,7 @@ export default function SignupPage() {
         <div className="text-center">
           <div className="flex justify-center items-center gap-2 mb-4">
             <Sprout className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-headline font-bold">CropTrade</h1>
+            <h1 className="text-4xl font-headline font-bold text-primary">CropTrade</h1>
           </div>
           <p className="text-muted-foreground">Create an account to get started.</p>
         </div>
