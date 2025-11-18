@@ -71,29 +71,8 @@ function OrderDialog() {
     const [address, setAddress] = useState('');
     const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Card'>('UPI');
 
-    const handleConfirmOrder = async () => {
-        if (!user || !firestore) {
-            toast({
-                variant: 'destructive',
-                title: 'You are not logged in',
-                description: 'Please log in to purchase a soil kit.',
-            });
-            return;
-        }
-
-        if (!address.trim()) {
-            toast({
-                variant: 'destructive',
-                title: 'Address Required',
-                description: 'Please enter a delivery address.',
-            });
-            return;
-        }
-
-        toast({
-            title: 'Processing Order...',
-            description: 'Please wait while we create your order.',
-        });
+    const createOrderInFirestore = async () => {
+        if (!user || !firestore) return; // Should be checked before calling
 
         const newOrder = {
             userId: user.uid,
@@ -116,6 +95,60 @@ function OrderDialog() {
 
         setIsOpen(false);
         router.push('/my-soil-tests');
+    };
+
+    const handleConfirmOrder = async () => {
+        if (!user || !firestore) {
+            toast({
+                variant: 'destructive',
+                title: 'You are not logged in',
+                description: 'Please log in to purchase a soil kit.',
+            });
+            return;
+        }
+
+        if (!address.trim()) {
+            toast({
+                variant: 'destructive',
+                title: 'Address Required',
+                description: 'Please enter a delivery address.',
+            });
+            return;
+        }
+
+        toast({
+            title: 'Processing Order...',
+            description: 'Please wait while we prepare your order.',
+        });
+
+        if (paymentMethod === 'UPI') {
+            // Construct UPI payment link
+            const payeeAddress = 'sahanagowdasahana8746@okaxis';
+            const payeeName = 'CropTrade';
+            const amount = '500.00';
+            const note = 'Soil Test Kit Order';
+            const upiUrl = `upi://pay?pa=${payeeAddress}&pn=${payeeName}&am=${amount}&cu=INR&tn=${note}`;
+
+            // Simulate redirection for non-mobile environments
+            if (typeof window !== 'undefined') {
+                console.log('Redirecting to UPI:', upiUrl);
+                toast({
+                    title: "Redirecting to UPI",
+                    description: "Opening UPI app to complete payment. Creating order after payment...",
+                });
+                
+                // In a real mobile scenario, this would open the UPI app.
+                // Here, we simulate the process for a web environment.
+                // We'll create the order after a short delay to simulate payment completion.
+                setTimeout(() => {
+                    createOrderInFirestore();
+                }, 3000); // Simulate 3 second payment time
+
+            }
+        } else {
+            // For 'Card' payment, create the order directly as before
+            await createOrderInFirestore();
+        }
     };
 
     return (
@@ -143,7 +176,7 @@ function OrderDialog() {
                     </div>
                      <div>
                         <Label>Payment Method</Label>
-                         <RadioGroup defaultValue="upi" onValueChange={(value: 'UPI' | 'Card') => setPaymentMethod(value)} className="mt-2">
+                         <RadioGroup defaultValue="upi" value={paymentMethod} onValueChange={(value: 'UPI' | 'Card') => setPaymentMethod(value)} className="mt-2">
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="UPI" id="upi" />
                                 <Label htmlFor="upi" className="flex items-center gap-2 cursor-pointer">
@@ -291,5 +324,3 @@ export default function SoilKitPage() {
         </div>
     );
 }
-
-    
