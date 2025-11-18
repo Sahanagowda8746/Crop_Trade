@@ -53,7 +53,7 @@ const analyzeSoilFromImageFlow = ai.defineFlow(
   async ({ photoDataUri, userId }) => {
     // The AI flow is now only responsible for analysis, not for saving data.
     const {output} = await ai.generate({
-        model: 'googleai/gemini-pro-vision',
+        model: 'googleai/gemini-pro',
         prompt: `You are an expert soil scientist and agronomist AI for the AgriLink platform. Analyze the provided image of a soil sample and return a structured JSON output.
 
 Based on the visual characteristics in the image (color, apparent texture, structure, moisture sheen), provide a detailed analysis.
@@ -61,7 +61,7 @@ Based on the visual characteristics in the image (color, apparent texture, struc
 1.  **Soil Identification**: Identify the likely soil type (e.g., Sandy Loam, Clay, Silt).
 2.  **Moisture & Texture**: Estimate moisture and classify texture.
 3.  **pH Estimate**: Provide a numerical pH estimate.
-4.  **Nutrient Prediction**: Predict the levels for Nitrogen, Phosphorus, and Potassium as 'Low', 'Moderate', or 'High'.
+4.  **Nutrient Prediction**: Predict the levels for Nitrogen, Phosphorus, and Potassium as 'Low', 'Moderate', 'High'.
 5.  **Fertility Score**: Calculate an overall fertility score from 0 to 100 based on all factors.
 6.  **Recommendations**: Recommend at least three suitable crops and a clear, actionable fertilizer plan (e.g., "Urea @ 70kg/acre").
 7.  **General Advice**: Provide a simple, summary sentence of advice for the farmer.
