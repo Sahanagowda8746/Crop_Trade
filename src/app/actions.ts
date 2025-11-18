@@ -13,8 +13,9 @@ import { predictYield } from '@/ai/flows/yield-prediction';
 import { forecastDemand } from '@/ai/flows/demand-forecast';
 import { assessCreditScore } from '@/ai/flows/credit-score-flow';
 import { assessInsuranceRisk } from '@/ai/flows/insurance-risk-flow';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { initializeFirebase, setDocumentNonBlocking } from '@/firebase';
+import { getFirestore, doc, setDoc, addDoc, collection } from 'firebase/firestore';
+import { initializeFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import type { SoilAnalysis } from '@/lib/types';
 
 
 // This is a simplified way to get the currently logged-in user's ID on the server.
@@ -63,9 +64,19 @@ export async function handleSoilAnalysis(prevState: any, formData: FormData) {
     const userId = await getUserId();
     const result = await analyzeSoilFromImage({ ...validatedFields.data, userId });
 
-    // Do not return the complex `result` object to the client.
-    // The data is already saved to Firestore by the flow.
-    // Return a simple success message.
+    // The server action is now responsible for saving the data.
+    const { firestore } = initializeFirebase();
+    const analysisCollectionRef = collection(firestore, `users/${userId}/soilAnalyses`);
+    
+    const analysisData: Omit<SoilAnalysis, 'id'> = {
+        ...result,
+        farmerId: userId,
+        analysisDate: new Date().toISOString(),
+    };
+    
+    await addDoc(analysisCollectionRef, analysisData);
+
+    // Return a simple success message, not the full data object.
     return { message: 'Analysis complete.', data: null };
   } catch (error) {
     console.error(error);
@@ -119,8 +130,8 @@ export async function handleAskAgronomist(question: string) {
 
     try {
         const userId = await getUserId();
-        const result = await askAgronomist({ question, userId });
-        return { message: 'Answer complete.', data: result };
+        const response = await askAgronomist({ question, userId });
+        return { message: 'Answer complete.', data: response };
     } catch (error) {
         console.error(error);
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -369,25 +380,9 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
   const { listingId, ...listingData } = validatedFields.data;
 
   try {
-    // This is now a server context. We cannot use the client-side 'initializeFirebase'
-    // We must use the Admin SDK to interact with Firestore from the server.
-    // Since the full Admin SDK setup is not present, we will mock this part.
-    // In a real app, you would have:
-    // import { getAdminApp, getFirestore as getAdminFirestore } from 'firebase-admin/app';
-    // import { getFirestore } from 'firebase-admin/firestore';
-    //
-    // const firestore = getAdminFirestore(getAdminApp());
-    // const listingRef = firestore.doc(`cropListings/${listingId}`);
-    // await listingRef.set(listingData, { merge: true });
-    
-    // For this environment, we'll revert to using the client-side SDK's `setDocumentNonBlocking`
-    // by calling initializeFirebase(), but this is NOT the correct pattern for production Next.js apps.
-    // This is a workaround for the limitations of this specific environment.
     const { firestore } = initializeFirebase();
     const listingRef = doc(firestore, 'cropListings', listingId);
-
-    // Because this is a server action, `setDocumentNonBlocking` will behave like a standard `setDoc`.
-    // The "non-blocking" aspect is primarily for optimistic UI updates on the client.
+    
     await setDoc(listingRef, listingData, { merge: true });
 
     return { message: 'Listing updated successfully.' };

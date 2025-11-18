@@ -52,143 +52,10 @@ function fileToDataUri(file: File): Promise<string> {
     });
 }
 
-function NutrientMeter({ level }: { level: 'Low' | 'Moderate' | 'High' }) {
-    const levelMap = {
-        'Low': { value: 25, color: 'bg-red-500' },
-        'Moderate': { value: 60, color: 'bg-yellow-500' },
-        'High': { value: 90, color: 'bg-green-500' },
-    }
-    return <Progress value={levelMap[level].value} indicatorClassName={levelMap[level].color} />
-}
-
-
-function ResultsDisplay({ data, imagePreview }: { data: SoilAnalysisFromImageOutput, imagePreview: string }) {
-    return (
-        <Card className="shadow-md animate-in fade-in-50">
-            <CardHeader>
-                <CardTitle className="font-headline text-2xl">Analysis Results</CardTitle>
-                <CardDescription>The AI has analyzed your soil image and generated the following report.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="md:col-span-1">
-                        <Image src={imagePreview} alt="Analyzed soil" width={400} height={400} className="rounded-lg object-cover w-full aspect-square" />
-                    </div>
-                    <div className="md:col-span-2 grid grid-cols-2 gap-6">
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base font-medium flex items-center gap-2"><Scale className="text-muted-foreground" />Fertility Score</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-4xl font-bold text-primary">{data.fertilityScore}<span className="text-lg font-normal text-muted-foreground">/100</span></p>
-                                <Progress value={data.fertilityScore} className="mt-2" />
-                            </CardContent>
-                        </Card>
-                        <Card>
-                             <CardHeader className="pb-2">
-                                <CardTitle className="text-base font-medium flex items-center gap-2"><Trees className="text-muted-foreground" />Soil Type</CardTitle>
-                            </CardHeader>
-                             <CardContent>
-                                <p className="text-2xl font-semibold">{data.soilType}</p>
-                            </CardContent>
-                        </Card>
-                         <Card>
-                             <CardHeader className="pb-2">
-                                <CardTitle className="text-base font-medium flex items-center gap-2"><Droplets className="text-muted-foreground" />Moisture</CardTitle>
-                            </CardHeader>
-                             <CardContent>
-                                <p className="text-2xl font-semibold">{data.moisture}</p>
-                            </CardContent>
-                        </Card>
-                         <Card>
-                             <CardHeader className="pb-2">
-                                <CardTitle className="text-base font-medium flex items-center gap-2"><Microscope className="text-muted-foreground" />Texture</CardTitle>
-                            </CardHeader>
-                             <CardContent>
-                                <p className="text-2xl font-semibold">{data.texture}</p>
-                            </CardContent>
-                        </Card>
-                         <Card>
-                             <CardHeader className="pb-2">
-                                <CardTitle className="text-base font-medium flex items-center gap-2"><TestTube className="text-muted-foreground" />pH Estimate</CardTitle>
-                            </CardHeader>
-                             <CardContent>
-                                <p className="text-2xl font-semibold">{data.phEstimate.toFixed(1)}</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                    <h3 className="font-semibold text-lg flex items-center gap-2 mb-4">
-                        <FlaskConical className="text-primary" /> Nutrient Analysis
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <p className="font-medium">Nitrogen</p>
-                                <p className="text-sm text-muted-foreground">{data.nutrientAnalysis.nitrogen}</p>
-                            </div>
-                            <NutrientMeter level={data.nutrientAnalysis.nitrogen} />
-                        </div>
-                         <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <p className="font-medium">Phosphorus</p>
-                                <p className="text-sm text-muted-foreground">{data.nutrientAnalysis.phosphorus}</p>
-                            </div>
-                             <NutrientMeter level={data.nutrientAnalysis.phosphorus} />
-                        </div>
-                         <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <p className="font-medium">Potassium</p>
-                                <p className="text-sm text-muted-foreground">{data.nutrientAnalysis.potassium}</p>
-                            </div>
-                             <NutrientMeter level={data.nutrientAnalysis.potassium} />
-                        </div>
-                    </div>
-                </div>
-                
-                <Separator />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div>
-                        <h3 className="font-semibold text-lg flex items-center gap-2 mb-2">
-                            <Sprout className="text-primary" /> Recommended Crops
-                        </h3>
-                        <ul className="space-y-2">
-                           {data.recommendedCrops.map(crop => (
-                               <li key={crop} className="flex items-center gap-2 text-muted-foreground">
-                                   <CheckCircle className="h-4 w-4 text-green-500" />
-                                   <span>{crop}</span>
-                               </li>
-                           ))}
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 className="font-semibold text-lg flex items-center gap-2 mb-2">
-                            <Lightbulb className="text-primary" /> Fertilizer Plan & Advice
-                        </h3>
-                        <p className="text-muted-foreground font-semibold mb-2">{data.generalAdvice}</p>
-                         <ul className="space-y-2">
-                           {data.fertilizerPlan.map(plan => (
-                               <li key={plan} className="flex items-start gap-2 text-muted-foreground">
-                                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
-                                   <span>{plan}</span>
-                               </li>
-                           ))}
-                        </ul>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
 
 export default function SoilAnalysisPage() {
   const { setPageTitle } = useAppContext();
-  const [state, formAction, isPending] = useActionState(handleSoilAnalysis, initialState);
+  const [state, formAction] = useActionState(handleSoilAnalysis, initialState);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -234,6 +101,8 @@ export default function SoilAnalysisPage() {
       }
     }
   }, [state, toast, router]);
+  
+  const { pending } = useFormStatus();
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -276,7 +145,7 @@ export default function SoilAnalysisPage() {
         </CardContent>
       </Card>
 
-      {isPending && (
+      {pending && (
         <Card>
           <CardHeader>
             <CardTitle>Analysis in Progress</CardTitle>

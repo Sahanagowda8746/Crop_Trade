@@ -2,7 +2,7 @@
 /**
  * @fileOverview An AI agent to analyze soil and provide crop recommendations and fertilizer plans from an image.
  *
- * - analyzeSoilFromImage - A function that handles the soil analysis process and saves the result to Firestore.
+ * - analyzeSoilFromImage - A function that handles the soil analysis process.
  * - SoilAnalysisFromImageInput - The input type for the analyzeSoilFromImage function.
  * - SoilAnalysisFromImageOutput - The return type for the analyzeSoilFromImage function.
  */
@@ -48,7 +48,7 @@ export async function analyzeSoilFromImage(
 
 const prompt = ai.definePrompt({
   name: 'soilAnalysisFromImagePrompt',
-  input: {schema: SoilAnalysisFromImageInputSchema},
+  input: {schema: z.object({ photoDataUri: SoilAnalysisFromImageInputSchema.shape.photoDataUri })},
   output: {schema: SoilAnalysisFromImageOutputSchema},
   prompt: `You are an expert soil scientist and agronomist AI for the AgriLink platform. Analyze the provided image of a soil sample and return a structured JSON output.
 
@@ -72,23 +72,12 @@ const analyzeSoilFromImageFlow = ai.defineFlow(
     inputSchema: SoilAnalysisFromImageInputSchema,
     outputSchema: SoilAnalysisFromImageOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async ({ photoDataUri }) => {
+    // The AI flow is now only responsible for analysis, not for saving data.
+    const {output} = await prompt({ photoDataUri });
     if (!output) {
       throw new Error("AI analysis failed to produce a valid output.");
     }
-    
-    const { firestore } = getSdks(initializeFirebase(undefined, `backend-action-soil-analysis-${Date.now()}`));
-    const analysisCollectionRef = collection(firestore, `users/${input.userId}/soilAnalyses`);
-    
-    const analysisData: Omit<SoilAnalysis, 'id'> = {
-        ...output,
-        farmerId: input.userId,
-        analysisDate: new Date().toISOString(),
-    };
-    
-    await addDoc(analysisCollectionRef, analysisData);
-
     return output;
   }
 );
