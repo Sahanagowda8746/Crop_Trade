@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -232,6 +233,7 @@ export default function EditListingPage() {
                             <SelectItem value="head">Head</SelectItem>
                           </SelectContent>
                         </Select>
+                        <Input type="hidden" {...field} />
                         <FormMessage />
                       </FormItem>
                     )}

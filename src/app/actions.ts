@@ -344,33 +344,40 @@ const listingSchema = z.object({
 
 
 export async function handleUpdateListing(prevState: any, formData: FormData) {
-  const formValues = Object.fromEntries(formData.entries());
-  
-  // The 'photo' input is used for file selection client-side but is not part of the schema.
-  // We must remove it before validation.
-  delete formValues.photo;
-
-  const validatedFields = listingSchema.safeParse(formValues);
-
-  if (!validatedFields.success) {
-    console.error("Zod validation failed:", validatedFields.error.flatten());
-    return {
-      message: 'error:Invalid form data. Check console for details.',
-      errors: validatedFields.error.flatten().fieldErrors,
+    const formValues = {
+        listingId: formData.get('listingId'),
+        cropType: formData.get('cropType'),
+        variety: formData.get('variety'),
+        quantity: formData.get('quantity'),
+        unit: formData.get('unit'),
+        pricePerUnit: formData.get('pricePerUnit'),
+        location: formData.get('location'),
+        harvestDate: formData.get('harvestDate'),
+        description: formData.get('description'),
+        imageUrl: formData.get('imageUrl'),
     };
-  }
 
-  const { listingId, ...listingData } = validatedFields.data;
+    const validatedFields = listingSchema.safeParse(formValues);
 
-  try {
-    const { firestore } = initializeFirebase();
-    const listingRef = doc(firestore, 'cropListings', listingId);
-    
-    await setDoc(listingRef, listingData, { merge: true });
+    if (!validatedFields.success) {
+        console.error("Zod validation failed:", validatedFields.error.flatten());
+        return {
+            message: 'error:Invalid form data. Check console for details.',
+            errors: validatedFields.error.flatten().fieldErrors,
+        };
+    }
 
-    return { message: 'Listing updated successfully.' };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-    return { message: `error:Update failed. ${errorMessage}` };
-  }
+    const { listingId, ...listingData } = validatedFields.data;
+
+    try {
+        const { firestore } = initializeFirebase();
+        const listingRef = doc(firestore, 'cropListings', listingId);
+        
+        await setDoc(listingRef, listingData, { merge: true });
+
+        return { message: 'Listing updated successfully.' };
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { message: `error:Update failed. ${errorMessage}` };
+    }
 }
