@@ -16,6 +16,7 @@ import { handleFertilizerCalculation } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import type { FertilizerCalculatorOutput } from '@/ai/flows/fertilizer-calculator';
 
 const formSchema = z.object({
   nitrogen: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Nitrogen cannot be negative.")),
@@ -30,7 +31,7 @@ type FormSchema = z.infer<typeof formSchema>;
 
 const initialState: {
     message: string;
-    data: Awaited<ReturnType<typeof calculateFertilizer>> | null;
+    data: FertilizerCalculatorOutput | null;
     errors?: any
 } = {
   message: '',
@@ -64,6 +65,14 @@ export default function FertilizerCalculatorPage() {
   useEffect(() => {
     setPageTitle('AI Fertilizer Calculator');
   }, [setPageTitle]);
+
+  useEffect(() => {
+    if (state.message.startsWith('error:')) {
+      toast({ variant: 'destructive', title: 'Calculation Failed', description: state.message.replace('error:', '') });
+    } else if (state.data) {
+      toast({ title: 'Plan Ready!', description: "Your custom fertilizer plan has been generated." });
+    }
+  }, [state, toast]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
