@@ -24,7 +24,7 @@ const months = ["January", "February", "March", "April", "May", "June", "July", 
 const formSchema = z.object({
   cropType: z.string().min(2, "Please enter a crop type."),
   region: z.string().min(2, "Please enter a region."),
-  month: z.string().min(1, "Please select a month.").default(months[new Date().getMonth()]),
+  month: z.string().min(1, "Please select a month."),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -97,7 +97,7 @@ export default function DemandForecastPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => formAction(data))} className="space-y-6">
+              <form action={form.handleSubmit(formAction)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <FormField control={form.control} name="cropType" render={({ field }) => (
                         <FormItem>

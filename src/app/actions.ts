@@ -230,13 +230,7 @@ const demandForecastSchema = z.object({
   month: z.string().min(1, "Please select a month."),
 });
 
-export async function handleDemandForecast(prevState: any, formData: FormData | z.infer<typeof demandForecastSchema>) {
-  const data = formData instanceof FormData ? {
-      cropType: formData.get('cropType'),
-      region: formData.get('region'),
-      month: formData.get('month'),
-  } : formData;
-
+export async function handleDemandForecast(prevState: any, data: z.infer<typeof demandForecastSchema>) {
   const validatedFields = demandForecastSchema.safeParse(data);
   if (!validatedFields.success) {
     return {
