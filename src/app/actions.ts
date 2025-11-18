@@ -173,8 +173,14 @@ const fertilizerCalculatorSchema = z.object({
 });
 
 export async function handleFertilizerCalculation(prevState: any, formData: FormData) {
-    const data = Object.fromEntries(formData.entries());
-    const validatedFields = fertilizerCalculatorSchema.safeParse(data);
+    const validatedFields = fertilizerCalculatorSchema.safeParse({
+        nitrogen: formData.get('nitrogen'),
+        phosphorus: formData.get('phosphorus'),
+        potassium: formData.get('potassium'),
+        ph: formData.get('ph'),
+        soilType: formData.get('soilType'),
+        targetCrop: formData.get('targetCrop'),
+    });
 
     if (!validatedFields.success) {
       return {
@@ -205,8 +211,16 @@ const yieldPredictionSchema = z.object({
 });
 
 export async function handleYieldPrediction(prevState: any, formData: FormData) {
-    const data = Object.fromEntries(formData.entries());
-    const validatedFields = yieldPredictionSchema.safeParse(data);
+    const validatedFields = yieldPredictionSchema.safeParse({
+        cropType: formData.get('cropType'),
+        acreage: formData.get('acreage'),
+        soilType: formData.get('soilType'),
+        nitrogenLevel: formData.get('nitrogenLevel'),
+        phosphorusLevel: formData.get('phosphorusLevel'),
+        potassiumLevel: formData.get('potassiumLevel'),
+        region: formData.get('region'),
+        historicalYield: formData.get('historicalYield'),
+    });
 
     if (!validatedFields.success) {
       return {
@@ -231,22 +245,26 @@ const demandForecastSchema = z.object({
 });
 
 export async function handleDemandForecast(prevState: any, formData: FormData) {
-  const data = Object.fromEntries(formData.entries());
-  const validatedFields = demandForecastSchema.safeParse(data);
-  if (!validatedFields.success) {
-    return {
-      message: 'error:Invalid form data.',
-      errors: validatedFields.error.flatten().fieldErrors,
-      data: null,
-    };
-  }
+    const validatedFields = demandForecastSchema.safeParse({
+        cropType: formData.get('cropType'),
+        region: formData.get('region'),
+        month: formData.get('month'),
+    });
 
-  try {
-    const result = await forecastDemand(validatedFields.data);
-    return { message: "Forecast complete.", data: result, errors: null };
-  } catch (e: any) {
-    return { message: `error: ${e.message}`, data: null, errors: null };
-  }
+    if (!validatedFields.success) {
+        return {
+        message: 'error:Invalid form data.',
+        errors: validatedFields.error.flatten().fieldErrors,
+        data: null,
+        };
+    }
+
+    try {
+        const result = await forecastDemand(validatedFields.data);
+        return { message: "Forecast complete.", data: result, errors: null };
+    } catch (e: any) {
+        return { message: `error: ${e.message}`, data: null, errors: null };
+    }
 }
 
 const creditScoreSchema = z.object({
@@ -257,8 +275,12 @@ const creditScoreSchema = z.object({
 });
 
 export async function handleCreditScore(prevState: any, formData: FormData) {
-    const data = Object.fromEntries(formData.entries());
-    const validatedFields = creditScoreSchema.safeParse(data);
+    const validatedFields = creditScoreSchema.safeParse({
+        annualRevenue: formData.get('annualRevenue'),
+        yearsFarming: formData.get('yearsFarming'),
+        loanHistory: formData.get('loanHistory'),
+        outstandingDebt: formData.get('outstandingDebt'),
+    });
 
     if (!validatedFields.success) {
         return {
@@ -284,8 +306,13 @@ const insuranceRiskSchema = z.object({
 });
 
 export async function handleInsuranceRisk(prevState: any, formData: FormData) {
-    const data = Object.fromEntries(formData.entries());
-    const validatedFields = insuranceRiskSchema.safeParse(data);
+    const validatedFields = insuranceRiskSchema.safeParse({
+        cropType: formData.get('cropType'),
+        region: formData.get('region'),
+        acreage: formData.get('acreage'),
+        historicalEvents: formData.get('historicalEvents'),
+    });
+    
     if (!validatedFields.success) {
         return {
             message: 'error:Invalid form data.',

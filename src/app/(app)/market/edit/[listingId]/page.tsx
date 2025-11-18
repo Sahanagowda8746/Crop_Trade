@@ -232,8 +232,6 @@ export default function EditListingPage() {
                             <SelectItem value="head">Head</SelectItem>
                           </SelectContent>
                         </Select>
-                        {/* This hidden field is necessary to pass the value to the form action */}
-                        <FormControl><Input type="hidden" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
