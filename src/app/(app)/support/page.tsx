@@ -50,6 +50,14 @@ export default function SupportPage() {
     setPageTitle('Help & Support');
   }, [setPageTitle]);
 
+  const supportEmails = [
+    "sahanagowdasahana8746@gmail.com",
+    "nkruthika2@gmail.com",
+    "ganavibasavaraju99@gmail.com",
+    "rachithaa16@gmail.com",
+    "youkthikb51@gmail.com"
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center gap-4">
@@ -89,11 +97,17 @@ export default function SupportPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4">
-                        <Mail className="h-6 w-6 text-primary" />
+                    <div className="flex items-start gap-4">
+                        <Mail className="h-6 w-6 text-primary mt-1" />
                         <div>
                             <p className="font-semibold">Email Support</p>
-                            <a href="mailto:support@croptrade.com" className="text-sm text-muted-foreground hover:underline">support@croptrade.com</a>
+                            <div className="flex flex-col">
+                                {supportEmails.map(email => (
+                                    <a key={email} href={`mailto:${email}`} className="text-sm text-muted-foreground hover:underline">
+                                        {email}
+                                    </a>
+                                ))}
+                            </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
