@@ -189,7 +189,6 @@ service cloud.firestore {
         allow create: if isSignedIn()
                       && request.resource.data.buyerId == request.auth.uid
                       && request.resource.data.farmerId == farmerId
-                      // Check that a corresponding 'delivered' order exists for this buyer and item.
                       && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
                       && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.buyerId == request.auth.uid
                       && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.status == 'delivered';
