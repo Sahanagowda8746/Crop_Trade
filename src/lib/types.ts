@@ -1,4 +1,5 @@
 
+
 import type { UserRole } from "@/context/app-context";
 import { z } from "zod";
 
@@ -158,4 +159,8 @@ export interface SoilKitOrder {
     trackingId: string | null;
     soilKitQr: string;
     labReportUrl: string | null;
+    deliveryAddress: string;
+    paymentMethod: 'UPI' | 'Card';
 }
+
+    

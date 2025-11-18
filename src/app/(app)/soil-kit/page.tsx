@@ -1,13 +1,13 @@
 
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/app-context';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, FlaskConical, Package, TestTube, Truck, XCircle } from 'lucide-react';
+import { Check, CreditCard, FlaskConical, Package, TestTube, Truck, XCircle, Send } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
@@ -18,6 +18,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
 
 const features = [
     "Professional lab analysis of N, P, K, pH, and organic matter.",
@@ -48,24 +62,30 @@ const requirements = [
     { parameter: 'Foreign Material', requirement: 'None (stones, roots)', compliant: false },
 ];
 
-
-export default function SoilKitPage() {
-    const { setPageTitle } = useAppContext();
+function OrderDialog() {
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
     const router = useRouter();
+    const [isOpen, setIsOpen] = useState(false);
+    const [address, setAddress] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Card'>('UPI');
 
-    useEffect(() => {
-        setPageTitle('Professional Soil Test Kit');
-    }, [setPageTitle]);
-
-    const handleBuyNow = async () => {
+    const handleConfirmOrder = async () => {
         if (!user || !firestore) {
             toast({
                 variant: 'destructive',
                 title: 'You are not logged in',
                 description: 'Please log in to purchase a soil kit.',
+            });
+            return;
+        }
+
+        if (!address.trim()) {
+            toast({
+                variant: 'destructive',
+                title: 'Address Required',
+                description: 'Please enter a delivery address.',
             });
             return;
         }
@@ -82,6 +102,8 @@ export default function SoilKitPage() {
             trackingId: null,
             soilKitQr: `SK-${user.uid.slice(0, 5)}-${Date.now()}`,
             labReportUrl: null,
+            deliveryAddress: address,
+            paymentMethod: paymentMethod,
         };
 
         const ordersCollection = collection(firestore, 'soilKitOrders');
@@ -92,8 +114,73 @@ export default function SoilKitPage() {
             description: 'Your Soil Test Kit has been ordered successfully.',
         });
 
+        setIsOpen(false);
         router.push('/my-soil-tests');
     };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button size="lg" className="w-full mt-6">Buy Now</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Confirm Your Order</DialogTitle>
+                    <DialogDescription>
+                        Please provide your delivery address and confirm your payment method to complete the purchase.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <div>
+                        <Label htmlFor="address">Delivery Address</Label>
+                        <Textarea 
+                            id="address" 
+                            placeholder="Enter your full shipping address..." 
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            className="mt-1"
+                        />
+                    </div>
+                     <div>
+                        <Label>Payment Method</Label>
+                         <RadioGroup defaultValue="upi" onValueChange={(value: 'UPI' | 'Card') => setPaymentMethod(value)} className="mt-2">
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="UPI" id="upi" />
+                                <Label htmlFor="upi" className="flex items-center gap-2 cursor-pointer">
+                                    <Send className="h-5 w-5 text-primary" />
+                                    UPI
+                                </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Card" id="card" />
+                                <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer">
+                                    <CreditCard className="h-5 w-5 text-primary" />
+                                    Card (Credit/Debit)
+                                </Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                    <Button onClick={handleConfirmOrder}>Confirm and Pay ₹500</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+export default function SoilKitPage() {
+    const { setPageTitle } = useAppContext();
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const router = useRouter();
+
+    useEffect(() => {
+        setPageTitle('Professional Soil Test Kit');
+    }, [setPageTitle]);
+
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
@@ -120,7 +207,7 @@ export default function SoilKitPage() {
                             </ul>
                             <p className="text-4xl font-bold mt-6 text-primary">₹500</p>
                             <p className="text-sm text-muted-foreground">Includes shipping and all lab fees.</p>
-                            <Button onClick={handleBuyNow} size="lg" className="w-full mt-6">Buy Now</Button>
+                            <OrderDialog />
                         </CardContent>
                     </div>
                      <div className="relative min-h-[300px] md:min-h-0">
@@ -204,3 +291,5 @@ export default function SoilKitPage() {
         </div>
     );
 }
+
+    
