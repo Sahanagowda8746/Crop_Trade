@@ -20,7 +20,7 @@ import type { CropListing } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initialCrops } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, Pencil, CreditCard, Send } from 'lucide-react';
+import { PlusCircle, Trash2, Pencil, CreditCard, Send, Gavel } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +44,7 @@ import {
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 function PaymentDialog({ crop, onConfirm }: { crop: CropListing; onConfirm: (crop: CropListing, paymentMethod: 'UPI' | 'Card') => void; }) {
     const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Card'>('UPI');
@@ -91,7 +92,72 @@ function PaymentDialog({ crop, onConfirm }: { crop: CropListing; onConfirm: (cro
     );
 }
 
-function CropCard({ crop, onBuy, onRemove, currentUserId }: { crop: CropListing, onBuy: (crop: CropListing, paymentMethod: 'UPI' | 'Card') => void, onRemove: (cropId: string) => void, currentUserId?: string }) {
+function CreateAuctionDialog({ crop, onConfirm }: { crop: CropListing, onConfirm: (startingBid: number, endDate: string) => void }) {
+    const [startingBid, setStartingBid] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
+    const { toast } = useToast();
+
+    const handleConfirm = () => {
+        const bid = parseFloat(startingBid);
+        if (isNaN(bid) || bid <= 0) {
+            toast({ variant: 'destructive', title: 'Invalid Bid', description: 'Starting bid must be a positive number.' });
+            return;
+        }
+        if (!endDate) {
+            toast({ variant: 'destructive', title: 'Invalid Date', description: 'Please select an end date for the auction.' });
+            return;
+        }
+        onConfirm(bid, endDate);
+        setIsOpen(false);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                    <Gavel className="mr-2 h-4 w-4" />
+                    Auction
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Create Auction for {crop.cropType}</DialogTitle>
+                    <DialogDescription>Set the terms for your auction. Once created, it will be live.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="starting-bid" className="text-right">Starting Bid (₹)</Label>
+                        <Input
+                            id="starting-bid"
+                            type="number"
+                            value={startingBid}
+                            onChange={(e) => setStartingBid(e.target.value)}
+                            className="col-span-3"
+                            placeholder="e.g., 15000"
+                        />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="end-date" className="text-right">End Date</Label>
+                        <Input
+                            id="end-date"
+                            type="datetime-local"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="col-span-3"
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                     <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                    <Button onClick={handleConfirm}>Create Auction</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function CropCard({ crop, onBuy, onRemove, onAuction, currentUserId }: { crop: CropListing, onBuy: (crop: CropListing, paymentMethod: 'UPI' | 'Card') => void, onRemove: (cropId: string) => void, onAuction: (crop: CropListing, startingBid: number, endDate: string) => void, currentUserId?: string }) {
   const isOwner = crop.farmerId === currentUserId;
   const isOutOfStock = crop.quantity <= 0;
 
@@ -134,6 +200,7 @@ function CropCard({ crop, onBuy, onRemove, currentUserId }: { crop: CropListing,
         <div className="flex gap-2">
         {isOwner ? (
             <>
+              <CreateAuctionDialog crop={crop} onConfirm={(startingBid, endDate) => onAuction(crop, startingBid, endDate)} />
               <Button variant="outline" size="sm" asChild>
                   <Link href={`/market/edit/${crop.id}`}>
                     <Pencil className="mr-2 h-4 w-4" />
@@ -288,6 +355,30 @@ export default function MarketPage() {
     })
   }
 
+  const handleCreateAuction = async (crop: CropListing, startingBid: number, endDate: string) => {
+    if (!firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Database not connected.'});
+        return;
+    }
+
+    const auctionsCollection = collection(firestore, 'auctions');
+    const newAuction = {
+        cropListingId: crop.id,
+        startDate: new Date().toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        startingBid: startingBid,
+        status: 'open',
+        cropListing: crop, // Denormalize for easy display
+    };
+    
+    await addDocumentNonBlocking(auctionsCollection, newAuction);
+    
+    toast({
+        title: 'Auction Created!',
+        description: `Your auction for ${crop.cropType} is now live.`
+    });
+  };
+
   const effectiveIsLoading = isLoading || isUserLoading;
 
   return (
@@ -308,7 +399,7 @@ export default function MarketPage() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {effectiveIsLoading && Array.from({ length: 8 }).map((_, i) => <CropSkeleton key={i} />)}
-        {crops && crops.map(crop => <CropCard key={crop.id} crop={crop} onBuy={handleBuy} onRemove={handleRemove} currentUserId={user?.uid}/>)}
+        {crops && crops.map(crop => <CropCard key={crop.id} crop={crop} onBuy={handleBuy} onRemove={handleRemove} onAuction={handleCreateAuction} currentUserId={user?.uid}/>)}
         {!effectiveIsLoading && crops?.length === 0 && (
           <div className="col-span-full text-center py-12">
             <Card className="max-w-md mx-auto">
