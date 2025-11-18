@@ -52,7 +52,7 @@ const analyzeSoilFromImageFlow = ai.defineFlow(
   },
   async ({ photoDataUri }) => {
     const {output} = await ai.generate({
-        model: 'googleai/gemini-pro',
+        model: 'googleai/gemini-pro-vision',
         prompt: [
             { text: `You are an expert soil scientist and agronomist AI for the AgriLink platform. Analyze the provided image of a soil sample and return a structured JSON output.
 
