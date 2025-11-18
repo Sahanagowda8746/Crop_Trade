@@ -11,7 +11,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import { getSdks, initializeFirebase } from '@/firebase';
-import type { SoilAnalysisFromImageOutput } from '@/lib/types';
+import type { SoilAnalysis, SoilAnalysisFromImageOutput } from '@/lib/types';
 
 const SoilAnalysisFromImageInputSchema = z.object({
   photoDataUri: z
@@ -81,15 +81,10 @@ const analyzeSoilFromImageFlow = ai.defineFlow(
     const { firestore } = getSdks(initializeFirebase(undefined, `backend-action-soil-analysis-${Date.now()}`));
     const analysisCollectionRef = collection(firestore, `users/${input.userId}/soilAnalyses`);
     
-    const analysisData = {
+    const analysisData: Omit<SoilAnalysis, 'id'> = {
         ...output,
         farmerId: input.userId,
         analysisDate: new Date().toISOString(),
-        recommendations: `Crops: ${output.recommendedCrops.join(', ')}. Fertilizers: ${output.fertilizerPlan.join('; ')}. Advice: ${output.generalAdvice}`,
-        pH: output.phEstimate,
-        nitrogen: output.nutrientAnalysis.nitrogen === 'Low' ? 1 : (output.nutrientAnalysis.nitrogen === 'Moderate' ? 2 : 3), 
-        phosphorus: output.nutrientAnalysis.phosphorus === 'Low' ? 1 : (output.nutrientAnalysis.phosphorus === 'Moderate' ? 2 : 3),
-        potassium: output.nutrientAnalysis.potassium === 'Low' ? 1 : (output.nutrientAnalysis.potassium === 'Moderate' ? 2 : 3),
     };
     
     await addDoc(analysisCollectionRef, analysisData);
