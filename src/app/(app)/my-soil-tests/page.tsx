@@ -1,16 +1,27 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import { useAppContext } from '@/context/app-context';
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import type { SoilKitOrder } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TestTube, FlaskConical, CheckCircle, Package, Truck, Upload, PlusCircle } from 'lucide-react';
+import { TestTube, FlaskConical, CheckCircle, Package, Truck, Upload, PlusCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function SoilKitOrderCard({ order, role }: { order: SoilKitOrder, role: string }) {
     const firestore = useFirestore();
@@ -33,6 +44,16 @@ function SoilKitOrderCard({ order, role }: { order: SoilKitOrder, role: string }
             labReportUrl: 'https://example.com/sample-lab-report.pdf' // Placeholder URL
         });
         toast({ title: 'Report "Uploaded"!', description: 'The farmer can now view their report.'});
+    };
+
+    const handleCancelOrder = () => {
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to the database.'});
+            return;
+        }
+        const orderRef = doc(firestore, 'soilKitOrders', order.id);
+        deleteDocumentNonBlocking(orderRef);
+        toast({ title: 'Order Cancelled', description: 'Your soil kit order has been cancelled.'});
     };
 
     return (
@@ -58,16 +79,40 @@ function SoilKitOrderCard({ order, role }: { order: SoilKitOrder, role: string }
                         Tracking ID: <span className="font-mono text-primary">{order.trackingId}</span>
                     </p>
                 )}
-                 {order.status === 'completed' && order.labReportUrl ? (
-                    <Button asChild size="sm">
-                        <Link href={order.labReportUrl} target="_blank">View Lab Report</Link>
-                    </Button>
-                ) : role === 'Admin' && order.status === 'processing' ? (
-                     <Button size="sm" variant="secondary" onClick={handleUploadReport}>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload Report
-                    </Button>
-                ) : null}
+                 <div className="flex items-center gap-2">
+                    {order.status === 'completed' && order.labReportUrl ? (
+                        <Button asChild size="sm">
+                            <Link href={order.labReportUrl} target="_blank">View Lab Report</Link>
+                        </Button>
+                    ) : role === 'Admin' && order.status === 'processing' ? (
+                        <Button size="sm" variant="secondary" onClick={handleUploadReport}>
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload Report
+                        </Button>
+                    ) : null}
+                     {order.status === 'ordered' && (
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Cancel Order
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently cancel your soil kit order.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Dismiss</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleCancelOrder}>Confirm Cancellation</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                </div>
             </CardContent>
         </Card>
     );
