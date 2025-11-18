@@ -75,10 +75,12 @@ export default function YieldPredictionPage() {
   }, [setPageTitle]);
   
   useEffect(() => {
-    if (state.message.startsWith('error:')) {
-      toast({ variant: 'destructive', title: 'Prediction Failed', description: state.message.replace('error:', '') });
-    } else if (state.data) {
-      toast({ title: 'Prediction Ready!', description: "Your custom yield forecast has been generated." });
+    if (state.message) {
+        if (state.message.startsWith('error:')) {
+            toast({ variant: 'destructive', title: 'Prediction Failed', description: state.message.replace('error:', '') });
+        } else if (state.data) {
+            toast({ title: 'Prediction Ready!', description: "Your custom yield forecast has been generated." });
+        }
     }
   }, [state, toast]);
 
