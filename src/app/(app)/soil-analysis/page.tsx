@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import type { SoilAnalysisFromImageOutput } from '@/lib/types';
+import { useRouter } from 'next/navigation';
 
 const initialState: {
     message: string;
@@ -187,11 +188,11 @@ function ResultsDisplay({ data, imagePreview }: { data: SoilAnalysisFromImageOut
 
 export default function SoilAnalysisPage() {
   const { setPageTitle } = useAppContext();
-  const [state, formAction] = useActionState(handleSoilAnalysis, initialState);
+  const [state, formAction, isPending] = useActionState(handleSoilAnalysis, initialState);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { pending } = useFormStatus();
+  const router = useRouter();
 
   useEffect(() => {
     setPageTitle('AI Soil Analysis');
@@ -216,19 +217,23 @@ export default function SoilAnalysisPage() {
   };
   
   useEffect(() => {
-    if(state.message && state.message !== 'Analysis complete.') {
-      toast({
-        variant: 'destructive',
-        title: 'Analysis Failed',
-        description: state.message.replace('error:', ''),
-      });
-    } else if (state.data) {
-      toast({
-        title: 'Analysis Complete',
-        description: 'Your soil report is ready.',
-      });
+    if (state.message) {
+      if (state.message.startsWith('error:')) {
+        toast({
+            variant: 'destructive',
+            title: 'Analysis Failed',
+            description: state.message.replace('error:', ''),
+        });
+      } else if (state.message === 'Analysis complete.') {
+          toast({
+            title: 'Analysis Complete!',
+            description: 'Your new soil report has been saved. Redirecting you to your test history.',
+          });
+          // Redirect to the page where they can see the results
+          router.push('/my-soil-tests');
+      }
     }
-  }, [state, toast]);
+  }, [state, toast, router]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -271,7 +276,7 @@ export default function SoilAnalysisPage() {
         </CardContent>
       </Card>
 
-      {pending && (
+      {isPending && (
         <Card>
           <CardHeader>
             <CardTitle>Analysis in Progress</CardTitle>
@@ -291,9 +296,7 @@ export default function SoilAnalysisPage() {
         </Card>
       )}
 
-      {state.data && preview && (
-        <ResultsDisplay data={state.data} imagePreview={preview} />
-      )}
+      {/* The results are no longer displayed on this page directly */}
     </div>
   );
 }

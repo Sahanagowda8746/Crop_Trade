@@ -63,7 +63,10 @@ export async function handleSoilAnalysis(prevState: any, formData: FormData) {
     const userId = await getUserId();
     const result = await analyzeSoilFromImage({ ...validatedFields.data, userId });
 
-    return { message: 'Analysis complete.', data: result };
+    // Do not return the complex `result` object to the client.
+    // The data is already saved to Firestore by the flow.
+    // Return a simple success message.
+    return { message: 'Analysis complete.', data: null };
   } catch (error) {
     console.error(error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
