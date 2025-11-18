@@ -53,7 +53,7 @@ const aiAdvisoryItems = [
     { href: '/fertilizer-calculator', label: 'Fertilizer Calculator', icon: Calculator, roles: ['Farmer', 'Admin'] },
     { href: '/yield-prediction', label: 'Yield Prediction', icon: AreaChart, roles: ['Farmer', 'Admin'] },
     { href: '/demand-forecast', label: 'Demand Forecast', icon: LineChart, roles: ['Farmer', 'Admin'] },
-    { href: '/insurance-risk', label: 'Insurance Risk', icon: ShieldCheck, roles: ['Farmer', 'Admin'] },
+    
     
 ];
 

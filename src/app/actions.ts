@@ -10,7 +10,7 @@ import { generateCropDescription } from '@/ai/flows/crop-description-generator';
 import { calculateFertilizer } from '@/ai/flows/fertilizer-calculator';
 import { predictYield } from '@/ai/flows/yield-prediction';
 import { forecastDemand } from '@/ai/flows/demand-forecast';
-import { assessInsuranceRisk } from '@/ai/flows/insurance-risk-flow';
+import { assessCreditScore } from '@/ai/flows/credit-score-flow';
 import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 import type { SoilAnalysis, CropListing, UserProfile, Order, Auction, TransportRequest, Review, SoilKitOrder, TransportBid } from '@/lib/types';
@@ -190,7 +190,7 @@ const yieldSchema = z.object({
   soilType: z.string().min(1, "Please select a soil type."),
   nitrogenLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Nitrogen cannot be negative.")),
   phosphorusLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Phosphorus cannot be negative.")),
-  potassiumLevel: z.preprocess((a) => parseFloat(zstring().parse(a)), z.number().min(0, "Potassium cannot be negative.")),
+  potassiumLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Potassium cannot be negative.")),
   region: z.string().min(2, "Region is required."),
   historicalYield: z.string().optional(),
 });
@@ -225,19 +225,19 @@ export async function handleDemandForecast(data: z.infer<typeof demandSchema>) {
     }
 }
 
-const insuranceSchema = z.object({
-  cropType: z.string().min(2, "Please enter a crop type."),
-  region: z.string().min(2, "Please enter a region."),
-  acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be positive.")),
-  historicalEvents: z.enum(['None', 'Rare', 'Occasional', 'Frequent']),
+const creditScoreSchema = z.object({
+  annualRevenue: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Annual revenue must be a positive number.")),
+  yearsFarming: z.preprocess((a) => parseInt(z.string().parse(a)), z.number().int().min(0, "Years in farming cannot be negative.")),
+  loanHistory: z.enum(['No Loans', 'Paid On Time', 'Minor Delays', 'Major Delays']),
+  outstandingDebt: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Outstanding debt cannot be negative.")),
 });
-export async function handleInsuranceRisk(data: z.infer<typeof insuranceSchema>) {
-    const validatedFields = insuranceSchema.safeParse(data);
+export async function handleCreditScore(data: z.infer<typeof creditScoreSchema>) {
+    const validatedFields = creditScoreSchema.safeParse(data);
     if (!validatedFields.success) {
         return { message: `error: Invalid form data.`, data: null };
     }
     try {
-        const result = await assessInsuranceRisk(validatedFields.data);
+        const result = await assessCreditScore(validatedFields.data);
         return { message: "Assessment complete.", data: result };
     } catch (e: any) {
         return { message: `error: ${e.message}`, data: null };
