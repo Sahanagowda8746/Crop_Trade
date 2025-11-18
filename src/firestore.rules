@@ -190,7 +190,6 @@ service cloud.firestore {
         allow create: if isSignedIn()
                       && request.resource.data.buyerId == request.auth.uid
                       && request.resource.data.farmerId == farmerId
-                      // Check that a corresponding 'delivered' order exists for this buyer and item.
                       && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
                       && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.buyerId == request.auth.uid
                       && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.status == 'delivered';
@@ -240,7 +239,8 @@ service cloud.firestore {
      * @principle Secures transport requests to relevant parties.
      */
     match /transportRequests/{transportRequestId} {
-      allow read: if isSignedIn();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if false; // Should be handled by system logic
     }
@@ -261,5 +261,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
