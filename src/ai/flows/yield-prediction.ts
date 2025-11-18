@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {getWeatherForecast} from '@/ai/tools/weather-tool';
 
 const YieldPredictionInputSchema = z.object({
   cropType: z.string().describe('The type of crop being grown (e.g., Wheat, Corn).'),
@@ -46,7 +47,8 @@ const prompt = ai.definePrompt({
   name: 'yieldPredictionPrompt',
   input: {schema: YieldPredictionInputSchema},
   output: {schema: YieldPredictionOutputSchema},
-  prompt: `You are a world-class agricultural data scientist AI. Your task is to predict crop yield based on the provided data. Provide a realistic and data-driven forecast.
+  tools: [getWeatherForecast],
+  prompt: `You are a world-class agricultural data scientist AI. Your task is to predict crop yield based on the provided data. You MUST use the getWeatherForecast tool to get the upcoming weather for the specified region and incorporate it as a primary factor in your analysis.
 
 **Input Data:**
 - Crop: {{{cropType}}}
@@ -59,9 +61,9 @@ const prompt = ai.definePrompt({
 **Your Analysis Must Include:**
 
 1.  **Predicted Yield**: Provide a realistic range for the total yield (e.g., "400-420 tons") and per-acre yield (e.g., "4.0-4.2 tons/acre").
-2.  **Confidence Score**: Give a confidence score from 0-100. Base this on the quality of input data. If historical data is provided, the confidence should be higher.
-3.  **Influencing Factors**: Identify at least three key factors that will influence this prediction. For each factor, state its impact ('Positive', 'Negative', 'Neutral') and provide a brief comment. Consider typical weather patterns for the region but state that actual weather will be a major variable.
-4.  **Recommendations**: Provide at least two actionable recommendations for the farmer to maximize their yield based on the data.
+2.  **Confidence Score**: Give a confidence score from 0-100. Base this on the quality of input data and the certainty of the weather forecast. If historical data is provided, the confidence should be higher.
+3.  **Influencing Factors**: Identify at least three key factors that will influence this prediction, with the weather forecast being one of them. For each factor, state its impact ('Positive', 'Negative', 'Neutral') and provide a brief comment.
+4.  **Recommendations**: Provide at least two actionable recommendations for the farmer to maximize their yield based on the data and the weather forecast.
 
 Assume standard farming practices for the region unless otherwise specified. Generate the response in the required JSON format.`,
 });
