@@ -172,13 +172,13 @@ const fertilizerCalculatorSchema = z.object({
   targetCrop: z.string().min(2, "Please enter a target crop."),
 });
 
-export async function handleFertilizerCalculation(prevState: any, formData: FormData | z.infer<typeof fertilizerCalculatorSchema>) {
-    const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
+export async function handleFertilizerCalculation(prevState: any, formData: FormData) {
+    const data = Object.fromEntries(formData.entries());
     const validatedFields = fertilizerCalculatorSchema.safeParse(data);
 
     if (!validatedFields.success) {
       return {
-        message: 'Invalid form data.',
+        message: 'error:Invalid form data.',
         errors: validatedFields.error.flatten().fieldErrors,
         data: null,
       };
@@ -204,8 +204,8 @@ const yieldPredictionSchema = z.object({
     historicalYield: z.string().optional(),
 });
 
-export async function handleYieldPrediction(prevState: any, formData: FormData | z.infer<typeof yieldPredictionSchema>) {
-    const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
+export async function handleYieldPrediction(prevState: any, formData: FormData) {
+    const data = Object.fromEntries(formData.entries());
     const validatedFields = yieldPredictionSchema.safeParse(data);
 
     if (!validatedFields.success) {
@@ -230,7 +230,8 @@ const demandForecastSchema = z.object({
   month: z.string().min(1, "Please select a month."),
 });
 
-export async function handleDemandForecast(prevState: any, data: z.infer<typeof demandForecastSchema>) {
+export async function handleDemandForecast(prevState: any, formData: FormData) {
+  const data = Object.fromEntries(formData.entries());
   const validatedFields = demandForecastSchema.safeParse(data);
   if (!validatedFields.success) {
     return {
@@ -255,8 +256,8 @@ const creditScoreSchema = z.object({
   outstandingDebt: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Outstanding debt cannot be negative.")),
 });
 
-export async function handleCreditScore(prevState: any, formData: FormData | z.infer<typeof creditScoreSchema>) {
-    const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
+export async function handleCreditScore(prevState: any, formData: FormData) {
+    const data = Object.fromEntries(formData.entries());
     const validatedFields = creditScoreSchema.safeParse(data);
 
     if (!validatedFields.success) {
@@ -282,8 +283,8 @@ const insuranceRiskSchema = z.object({
   historicalEvents: z.string().min(1, "Please select a historical event likelihood."),
 });
 
-export async function handleInsuranceRisk(prevState: any, formData: FormData | z.infer<typeof insuranceRiskSchema>) {
-    const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
+export async function handleInsuranceRisk(prevState: any, formData: FormData) {
+    const data = Object.fromEntries(formData.entries());
     const validatedFields = insuranceRiskSchema.safeParse(data);
     if (!validatedFields.success) {
         return {

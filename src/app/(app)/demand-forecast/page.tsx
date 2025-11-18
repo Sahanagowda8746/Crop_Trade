@@ -97,7 +97,7 @@ export default function DemandForecastPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form action={form.handleSubmit(formAction)} className="space-y-6">
+              <form action={formAction} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <FormField control={form.control} name="cropType" render={({ field }) => (
                         <FormItem>
