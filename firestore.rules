@@ -102,7 +102,8 @@ service cloud.firestore {
      * @principle Allows authenticated users to create, read, and list orders.
      */
     match /orders/{orderId} {
-      allow get, list: if isSignedIn();
+      allow get: if isSignedIn() && isOwner(resource.data.buyerId);
+      allow list: if isSignedIn() && request.query.where.buyerId == request.auth.uid;
       allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
       allow update: if isSignedIn() && request.auth.uid == resource.data.buyerId;
       allow delete: if isSignedIn() && request.auth.uid == resource.data.buyerId && resource != null;
