@@ -13,8 +13,8 @@ import { predictYield } from '@/ai/flows/yield-prediction';
 import { forecastDemand } from '@/ai/flows/demand-forecast';
 import { assessCreditScore } from '@/ai/flows/credit-score-flow';
 import { assessInsuranceRisk } from '@/ai/flows/insurance-risk-flow';
-import { getFirestore, doc, setDoc, addDoc, collection } from 'firebase/firestore';
-import { initializeFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase';
 import type { SoilAnalysis } from '@/lib/types';
 
 
@@ -36,7 +36,7 @@ async function getUserId(): Promise<string> {
 
 
 const soilAnalysisSchema = z.object({
-  photoDataUri: z.string().startsWith('data:image', 'Please upload a valid image file.'),
+  photoDataUri: z.string().startsWith('data:image', 'Please upload a valid image file before analyzing.'),
 });
 
 export async function handleSoilAnalysis(prevState: any, formData: FormData) {
@@ -86,7 +86,7 @@ export async function handleSoilAnalysis(prevState: any, formData: FormData) {
 }
 
 const pestDiagnosisSchema = z.object({
-    photoDataUri: z.string().startsWith('data:image', 'Please upload a valid image file.'),
+    photoDataUri: z.string().startsWith('data:image', 'Please upload a valid image file before diagnosing.'),
 });
 
 export async function handlePestDiagnosis(prevState: any, formData: FormData) {
@@ -391,3 +391,5 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
     return { message: `error:Update failed. ${errorMessage}` };
   }
 }
+
+    

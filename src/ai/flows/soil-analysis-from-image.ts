@@ -40,7 +40,7 @@ const SoilAnalysisFromImageOutputSchema = z.object({
 
 export async function analyzeSoilFromImage(
   input: SoilAnalysisFromImageInput
-): Promise<SoilAnalysisFromImageOutput> {
+): Promise<z.infer<typeof SoilAnalysisFromImageOutputSchema>> {
   return analyzeSoilFromImageFlow(input);
 }
 
@@ -76,3 +76,5 @@ Based on the visual characteristics in the image (color, apparent texture, struc
     return output;
   }
 );
+
+    
