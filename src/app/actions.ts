@@ -173,7 +173,14 @@ const fertilizerCalculatorSchema = z.object({
 });
 
 export async function handleFertilizerCalculation(prevState: any, formData: FormData) {
-    const validatedFields = fertilizerCalculatorSchema.safeParse(Object.fromEntries(formData));
+    const validatedFields = fertilizerCalculatorSchema.safeParse({
+    nitrogen: formData.get('nitrogen'),
+    phosphorus: formData.get('phosphorus'),
+    potassium: formData.get('potassium'),
+    ph: formData.get('ph'),
+    soilType: formData.get('soilType'),
+    targetCrop: formData.get('targetCrop'),
+  });
     if (!validatedFields.success) {
       return {
         message: 'Invalid form data.',
@@ -203,7 +210,16 @@ const yieldPredictionSchema = z.object({
 });
 
 export async function handleYieldPrediction(prevState: any, formData: FormData) {
-    const validatedFields = yieldPredictionSchema.safeParse(Object.fromEntries(formData));
+    const validatedFields = yieldPredictionSchema.safeParse({
+        cropType: formData.get('cropType'),
+        acreage: formData.get('acreage'),
+        soilType: formData.get('soilType'),
+        nitrogenLevel: formData.get('nitrogenLevel'),
+        phosphorusLevel: formData.get('phosphorusLevel'),
+        potassiumLevel: formData.get('potassiumLevel'),
+        region: formData.get('region'),
+        historicalYield: formData.get('historicalYield'),
+    });
     if (!validatedFields.success) {
       return {
         message: 'error:Invalid form data.',
@@ -227,7 +243,11 @@ const demandForecastSchema = z.object({
 });
 
 export async function handleDemandForecast(prevState: any, formData: FormData) {
-  const validatedFields = demandForecastSchema.safeParse(Object.fromEntries(formData));
+  const validatedFields = demandForecastSchema.safeParse({
+    cropType: formData.get('cropType'),
+    region: formData.get('region'),
+    month: formData.get('month'),
+  });
   if (!validatedFields.success) {
     return {
       message: 'error:Invalid form data.',
@@ -252,7 +272,12 @@ const creditScoreSchema = z.object({
 });
 
 export async function handleCreditScore(prevState: any, formData: FormData) {
-    const validatedFields = creditScoreSchema.safeParse(Object.fromEntries(formData));
+    const validatedFields = creditScoreSchema.safeParse({
+        annualRevenue: formData.get('annualRevenue'),
+        yearsFarming: formData.get('yearsFarming'),
+        loanHistory: formData.get('loanHistory'),
+        outstandingDebt: formData.get('outstandingDebt'),
+    });
     if (!validatedFields.success) {
         return {
             message: 'error:Invalid form data.',
@@ -277,7 +302,12 @@ const insuranceRiskSchema = z.object({
 });
 
 export async function handleInsuranceRisk(prevState: any, formData: FormData) {
-    const validatedFields = insuranceRiskSchema.safeParse(Object.fromEntries(formData));
+    const validatedFields = insuranceRiskSchema.safeParse({
+        cropType: formData.get('cropType'),
+        region: formData.get('region'),
+        acreage: formData.get('acreage'),
+        historicalEvents: formData.get('historicalEvents'),
+    });
     if (!validatedFields.success) {
         return {
             message: 'error:Invalid form data.',
