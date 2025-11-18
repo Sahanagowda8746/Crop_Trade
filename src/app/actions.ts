@@ -7,14 +7,13 @@ import { askAgronomist } from '@/ai/flows/ask-agronomist';
 import { generateAdImage } from '@/ai/flows/generate-ad-image';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { generateCropDescription } from '@/ai/flows/crop-description-generator';
-import { calculateFertilizer, FertilizerCalculatorInput } from '@/ai/flows/fertilizer-calculator';
-import { predictYield, YieldPredictionInput } from '@/ai/flows/yield-prediction';
-import { forecastDemand, DemandForecastInput } from '@/ai/flows/demand-forecast';
-import { assessCreditScore, CreditScoreInput } from '@/ai/flows/credit-score-flow';
-import { assessInsuranceRisk, InsuranceRiskInput } from '@/ai/flows/insurance-risk-flow';
+import { calculateFertilizer } from '@/ai/flows/fertilizer-calculator';
+import { predictYield } from '@/ai/flows/yield-prediction';
+import { forecastDemand } from '@/ai/flows/demand-forecast';
+import { assessInsuranceRisk } from '@/ai/flows/insurance-risk-flow';
 import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
-import type { SoilAnalysis } from '@/lib/types';
+import type { SoilAnalysis, CropListing, UserProfile, Order, Auction, TransportRequest, Review, SoilKitOrder, TransportBid } from '@/lib/types';
 
 
 // This is a simplified way to get the currently logged-in user's ID on the server.
@@ -163,46 +162,82 @@ export async function handleCropDescription(prevState: any, formData: FormData) 
     }
 }
 
-export async function handleFertilizerCalculation(data: FertilizerCalculatorInput) {
+const fertilizerSchema = z.object({
+  nitrogen: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Nitrogen cannot be negative.")),
+  phosphorus: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Phosphorus cannot be negative.")),
+  potassium: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Potassium cannot be negative.")),
+  ph: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "pH must be between 0 and 14.").max(14)),
+  soilType: z.string().min(1, "Please select a soil type."),
+  targetCrop: z.string().min(2, "Please enter a target crop."),
+});
+
+export async function handleFertilizerCalculation(data: z.infer<typeof fertilizerSchema>) {
+    const validatedFields = fertilizerSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { message: `error: Invalid form data.`, data: null };
+    }
     try {
-      const result = await calculateFertilizer(data);
+      const result = await calculateFertilizer(validatedFields.data);
       return { message: "Calculation complete.", data: result };
     } catch (e: any) {
       return { message: `error: ${e.message}`, data: null };
     }
 }
 
-
-export async function handleYieldPrediction(data: YieldPredictionInput) {
+const yieldSchema = z.object({
+  cropType: z.string().min(2, "Please enter a crop type."),
+  acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be a positive number.")),
+  soilType: z.string().min(1, "Please select a soil type."),
+  nitrogenLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Nitrogen cannot be negative.")),
+  phosphorusLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Phosphorus cannot be negative.")),
+  potassiumLevel: z.preprocess((a) => parseFloat(zstring().parse(a)), z.number().min(0, "Potassium cannot be negative.")),
+  region: z.string().min(2, "Region is required."),
+  historicalYield: z.string().optional(),
+});
+export async function handleYieldPrediction(data: z.infer<typeof yieldSchema>) {
+    const validatedFields = yieldSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { message: `error: Invalid form data.`, data: null };
+    }
     try {
-      const result = await predictYield(data);
+      const result = await predictYield(validatedFields.data);
       return { message: "Prediction complete.", data: result };
     } catch (e: any) {
       return { message: `error: ${e.message}`, data: null };
     }
 }
 
-export async function handleDemandForecast(data: DemandForecastInput) {
+const demandSchema = z.object({
+  cropType: z.string().min(2, "Please enter a crop type."),
+  region: z.string().min(2, "Please enter a region."),
+  month: z.string().min(1, "Please select a month."),
+});
+export async function handleDemandForecast(data: z.infer<typeof demandSchema>) {
+     const validatedFields = demandSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { message: `error: Invalid form data.`, data: null };
+    }
     try {
-        const result = await forecastDemand(data);
+        const result = await forecastDemand(validatedFields.data);
         return { message: "Forecast complete.", data: result };
     } catch (e: any) {
         return { message: `error: ${e.message}`, data: null };
     }
 }
 
-export async function handleCreditScore(data: CreditScoreInput) {
-    try {
-        const result = await assessCreditScore(data);
-        return { message: "Assessment complete.", data: result };
-    } catch (e: any) {
-        return { message: `error: ${e.message}`, data: null };
+const insuranceSchema = z.object({
+  cropType: z.string().min(2, "Please enter a crop type."),
+  region: z.string().min(2, "Please enter a region."),
+  acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be positive.")),
+  historicalEvents: z.enum(['None', 'Rare', 'Occasional', 'Frequent']),
+});
+export async function handleInsuranceRisk(data: z.infer<typeof insuranceSchema>) {
+    const validatedFields = insuranceSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { message: `error: Invalid form data.`, data: null };
     }
-}
-
-export async function handleInsuranceRisk(data: InsuranceRiskInput) {
     try {
-        const result = await assessInsuranceRisk(data);
+        const result = await assessInsuranceRisk(validatedFields.data);
         return { message: "Assessment complete.", data: result };
     } catch (e: any) {
         return { message: `error: ${e.message}`, data: null };
