@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent to predict crop yield based on various agricultural inputs.
@@ -45,21 +46,14 @@ export async function predictYield(
 
 const prompt = ai.definePrompt({
   name: 'yieldPredictionPrompt',
-  input: {schema: YieldPredictionInputSchema.extend({ weather: z.string() })},
+  input: {schema: YieldPredictionInputSchema},
   output: {schema: YieldPredictionOutputSchema},
   tools: [getWeatherForecast],
-  prompt: `You are a world-class agricultural data scientist AI. Your task is to predict crop yield based on the provided data and the weather forecast.
+  system: `You are a world-class agricultural data scientist AI. Your task is to predict crop yield based on the provided data.
 
-**Input Data:**
-- Crop: {{{cropType}}}
-- Acreage: {{{acreage}}} acres
-- Soil Type: {{{soilType}}}
-- Region: {{{region}}}
-- Soil Nutrients (kg/ha): N={{{nitrogenLevel}}}, P={{{phosphorusLevel}}}, K={{{potassiumLevel}}}
-- Historical Yield (if provided): {{{historicalYield}}}
-- 7-Day Weather Forecast: {{{weather}}}
+**Crucially, you MUST first use the getWeatherForecast tool to get the 7-day weather forecast for the specified region.**
 
-**Your Analysis Must Include:**
+Then, using the user's data and the weather forecast you fetched, your analysis must include:
 
 1.  **Predicted Yield**: Provide a realistic range for the total yield (e.g., "400-420 tons") and per-acre yield (e.g., "4.0-4.2 tons/acre").
 2.  **Confidence Score**: Give a confidence score from 0-100. Base this on the quality of input data and the certainty of the weather forecast. If historical data is provided, the confidence should be higher.
@@ -76,15 +70,9 @@ const yieldPredictionFlow = ai.defineFlow(
     outputSchema: YieldPredictionOutputSchema,
   },
   async input => {
-    const weather = await getWeatherForecast({ region: input.region });
-
-    const {output} = await prompt({
-      ...input,
-      weather: weather.forecast
-    });
-
-     if (!output) {
-        throw new Error("AI failed to generate a yield prediction.");
+    const {output} = await prompt(input);
+    if (!output) {
+      throw new Error("AI failed to generate a yield prediction.");
     }
     return output;
   }
