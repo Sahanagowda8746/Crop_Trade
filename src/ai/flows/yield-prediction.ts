@@ -45,10 +45,10 @@ export async function predictYield(
 
 const prompt = ai.definePrompt({
   name: 'yieldPredictionPrompt',
-  input: {schema: YieldPredictionInputSchema},
+  input: {schema: YieldPredictionInputSchema.extend({ weather: z.string() })},
   output: {schema: YieldPredictionOutputSchema},
   tools: [getWeatherForecast],
-  prompt: `You are a world-class agricultural data scientist AI. Your task is to predict crop yield based on the provided data. You MUST use the getWeatherForecast tool to get the upcoming weather for the specified region and incorporate it as a primary factor in your analysis.
+  prompt: `You are a world-class agricultural data scientist AI. Your task is to predict crop yield based on the provided data and the weather forecast.
 
 **Input Data:**
 - Crop: {{{cropType}}}
@@ -57,6 +57,7 @@ const prompt = ai.definePrompt({
 - Region: {{{region}}}
 - Soil Nutrients (kg/ha): N={{{nitrogenLevel}}}, P={{{phosphorusLevel}}}, K={{{potassiumLevel}}}
 - Historical Yield (if provided): {{{historicalYield}}}
+- 7-Day Weather Forecast: {{{weather}}}
 
 **Your Analysis Must Include:**
 
@@ -75,7 +76,13 @@ const yieldPredictionFlow = ai.defineFlow(
     outputSchema: YieldPredictionOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const weather = await getWeatherForecast({ region: input.region });
+
+    const {output} = await prompt({
+      ...input,
+      weather: weather.forecast
+    });
+
      if (!output) {
         throw new Error("AI failed to generate a yield prediction.");
     }
