@@ -7,7 +7,7 @@ import type { SoilKitOrder } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TestTube, FlaskConical, CheckCircle, Package, Truck, Upload } from 'lucide-react';
+import { TestTube, FlaskConical, CheckCircle, Package, Truck, Upload, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -106,9 +106,17 @@ export default function MySoilTestsPage() {
     return (
         <div className="space-y-6">
             <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline text-2xl">My Soil Kit Orders</CardTitle>
-                    <CardDescription>Track your physical soil kit orders and view lab reports. {role === 'Admin' && <span className="font-bold text-primary">(Admin View)</span>}</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="font-headline text-2xl">My Soil Kit Orders</CardTitle>
+                        <CardDescription>Track your physical soil kit orders and view lab reports. {role === 'Admin' && <span className="font-bold text-primary">(Admin View)</span>}</CardDescription>
+                    </div>
+                     <Button asChild>
+                        <Link href="/soil-kit">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Order Another Kit
+                        </Link>
+                    </Button>
                 </CardHeader>
             </Card>
 
