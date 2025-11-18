@@ -7,12 +7,6 @@ import Link from 'next/link';
 
 const tools = [
   {
-    title: 'AI Soil Analysis',
-    description: 'Upload a soil image to get instant crop and fertilizer recommendations.',
-    href: '/soil-analysis',
-    icon: Leaf,
-  },
-  {
     title: 'Professional Lab Test',
     description: 'Order a physical soil kit for a comprehensive, lab-accurate analysis.',
     href: '/soil-kit',

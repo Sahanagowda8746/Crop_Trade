@@ -2,7 +2,6 @@
 'use server';
 
 import { z } from 'zod';
-import { analyzeSoilFromImage } from '@/ai/flows/soil-analysis-from-image';
 import { diagnosePestFromImage } from '@/ai/flows/pest-diagnosis-from-image';
 import { askAgronomist } from '@/ai/flows/ask-agronomist';
 import { generateAdImage } from '@/ai/flows/generate-ad-image';
@@ -32,57 +31,6 @@ async function getUserId(): Promise<string> {
     // and we must return a value, we will return a hardcoded one.
     // This is a known limitation of this environment.
     return 'farmer-1';
-}
-
-
-const soilAnalysisSchema = z.object({
-  photoDataUri: z.string().startsWith('data:image', 'Please upload a valid image file before analyzing.'),
-});
-
-export async function handleSoilAnalysis(prevState: any, formData: FormData) {
-  const validatedFields = soilAnalysisSchema.safeParse({
-    photoDataUri: formData.get('photoDataUri'),
-  });
-
-  if (!validatedFields.success) {
-    return {
-      message: 'error:Invalid form data.',
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-
-  if (!validatedFields.data.photoDataUri) {
-      return {
-          message: 'error:Please upload an image.',
-          errors: {
-              photoDataUri: ['Please upload an image before analyzing.'],
-          },
-      }
-  }
-  
-  try {
-    const userId = await getUserId();
-    const result = await analyzeSoilFromImage({ ...validatedFields.data, userId });
-
-    // The server action is now responsible for saving the data.
-    const { firestore } = initializeFirebase();
-    const analysisCollectionRef = collection(firestore, `users/${userId}/soilAnalyses`);
-    
-    const analysisData: Omit<SoilAnalysis, 'id'> = {
-        ...result,
-        farmerId: userId,
-        analysisDate: new Date().toISOString(),
-    };
-    
-    await addDoc(analysisCollectionRef, analysisData);
-
-    // Return a simple success message, not the full data object.
-    return { message: 'Analysis complete.', data: null };
-  } catch (error) {
-    console.error(error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-    return { message: `error:Analysis failed. ${errorMessage}`, errors: {} };
-  }
 }
 
 const pestDiagnosisSchema = z.object({
@@ -391,5 +339,3 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
     return { message: `error:Update failed. ${errorMessage}` };
   }
 }
-
-    
