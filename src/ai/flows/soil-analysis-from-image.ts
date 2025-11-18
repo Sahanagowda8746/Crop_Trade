@@ -68,7 +68,6 @@ Based on the visual characteristics in the image (color, apparent texture, struc
 
 Analyze the following image:
 Soil Image: {{media url=photoDataUri}}`,
-        input: { photoDataUri },
         output: { schema: SoilAnalysisFromImageOutputSchema },
     });
 
