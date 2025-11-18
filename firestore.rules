@@ -149,7 +149,6 @@ service cloud.firestore {
      * @allow (read) Users can only read their own soil kit orders. Admins can read all orders.
      * @allow (list) Users can query for their own orders. Admins can list all orders.
      * @allow (update) Admins can update the status and report URL.
-     * @allow (delete) Users can only delete their own orders.
      * @principle Enforces ownership for creating and reading soil kit orders, with admin override.
      */
     match /soilKitOrders/{orderId} {
@@ -157,8 +156,7 @@ service cloud.firestore {
         allow read: if isSignedIn() && (isOwner(resource.data.userId) || hasRole('Admin'));
         allow list: if hasRole('Admin') || (isSignedIn() && request.query.where.userId == request.auth.uid);
         allow update: if hasRole('Admin') && request.resource.data.userId == resource.data.userId; // Ensure userId is not changed
-        allow delete: if exists(/databases/$(database)/documents/soilKitOrders/$(orderId))
-                      && get(/databases/$(database)/documents/soilKitOrders/$(orderId)).data.userId == request.auth.uid;
+        allow delete: if false; // Deletion is not allowed.
     }
 
     /**

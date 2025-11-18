@@ -46,16 +46,6 @@ function SoilKitOrderCard({ order, role }: { order: SoilKitOrder, role: string }
         toast({ title: 'Report "Uploaded"!', description: 'The farmer can now view their report.'});
     };
 
-    const handleCancelOrder = () => {
-        if (!firestore) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to the database.'});
-            return;
-        }
-        const orderRef = doc(firestore, 'soilKitOrders', order.id);
-        deleteDocumentNonBlocking(orderRef);
-        toast({ title: 'Order Cancelled', description: 'Your soil kit order has been cancelled.'});
-    };
-
     return (
         <Card>
             <CardHeader>
@@ -90,28 +80,6 @@ function SoilKitOrderCard({ order, role }: { order: SoilKitOrder, role: string }
                             Upload Report
                         </Button>
                     ) : null}
-                     {order.status === 'ordered' && (
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm">
-                                    <XCircle className="mr-2 h-4 w-4" />
-                                    Cancel Order
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently cancel your soil kit order.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Dismiss</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleCancelOrder}>Confirm Cancellation</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    )}
                 </div>
             </CardContent>
         </Card>
