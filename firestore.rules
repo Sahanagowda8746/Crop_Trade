@@ -155,8 +155,8 @@ service cloud.firestore {
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
         allow read: if isSignedIn() && (isOwner(resource.data.userId) || hasRole('Admin'));
         allow list: if hasRole('Admin') || (isSignedIn() && request.query.where.userId == request.auth.uid);
-        allow update: if hasRole('Admin')
-                      && request.resource.data.userId == resource.data.userId; // Ensure userId is not changed
+        allow update: if hasRole('Admin') && request.resource.data.userId == resource.data.userId; // Ensure userId is not changed
+        allow delete: if isOwner(resource.data.userId);
     }
 
     /**
