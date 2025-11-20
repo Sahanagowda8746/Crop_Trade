@@ -238,7 +238,8 @@ service cloud.firestore {
      * @principle Secures transport requests to relevant parties.
      */
     match /transportRequests/{transportRequestId} {
-      allow read: if isSignedIn();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if false; // Should be handled by system logic
     }
