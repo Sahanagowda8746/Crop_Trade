@@ -216,19 +216,12 @@ service cloud.firestore {
     /**
      * @description Rules for traceability data.
      * @path /traceability/{traceabilityId}
-     * @allow (create) Any authenticated user can create traceability data.
-     * @allow (get) Any authenticated user can get traceability data.
-     * @allow (list) Any authenticated user can list traceability data.
-     * @allow (update) Any authenticated user can update traceability data.
-     * @allow (delete) Any authenticated user can delete traceability data.
+     * @allow (read) Any authenticated user can read traceability data.
      * @principle Allows authenticated users to manage traceability data.
      */
     match /traceability/{traceabilityId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
     }
     
     /**
@@ -239,8 +232,7 @@ service cloud.firestore {
      * @principle Secures transport requests to relevant parties.
      */
     match /transportRequests/{transportRequestId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow read: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if false; // Should be handled by system logic
     }
