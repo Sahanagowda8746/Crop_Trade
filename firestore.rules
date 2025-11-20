@@ -223,11 +223,7 @@ service cloud.firestore {
      * @principle Allows authenticated users to manage traceability data.
      */
     match /traceability/{traceabilityId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
     
     /**
@@ -238,8 +234,7 @@ service cloud.firestore {
      * @principle Secures transport requests to relevant parties.
      */
     match /transportRequests/{transportRequestId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow read: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if false; // Should be handled by system logic
     }
