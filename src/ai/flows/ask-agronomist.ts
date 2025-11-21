@@ -95,8 +95,6 @@ export async function askAgronomist(
 
 const agronomistPrompt = ai.definePrompt({
   name: 'askAgronomistPrompt',
-  input: {schema: AskAgronomistInputSchema},
-  output: {schema: AskAgronomistOutputSchema},
   tools: [getSoilKitOrderStatus],
   system: `You are an expert agronomist and AI assistant for the CropTrade platform. Your role is to provide clear, concise, and accurate advice to farmers.
 
@@ -114,11 +112,20 @@ const askAgronomistFlow = ai.defineFlow(
     outputSchema: AskAgronomistOutputSchema,
   },
   async ({question, userId}) => {
-    const {output} = await agronomistPrompt({
-        question,
-        userId,
+    const {response} = await ai.generate({
+      prompt: question,
+      model: 'googleai/gemini-2.5-pro',
+      history: [{role: 'system', content: agronomistPrompt.prompt}],
+      tools: [getSoilKitOrderStatus],
+      toolConfig: {
+        toolRequest: [{tool: 'getSoilKitOrderStatus', input: {userId}}],
+      },
     });
-    // The 'output' object from a prompt call is the direct response.
-    return output!;
+
+    const text = response.text;
+    if (!text) {
+      throw new Error('AI response did not contain any text.');
+    }
+    return {answer: text};
   }
 );
