@@ -114,9 +114,6 @@ const askAgronomistFlow = ai.defineFlow(
       prompt: question,
       system: agronomistPrompt,
       tools: [getSoilKitOrderStatus],
-      toolConfig: {
-        toolChoice: 'auto',
-      }
     });
 
     const answer = llmResponse.text;
