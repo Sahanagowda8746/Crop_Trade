@@ -12,6 +12,7 @@ import { z } from 'genkit';
 import { getFirestore, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 import type { SoilKitOrder } from '@/lib/types';
+import { getWeatherForecast } from '@/ai/tools/weather-tool';
 
 // Tool to get the status of a soil kit order
 const getSoilKitOrderStatus = ai.defineTool(
@@ -86,31 +87,34 @@ const askAgronomistFlow = ai.defineFlow(
     const llmResponse = await ai.generate({
       prompt: question,
       history: history,
-      tools: [getSoilKitOrderStatus],
+      tools: [getSoilKitOrderStatus, getWeatherForecast],
       system: `You are an expert agronomist AI assistant for the CropTrade platform.
         - Your name is 'Agri'.
         - Answer the user's questions about farming, crops, soil, pests, and our platform features.
         - ALWAYS respond in the user's specified language: ${language}.
         - Be concise, helpful, and friendly.
         - If you need to check a soil kit order status, you MUST use the 'getSoilKitOrderStatus' tool. To do this, you need the user's ID, which is provided to you as: ${userId}. Do not ask the user for their ID.
+        - If the user asks about the weather, you MUST use the 'getWeatherForecast' tool.
       `,
     });
 
     const text = llmResponse.text;
     
-    if (!text) {
-        // Fallback if the main text extraction fails
-        const toolResponsePart = llmResponse.candidates[0]?.content.parts.find(
-            (part) => part.toolResponse
-        );
-        if (toolResponsePart?.toolResponse?.output) {
-             const toolOutput = toolResponsePart.toolResponse.output as any;
-             // This is a guess. You might need to adjust based on the actual tool output structure
-             return { answer: toolOutput.details || JSON.stringify(toolOutput) };
-        }
-        return { answer: "I'm sorry, I couldn't generate a response. Please try again." };
+    if (text) {
+      return { answer: text };
+    }
+    
+    // Fallback in case the model response is unusual
+    const toolResponsePart = llmResponse.candidates[0]?.content.parts.find(
+        (part) => part.toolResponse
+    );
+    if (toolResponsePart?.toolResponse?.output) {
+         const toolOutput = toolResponsePart.toolResponse.output as any;
+         // Try to find a meaningful string in the tool output to return.
+         const details = toolOutput.details || toolOutput.forecast || JSON.stringify(toolOutput);
+         return { answer: `I've found the following information: ${details}` };
     }
 
-    return { answer: text };
+    return { answer: "I'm sorry, I couldn't generate a response. Please try rephrasing your question." };
   }
 );
