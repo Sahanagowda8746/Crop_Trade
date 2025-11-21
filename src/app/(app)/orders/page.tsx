@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
@@ -14,7 +15,7 @@ import {
 import { useAppContext } from '@/context/app-context';
 import { useCollection, useFirestore, useMemoFirebase, useUser, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc, query, where, orderBy } from 'firebase/firestore';
-import type { Order, Review } from '@/lib/types';
+import type { Order, Review, TransportRequest } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Package, Star, Calendar, ShoppingCart, Truck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -109,7 +110,7 @@ function LeaveReviewDialog({ order }: { order: Order }) {
     )
 }
 
-function OrderCard({ order, onRequestTransport }: { order: Order; onRequestTransport: (order: Order) => void; }) {
+function OrderCard({ order, transportRequest, onRequestTransport }: { order: Order; transportRequest?: TransportRequest, onRequestTransport: (order: Order) => void; }) {
     return (
         <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-start gap-4">
@@ -141,10 +142,19 @@ function OrderCard({ order, onRequestTransport }: { order: Order; onRequestTrans
                 </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
-                <Button variant="outline" size="sm" onClick={() => onRequestTransport(order)}>
-                    <Truck className="mr-2 h-4 w-4" />
-                    Request Transport
-                </Button>
+                {transportRequest ? (
+                     <Button variant="outline" size="sm" asChild>
+                        <Link href={`/transport/${transportRequest.id}`}>
+                             <Truck className="mr-2 h-4 w-4" />
+                            View Request
+                        </Link>
+                    </Button>
+                ) : (
+                     <Button variant="outline" size="sm" onClick={() => onRequestTransport(order)}>
+                        <Truck className="mr-2 h-4 w-4" />
+                        Request Transport
+                    </Button>
+                )}
                 {order.status === 'delivered' && <LeaveReviewDialog order={order} />}
             </CardFooter>
         </Card>
@@ -167,7 +177,21 @@ export default function OrdersPage() {
     }, [firestore, user]);
 
     const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
+
+    const transportRequestsQuery = useMemoFirebase(() => {
+        if (!firestore || !orders || orders.length === 0) return null;
+        const orderIds = orders.map(o => o.id);
+        return query(collection(firestore, 'transportRequests'), where('orderId', 'in', orderIds));
+    }, [firestore, orders]);
+    const { data: transportRequests } = useCollection<TransportRequest>(transportRequestsQuery);
     
+    const requestsByOrderId = useMemo(() => {
+        return transportRequests?.reduce((acc, req) => {
+            acc[req.orderId] = req;
+            return acc;
+        }, {} as Record<string, TransportRequest>) || {};
+    }, [transportRequests]);
+
     const handleRequestTransport = async (order: Order) => {
         if (!firestore) return;
         toast({ title: "Creating Transport Request", description: "Please wait..." });
@@ -209,7 +233,14 @@ export default function OrdersPage() {
 
             {!effectiveIsLoading && orders && orders.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {orders.map(order => <OrderCard key={order.id} order={order} onRequestTransport={handleRequestTransport} />)}
+                    {orders.map(order => (
+                        <OrderCard 
+                            key={order.id} 
+                            order={order} 
+                            transportRequest={requestsByOrderId[order.id]}
+                            onRequestTransport={handleRequestTransport} 
+                        />
+                    ))}
                 </div>
             ) : null}
 
@@ -229,5 +260,3 @@ export default function OrdersPage() {
         </div>
     );
 }
-
-    
