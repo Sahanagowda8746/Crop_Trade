@@ -1,6 +1,6 @@
 
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -42,6 +42,7 @@ export default function YieldPredictionPage() {
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
   const [result, setResult] = useState<YieldPredictionOutput | null>(null);
+  const hasRun = useRef(false);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -61,6 +62,13 @@ export default function YieldPredictionPage() {
   const onSubmit = async (data: FormSchema) => {
     setIsPending(true);
     setResult(null);
+    hasRun.current = false;
+    
+    toast({
+        title: 'Predicting Yield...',
+        description: 'The AI is generating your forecast. This may take a moment.',
+    });
+
     const response = await handleYieldPrediction(data);
     if(response.data) {
         setResult(response.data);
@@ -69,6 +77,7 @@ export default function YieldPredictionPage() {
         toast({ variant: 'destructive', title: 'Prediction Failed', description: response.message.replace('error:', '') });
     }
     setIsPending(false);
+    hasRun.current = true;
   }
 
   return (
