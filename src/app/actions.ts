@@ -174,12 +174,13 @@ const fertilizerSchema = z.object({
 export async function handleFertilizerCalculation(data: z.infer<typeof fertilizerSchema>) {
     const validatedFields = fertilizerSchema.safeParse(data);
     if (!validatedFields.success) {
-        return { message: `error: Invalid form data.`, data: null };
+        return { message: `error: Invalid form data. Please check your inputs.`, data: null };
     }
     try {
       const result = await calculateFertilizer(validatedFields.data);
       return { message: "Calculation complete.", data: result };
     } catch (e: any) {
+      console.error("Fertilizer calculation error:", e);
       return { message: `error: ${e.message}`, data: null };
     }
 }

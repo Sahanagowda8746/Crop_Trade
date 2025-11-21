@@ -44,9 +44,9 @@ const prompt = ai.definePrompt({
   name: 'fertilizerCalculatorPrompt',
   input: {schema: FertilizerCalculatorInputSchema},
   output: {schema: FertilizerCalculatorOutputSchema},
-  prompt: `You are an expert agronomist AI specializing in soil science and nutrient management for Indian agriculture.
+  prompt: `You are an expert agronomist AI specializing in soil science and nutrient management. Your task is to provide a fertilizer plan based on soil data and a target crop.
 
-A farmer has provided the following soil test data and wants a fertilizer plan for their chosen crop. Analyze the data and provide a set of clear, actionable recommendations.
+Analyze the following data and generate a response in the required JSON format.
 
 **Soil Data:**
 - Soil Type: {{{soilType}}}
@@ -57,17 +57,11 @@ A farmer has provided the following soil test data and wants a fertilizer plan f
 
 **Target Crop:** {{{targetCrop}}}
 
-**Your Task:**
-
-1.  **Analyze Nutrient Levels**: Determine if N, P, and K are low, medium, or high for the specified crop.
-2.  **Provide Recommendations**: Based on the nutrient levels and crop requirements, recommend specific fertilizers (e.g., Urea, Diammonium Phosphate (DAP), Muriate of Potash (MOP), Single Super Phosphate (SSP)). For each fertilizer, provide:
-    - The recommended application rate in kg/ha.
-    - The best timing for application (e.g., basal, top dressing, specific growth stages).
-    - A simple reason for the recommendation.
-3.  **Address pH**: If the pH is outside the ideal range for the crop, provide a clear warning and suggest soil amendments (e.g., Lime for acidic soil, Gypsum for alkaline soil) with application rates.
-4.  **General Advice**: Give a concluding paragraph of general advice for nutrient management for this specific crop in this soil type.
-
-Generate the response in the required JSON format. Ensure the recommendations are practical for a typical Indian farmer.`,
+**Instructions:**
+1.  **Analyze Nutrient Levels**: Determine if N, P, and K are low, medium, or high for the target crop.
+2.  **Provide Recommendations**: Based on the analysis, recommend specific fertilizers (e.g., Urea, DAP, MOP). For each, provide the application rate (kg/ha), timing, and a simple reason.
+3.  **Address pH**: If the pH is outside the ideal range, provide a warning and suggest amendments (e.g., Lime for acidic, Gypsum for alkaline).
+4.  **General Advice**: Give a concluding paragraph of general advice for nutrient management for this crop in this soil type.`,
 });
 
 const fertilizerCalculatorFlow = ai.defineFlow(
@@ -79,7 +73,7 @@ const fertilizerCalculatorFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
     if (!output) {
-        throw new Error("AI failed to generate a fertilizer plan.");
+        throw new Error("AI failed to generate a fertilizer plan. The model may be overloaded or the input is invalid.");
     }
     return output;
   }

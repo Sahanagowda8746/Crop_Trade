@@ -1,6 +1,6 @@
 
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -46,6 +46,8 @@ export default function FertilizerCalculatorPage() {
       targetCrop: '',
     },
   });
+  
+  const hasRun = useRef(false);
 
   useEffect(() => {
     setPageTitle('AI Fertilizer Calculator');
@@ -54,14 +56,27 @@ export default function FertilizerCalculatorPage() {
   const onSubmit = async (data: FormSchema) => {
     setIsPending(true);
     setResult(null);
-    const response = await handleFertilizerCalculation(data);
-    if (response.data) {
-      setResult(response.data);
-      toast({ title: 'Plan Ready!', description: "Your custom fertilizer plan has been generated." });
-    } else {
-      toast({ variant: 'destructive', title: 'Calculation Failed', description: response.message.replace('error:', '') });
+    hasRun.current = false;
+    
+     const { id } = toast({
+      title: 'Calculating Plan...',
+      description: 'The AI is generating your custom fertilizer plan. This may take a moment.',
+    });
+
+    try {
+        const response = await handleFertilizerCalculation(data);
+        if (response.data) {
+          setResult(response.data);
+          toast({ title: 'Plan Ready!', description: "Your custom fertilizer plan has been generated." });
+        } else {
+          toast({ variant: 'destructive', title: 'Calculation Failed', description: response.message.replace('error:', '') });
+        }
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: 'An Error Occurred', description: e.message || "Failed to get a response from the server." });
+    } finally {
+        setIsPending(false);
+        hasRun.current = true;
     }
-    setIsPending(false);
   };
 
   return (
