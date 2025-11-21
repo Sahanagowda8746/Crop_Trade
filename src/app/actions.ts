@@ -224,7 +224,7 @@ const listingSchema = z.object({
   location: z.string().min(3, "Location is required."),
   harvestDate: z.string().min(1, "Harvest date is required."),
   description: z.string().min(10, "Description must be at least 10 characters."),
-  imageUrl: z.string().url().optional().or(z.literal('')),
+  imageUrl: z.coerce.string().optional(),
 });
 
 
