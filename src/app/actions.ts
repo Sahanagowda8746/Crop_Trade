@@ -163,10 +163,10 @@ export async function handleCropDescription(prevState: any, formData: FormData) 
 }
 
 const fertilizerSchema = z.object({
-  nitrogen: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Nitrogen cannot be negative.")),
-  phosphorus: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Phosphorus cannot be negative.")),
-  potassium: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Potassium cannot be negative.")),
-  ph: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "pH must be between 0 and 14.").max(14)),
+  nitrogen: z.number().min(0, "Nitrogen cannot be negative."),
+  phosphorus: z.number().min(0, "Phosphorus cannot be negative."),
+  potassium: z.number().min(0, "Potassium cannot be negative."),
+  ph: z.number().min(0, "pH must be between 0 and 14.").max(14),
   soilType: z.string().min(1, "Please select a soil type."),
   targetCrop: z.string().min(2, "Please enter a target crop."),
 });
