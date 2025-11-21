@@ -29,7 +29,7 @@ const getSoilKitOrderStatus = ai.defineTool(
   {
     name: 'getSoilKitOrderStatus',
     description:
-      'Get the status of the most recent soil kit order for a given user.',
+      "Get the status of the most recent soil kit order for a given user. You must use this tool if the user asks about their order, report, or kit status.",
     inputSchema: z.object({
       userId: z.string().describe('The ID of the user to check.'),
     }),
@@ -41,9 +41,9 @@ const getSoilKitOrderStatus = ai.defineTool(
   async ({userId}) => {
     console.log(`Checking soil kit order status for user: ${userId}`);
     try {
-      const {firestore} = getSdks(
-        initializeFirebase(undefined, `backend-tool-get-order-status-${Date.now()}`)
-      );
+      // Use a unique name for the backend app instance to avoid conflicts.
+      const appName = `backend-tool-get-order-status-${Date.now()}`;
+      const {firestore} = getSdks(initializeFirebase(undefined, appName));
       const ordersRef = collection(firestore, 'soilKitOrders');
       const q = query(
         ordersRef,
@@ -96,7 +96,7 @@ export async function askAgronomist(
 const agronomistPrompt = `You are an expert agronomist and AI assistant for the CropTrade platform. Your role is to provide clear, concise, and accurate advice to farmers.
 
 - If the user asks about the status of their order, kit, or report, you MUST use the getSoilKitOrderStatus tool to check the database.
-- Base your answer on the information provided by the tool. Inform the user if no order is found.
+- Base your answer on the information provided by the tool. Inform the user if no order is found. If the tool fails, inform the user you could not retrieve the information.
 - For all other agricultural questions, provide a helpful and encouraging answer based on your expertise.
 - Keep your answers concise and easy to understand for a non-expert audience.
 - Today's date is ${new Date().toLocaleDateString()}.`;
@@ -109,41 +109,23 @@ const askAgronomistFlow = ai.defineFlow(
     outputSchema: AskAgronomistOutputSchema,
   },
   async ({question, userId}) => {
+    
     const llmResponse = await ai.generate({
       prompt: question,
       model: 'googleai/gemini-1.5-flash',
       system: agronomistPrompt,
       tools: [getSoilKitOrderStatus],
-      // The tool automatically gets the userId from the input schema
-      // We don't need to force it with a config.
+      toolConfig: {
+        toolChoice: 'auto',
+      }
     });
 
     const answer = llmResponse.text;
-    
-    if (answer) {
-        return { answer };
+
+    if (!answer) {
+        throw new Error('The AI failed to generate a response. Please try again.');
     }
 
-    // Fallback logic in case the model uses a tool and doesn't return a direct text response.
-    const toolResponsePart = llmResponse.candidates[0]?.content.parts.find(p => p.toolResponse);
-    if (toolResponsePart?.toolResponse) {
-        const output = toolResponsePart.toolResponse.output;
-        if(output === null) {
-            return { answer: "I couldn't find any soil kit orders for you. You can order one from the 'AI & Lab Tools' page." };
-        }
-        // Let the model generate a natural language response based on the tool's output
-        const followUpResponse = await ai.generate({
-             model: 'googleai/gemini-1.5-flash',
-             prompt: `The user's soil kit order status is: ${JSON.stringify(output)}. Please formulate a friendly response to the user with this information.`,
-        });
-        return { answer: followUpResponse.text };
-    }
-    
-    // Final fallback
-    if (llmResponse.candidates[0]?.content?.parts[0]?.text) {
-        return { answer: llmResponse.candidates[0].content.parts[0].text };
-    }
-    
-    throw new Error('AI response did not contain any text.');
+    return { answer };
   }
 );
