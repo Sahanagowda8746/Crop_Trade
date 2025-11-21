@@ -23,6 +23,7 @@ import {
 } from 'firebase/firestore';
 import {getSdks, initializeFirebase} from '@/firebase';
 import {SoilKitOrder} from '@/lib/types';
+import { content } from 'genkit';
 
 // Tool to get the status of a soil kit order
 const getSoilKitOrderStatus = ai.defineTool(
@@ -112,20 +113,32 @@ const askAgronomistFlow = ai.defineFlow(
     outputSchema: AskAgronomistOutputSchema,
   },
   async ({question, userId}) => {
-    const {response} = await ai.generate({
+    const llmResponse = await ai.generate({
       prompt: question,
       model: 'googleai/gemini-2.5-pro',
-      history: [{role: 'system', content: agronomistPrompt.prompt}],
+      history: [content(agronomistPrompt.prompt, 'system')],
       tools: [getSoilKitOrderStatus],
       toolConfig: {
         toolRequest: [{tool: 'getSoilKitOrderStatus', input: {userId}}],
       },
     });
 
-    const text = response.text;
+    const text = llmResponse.text;
+    
     if (!text) {
+      // This can happen if the model only returns a tool call and no text.
+      // We can inspect the tool calls if we need to.
+      const choice = llmResponse.candidates[0];
+      const toolCalls = choice.message.content.filter(part => !!part.toolRequest);
+      if (toolCalls.length > 0) {
+         // In a more complex scenario, you might want to re-invoke the LLM
+         // with the tool's output to get a natural language response.
+         // For now, we'll return a simple message.
+         return { answer: "I've looked up the information, but I'm having trouble formulating a response. Could you try rephrasing your question?" };
+      }
       throw new Error('AI response did not contain any text.');
     }
+    
     return {answer: text};
   }
 );
