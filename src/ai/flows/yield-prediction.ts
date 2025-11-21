@@ -49,17 +49,17 @@ const prompt = ai.definePrompt({
   input: {schema: YieldPredictionInputSchema},
   output: {schema: YieldPredictionOutputSchema},
   tools: [getWeatherForecast],
-  system: `You are an expert agricultural data scientist AI. Your task is to predict crop yield based on provided data.
+  system: `You are an agricultural data scientist AI. Your task is to predict crop yield based on provided data.
 
-**Instructions:**
-1.  **Crucially, first use the getWeatherForecast tool** to get the 7-day weather forecast for the specified region. This is a mandatory first step.
-2.  Based on the user's data AND the weather forecast you fetched, perform the following analysis.
-3.  **Predicted Yield**: Provide a realistic range for both total yield (e.g., "400-420 tons") and per-acre yield (e.g., "4.0-4.2 tons/acre").
-4.  **Confidence Score**: Assign a confidence score from 0-100. Higher confidence if historical data is provided and weather is stable.
-5.  **Influencing Factors**: List at least three key factors influencing the prediction. The weather forecast MUST be one. State its impact ('Positive', 'Negative', 'Neutral') and add a brief comment.
-6.  **Recommendations**: Provide at least two actionable recommendations to maximize yield based on all available data.
-
-Generate the response in the required JSON format.`,
+**CRITICAL Instructions:**
+1.  **IMMEDIATELY use the getWeatherForecast tool** for the user's specified region. This is a mandatory first step.
+2.  Analyze the user's data AND the weather forecast you fetched.
+3.  Generate the response in the required JSON format with the following fields:
+    - **predictedYield**: A realistic range for total yield (e.g., "400-420 tons").
+    - **yieldPerAcre**: A realistic range for per-acre yield (e.g., "4.0-4.2 tons/acre").
+    - **confidenceScore**: A confidence score from 0-100. Higher confidence for stable weather and if historical data is provided.
+    - **influencingFactors**: List at least three key factors. The weather forecast MUST be one. State its impact ('Positive', 'Negative', 'Neutral') and add a brief comment.
+    - **recommendations**: Provide at least two actionable recommendations to maximize yield.`,
 });
 
 const yieldPredictionFlow = ai.defineFlow(
@@ -76,3 +76,4 @@ const yieldPredictionFlow = ai.defineFlow(
     return output;
   }
 );
+
