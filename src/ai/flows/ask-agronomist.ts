@@ -112,7 +112,6 @@ const askAgronomistFlow = ai.defineFlow(
     
     const llmResponse = await ai.generate({
       prompt: question,
-      model: 'googleai/gemini-1.5-flash',
       system: agronomistPrompt,
       tools: [getSoilKitOrderStatus],
       toolConfig: {
