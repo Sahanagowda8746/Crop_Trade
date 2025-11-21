@@ -60,6 +60,7 @@ const prompt = ai.definePrompt({
     - **confidenceScore**: A confidence score from 0-100. Higher confidence for stable weather and if historical data is provided.
     - **influencingFactors**: List at least three key factors. The weather forecast MUST be one. State its impact ('Positive', 'Negative', 'Neutral') and add a brief comment.
     - **recommendations**: Provide at least two actionable recommendations to maximize yield.`,
+  prompt: `Please generate a yield prediction based on the user's input and the system instructions.`,
 });
 
 const yieldPredictionFlow = ai.defineFlow(
@@ -76,4 +77,5 @@ const yieldPredictionFlow = ai.defineFlow(
     return output;
   }
 );
+
 
