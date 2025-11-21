@@ -23,7 +23,6 @@ import {
 } from 'firebase/firestore';
 import {getSdks, initializeFirebase} from '@/firebase';
 import {SoilKitOrder} from '@/lib/types';
-import { content } from 'genkit';
 
 // Tool to get the status of a soil kit order
 const getSoilKitOrderStatus = ai.defineTool(
@@ -94,17 +93,14 @@ export async function askAgronomist(
   return askAgronomistFlow(input);
 }
 
-const agronomistPrompt = ai.definePrompt({
-  name: 'askAgronomistPrompt',
-  tools: [getSoilKitOrderStatus],
-  system: `You are an expert agronomist and AI assistant for the CropTrade platform. Your role is to provide clear, concise, and accurate advice to farmers.
+const agronomistPrompt = `You are an expert agronomist and AI assistant for the CropTrade platform. Your role is to provide clear, concise, and accurate advice to farmers.
 
 - If the user asks about the status of their order, kit, or report, you MUST use the getSoilKitOrderStatus tool to check the database.
 - Base your answer on the information provided by the tool. Inform the user if no order is found.
 - For all other agricultural questions, provide a helpful and encouraging answer based on your expertise.
 - Keep your answers concise and easy to understand for a non-expert audience.
-- Today's date is ${new Date().toLocaleDateString()}.`,
-});
+- Today's date is ${new Date().toLocaleDateString()}.`;
+
 
 const askAgronomistFlow = ai.defineFlow(
   {
@@ -115,30 +111,26 @@ const askAgronomistFlow = ai.defineFlow(
   async ({question, userId}) => {
     const llmResponse = await ai.generate({
       prompt: question,
-      model: 'googleai/gemini-2.5-pro',
-      history: [content(agronomistPrompt.prompt, 'system')],
+      model: 'googleai/gemini-pro',
+      system: agronomistPrompt,
       tools: [getSoilKitOrderStatus],
       toolConfig: {
         toolRequest: [{tool: 'getSoilKitOrderStatus', input: {userId}}],
       },
     });
 
-    const text = llmResponse.text;
-    
-    if (!text) {
-      // This can happen if the model only returns a tool call and no text.
-      // We can inspect the tool calls if we need to.
-      const choice = llmResponse.candidates[0];
-      const toolCalls = choice.message.content.filter(part => !!part.toolRequest);
-      if (toolCalls.length > 0) {
-         // In a more complex scenario, you might want to re-invoke the LLM
-         // with the tool's output to get a natural language response.
-         // For now, we'll return a simple message.
-         return { answer: "I've looked up the information, but I'm having trouble formulating a response. Could you try rephrasing your question?" };
-      }
-      throw new Error('AI response did not contain any text.');
+    const answer = llmResponse.text;
+
+    if (!answer) {
+        // Fallback for when the model might not return text directly
+        const toolResponsePart = llmResponse.candidates[0]?.content.parts.find(p => p.toolResponse);
+        if (toolResponsePart?.toolResponse) {
+             return { answer: `I've looked up the information about your order. Here's what I found: ${JSON.stringify(toolResponsePart.toolResponse.output)}` };
+        }
+        
+        throw new Error('AI response did not contain any text.');
     }
     
-    return {answer: text};
+    return {answer};
   }
 );
