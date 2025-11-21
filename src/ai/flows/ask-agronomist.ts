@@ -114,38 +114,36 @@ const askAgronomistFlow = ai.defineFlow(
       model: 'googleai/gemini-1.5-flash',
       system: agronomistPrompt,
       tools: [getSoilKitOrderStatus],
-      toolConfig: {
-        toolRequest: 'auto'
-      },
-      config: {
-        // Pass the userId to the tool automatically if it asks for it.
-        toolRequest: {
-          getSoilKitOrderStatus: {
-            input: {
-              userId,
-            },
-          },
-        },
-      }
+      // The tool automatically gets the userId from the input schema
+      // We don't need to force it with a config.
     });
 
     const answer = llmResponse.text;
+    
+    if (answer) {
+        return { answer };
+    }
 
-    if (!answer) {
-        // Fallback for when the model might not return text directly (e.g. after tool use)
-        const content = llmResponse.candidates?.[0]?.content;
-        const toolResponsePart = content?.parts.find(p => p.toolResponse);
-        if (toolResponsePart?.toolResponse?.output) {
-             const output = toolResponsePart.toolResponse.output;
-             if(output === null) {
-                return { answer: "I couldn't find any soil kit orders for you. You can order one from the 'AI & Lab Tools' page." };
-             }
-             return { answer: `I've looked up your most recent order. It was placed on ${new Date(output.orderDate).toLocaleDateString()} and its status is: ${output.status}.` };
+    // Fallback logic in case the model uses a tool and doesn't return a direct text response.
+    const toolResponsePart = llmResponse.candidates[0]?.content.parts.find(p => p.toolResponse);
+    if (toolResponsePart?.toolResponse) {
+        const output = toolResponsePart.toolResponse.output;
+        if(output === null) {
+            return { answer: "I couldn't find any soil kit orders for you. You can order one from the 'AI & Lab Tools' page." };
         }
-        
-        throw new Error('AI response did not contain any text.');
+        // Let the model generate a natural language response based on the tool's output
+        const followUpResponse = await ai.generate({
+             model: 'googleai/gemini-1.5-flash',
+             prompt: `The user's soil kit order status is: ${JSON.stringify(output)}. Please formulate a friendly response to the user with this information.`,
+        });
+        return { answer: followUpResponse.text };
     }
     
-    return {answer};
+    // Final fallback
+    if (llmResponse.candidates[0]?.content?.parts[0]?.text) {
+        return { answer: llmResponse.candidates[0].content.parts[0].text };
+    }
+    
+    throw new Error('AI response did not contain any text.');
   }
 );
