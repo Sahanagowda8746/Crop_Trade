@@ -24,6 +24,11 @@ const YieldPredictionInputSchema = z.object({
 });
 export type YieldPredictionInput = z.infer<typeof YieldPredictionInputSchema>;
 
+// Internal schema that includes the weather forecast
+const CombinedInputSchema = YieldPredictionInputSchema.extend({
+    weatherForecast: z.string().describe("The 7-day weather forecast for the region.")
+});
+
 const YieldPredictionOutputSchema = z.object({
     predictedYield: z.string().describe('The estimated total yield for the entire acreage (e.g., "400-420 tons").'),
     yieldPerAcre: z.string().describe('The estimated yield per acre (e.g., "4.0-4.2 tons/acre").'),
@@ -46,21 +51,29 @@ export async function predictYield(
 
 const prompt = ai.definePrompt({
   name: 'yieldPredictionPrompt',
-  input: {schema: YieldPredictionInputSchema},
+  input: {schema: CombinedInputSchema},
   output: {schema: YieldPredictionOutputSchema},
-  tools: [getWeatherForecast],
-  system: `You are an agricultural data scientist AI. Your task is to predict crop yield based on provided data.
+  prompt: `You are an agricultural data scientist AI. Your task is to predict crop yield based on provided data. Analyze the user's data AND the provided weather forecast.
 
-**CRITICAL Instructions:**
-1.  **IMMEDIATELY use the getWeatherForecast tool** for the user's specified region. This is a mandatory first step.
-2.  Analyze the user's data AND the weather forecast you fetched.
-3.  Generate the response in the required JSON format with the following fields:
-    - **predictedYield**: A realistic range for total yield (e.g., "400-420 tons").
-    - **yieldPerAcre**: A realistic range for per-acre yield (e.g., "4.0-4.2 tons/acre").
-    - **confidenceScore**: A confidence score from 0-100. Higher confidence for stable weather and if historical data is provided.
-    - **influencingFactors**: List at least three key factors. The weather forecast MUST be one. State its impact ('Positive', 'Negative', 'Neutral') and add a brief comment.
-    - **recommendations**: Provide at least two actionable recommendations to maximize yield.`,
-  prompt: `Please generate a yield prediction based on the user's input and the system instructions.`,
+**Input Data:**
+- Crop: {{{cropType}}}
+- Acreage: {{{acreage}}}
+- Soil Type: {{{soilType}}}
+- Nitrogen: {{{nitrogenLevel}}} kg/ha
+- Phosphorus: {{{phosphorusLevel}}} kg/ha
+- Potassium: {{{potassiumLevel}}} kg/ha
+- Region: {{{region}}}
+- Historical Yield: {{{historicalYield}}}
+- Weather Forecast: {{{weatherForecast}}}
+
+**Your Analysis Must Include:**
+1.  **predictedYield**: A realistic range for total yield (e.g., "400-420 tons").
+2.  **yieldPerAcre**: A realistic range for per-acre yield (e.g., "4.0-4.2 tons/acre").
+3.  **confidenceScore**: A confidence score from 0-100. Higher confidence for stable weather and if historical data is provided.
+4.  **influencingFactors**: List at least three key factors. The weather forecast MUST be one. State its impact ('Positive', 'Negative', 'Neutral') and add a brief comment.
+5.  **recommendations**: Provide at least two actionable recommendations to maximize yield.
+
+Generate the response in the required JSON format.`,
 });
 
 const yieldPredictionFlow = ai.defineFlow(
@@ -70,13 +83,21 @@ const yieldPredictionFlow = ai.defineFlow(
     outputSchema: YieldPredictionOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    // 1. Explicitly call the weather tool
+    const weather = await getWeatherForecast({ region: input.region });
+
+    // 2. Combine the user input with the weather data
+    const combinedData = {
+      ...input,
+      weatherForecast: weather.forecast,
+    };
+    
+    // 3. Call the prompt with the complete data
+    const {output} = await prompt(combinedData);
+
     if (!output) {
       throw new Error("AI failed to generate a yield prediction.");
     }
     return output;
   }
 );
-
-
-
