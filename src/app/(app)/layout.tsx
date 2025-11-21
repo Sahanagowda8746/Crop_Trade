@@ -7,6 +7,8 @@ import AppSidebar from '@/components/app-sidebar';
 import { FirebaseClientProvider, useUser } from '@/firebase';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
+import AIAssistantWidget from '@/components/AIAssistantWidget';
+
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -68,6 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
                     {children}
                 </main>
+                <AIAssistantWidget />
                 </SidebarInset>
             </SidebarProvider>
         </AuthGuard>

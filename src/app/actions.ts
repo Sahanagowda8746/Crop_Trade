@@ -12,6 +12,8 @@ import { assessCreditScore } from '@/ai/flows/credit-score-flow';
 import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 import type { SoilAnalysis, CropListing, UserProfile, Order, Auction, TransportRequest, Review, SoilKitOrder, TransportBid } from '@/lib/types';
+import { askAgronomist } from '@/ai/flows/ask-agronomist';
+import { convertTextToSpeech } from '@/ai/flows/text-to-speech';
 
 
 // This is a simplified way to get the currently logged-in user's ID on the server.
@@ -262,5 +264,42 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
         return { message: `error:Update failed. ${errorMessage}` };
+    }
+}
+
+
+const askAgronomistSchema = z.object({
+  question: z.string().min(1, 'Please enter a question.'),
+  language: z.string(),
+  userId: z.string(),
+  history: z.string().optional(),
+});
+export async function handleAskAgronomist(data: z.infer<typeof askAgronomistSchema>) {
+    const validatedFields = askAgronomistSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { message: `error: Invalid form data.`, data: null };
+    }
+    try {
+        const history = validatedFields.data.history ? JSON.parse(validatedFields.data.history) : [];
+        const result = await askAgronomist({...validatedFields.data, history });
+        return { message: "Answer received.", data: result };
+    } catch (e: any) {
+        return { message: `error: Failed to get answer. ${e.message}`, data: null };
+    }
+}
+
+const ttsSchema = z.object({
+  text: z.string().min(1, 'Please provide text.'),
+});
+export async function handleTextToSpeech(data: z.infer<typeof ttsSchema>) {
+    const validatedFields = ttsSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { message: `error: Invalid form data.`, data: null };
+    }
+    try {
+        const result = await convertTextToSpeech(validatedFields.data);
+        return { message: "Audio received.", data: result };
+    } catch (e: any) {
+        return { message: `error: Failed to get audio. ${e.message}`, data: null };
     }
 }
