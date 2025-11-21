@@ -3,9 +3,7 @@
 
 import { z } from 'zod';
 import { diagnosePestFromImage } from '@/ai/flows/pest-diagnosis-from-image';
-import { askAgronomist } from '@/ai/flows/ask-agronomist';
 import { generateAdImage } from '@/ai/flows/generate-ad-image';
-import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { generateCropDescription } from '@/ai/flows/crop-description-generator';
 import { calculateFertilizer } from '@/ai/flows/fertilizer-calculator';
 import { predictYield } from '@/ai/flows/yield-prediction';
@@ -70,22 +68,6 @@ export async function handlePestDiagnosis(prevState: any, formData: FormData) {
     }
 }
 
-export async function handleAskAgronomist(question: string) {
-    if (!question) {
-        return { message: 'Please provide a question.' };
-    }
-
-    try {
-        const userId = await getUserId();
-        const response = await askAgronomist({ question, userId });
-        return { message: 'Answer complete.', data: response };
-    } catch (error) {
-        console.error(error);
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-        return { message: `error:Failed to get answer. ${errorMessage}`, errors: {} };
-    }
-}
-
 const adImageSchema = z.object({
   description: z.string().min(5, 'Please provide a more detailed description.'),
 });
@@ -110,21 +92,6 @@ export async function handleAdImageGeneration(prevState: any, formData: FormData
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return { message: `error:Image generation failed. ${errorMessage}`, errors: {} };
   }
-}
-
-export async function handleTextToSpeech(text: string) {
-    if (!text) {
-        return { message: 'Please provide text.' };
-    }
-
-    try {
-        const result = await textToSpeech(text);
-        return { message: 'Audio generated.', data: result };
-    } catch (error) {
-        console.error(error);
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-        return { message: `error:Failed to generate audio. ${errorMessage}`, errors: {} };
-    }
 }
 
 const cropDescriptionSchema = z.object({
@@ -297,5 +264,3 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
         return { message: `error:Update failed. ${errorMessage}` };
     }
 }
-
-    
