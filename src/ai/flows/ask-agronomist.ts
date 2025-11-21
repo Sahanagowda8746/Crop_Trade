@@ -111,21 +111,36 @@ const askAgronomistFlow = ai.defineFlow(
   async ({question, userId}) => {
     const llmResponse = await ai.generate({
       prompt: question,
-      model: 'googleai/gemini-pro',
+      model: 'googleai/gemini-1.5-flash',
       system: agronomistPrompt,
       tools: [getSoilKitOrderStatus],
       toolConfig: {
-        toolRequest: [{tool: 'getSoilKitOrderStatus', input: {userId}}],
+        toolRequest: 'auto'
       },
+      config: {
+        // Pass the userId to the tool automatically if it asks for it.
+        toolRequest: {
+          getSoilKitOrderStatus: {
+            input: {
+              userId,
+            },
+          },
+        },
+      }
     });
 
     const answer = llmResponse.text;
 
     if (!answer) {
-        // Fallback for when the model might not return text directly
-        const toolResponsePart = llmResponse.candidates[0]?.content.parts.find(p => p.toolResponse);
-        if (toolResponsePart?.toolResponse) {
-             return { answer: `I've looked up the information about your order. Here's what I found: ${JSON.stringify(toolResponsePart.toolResponse.output)}` };
+        // Fallback for when the model might not return text directly (e.g. after tool use)
+        const content = llmResponse.candidates?.[0]?.content;
+        const toolResponsePart = content?.parts.find(p => p.toolResponse);
+        if (toolResponsePart?.toolResponse?.output) {
+             const output = toolResponsePart.toolResponse.output;
+             if(output === null) {
+                return { answer: "I couldn't find any soil kit orders for you. You can order one from the 'AI & Lab Tools' page." };
+             }
+             return { answer: `I've looked up your most recent order. It was placed on ${new Date(output.orderDate).toLocaleDateString()} and its status is: ${output.status}.` };
         }
         
         throw new Error('AI response did not contain any text.');
