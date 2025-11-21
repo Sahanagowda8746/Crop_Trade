@@ -63,7 +63,8 @@ export default function AIAssistantWidget() {
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
-        if (event.error !== 'aborted') { // Don't show toast if we intentionally stop it
+        // Do not show a toast for 'no-speech' or 'aborted' errors.
+        if (event.error !== 'aborted' && event.error !== 'no-speech') {
              toast({
               variant: 'destructive',
               title: 'Speech Recognition Error',
