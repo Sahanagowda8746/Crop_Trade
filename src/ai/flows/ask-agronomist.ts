@@ -99,6 +99,15 @@ const askAgronomistFlow = ai.defineFlow(
     const text = llmResponse.text;
     
     if (!text) {
+        // Fallback if the main text extraction fails
+        const toolResponsePart = llmResponse.candidates[0]?.content.parts.find(
+            (part) => part.toolResponse
+        );
+        if (toolResponsePart?.toolResponse?.output) {
+             const toolOutput = toolResponsePart.toolResponse.output as any;
+             // This is a guess. You might need to adjust based on the actual tool output structure
+             return { answer: toolOutput.details || JSON.stringify(toolOutput) };
+        }
         return { answer: "I'm sorry, I couldn't generate a response. Please try again." };
     }
 
