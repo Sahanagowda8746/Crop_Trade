@@ -187,11 +187,11 @@ export async function handleFertilizerCalculation(data: z.infer<typeof fertilize
 
 const yieldSchema = z.object({
   cropType: z.string().min(2, "Please enter a crop type."),
-  acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be a positive number.")),
+  acreage: z.number().positive("Acreage must be a positive number."),
   soilType: z.string().min(1, "Please select a soil type."),
-  nitrogenLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Nitrogen cannot be negative.")),
-  phosphorusLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Phosphorus cannot be negative.")),
-  potassiumLevel: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Potassium cannot be negative.")),
+  nitrogenLevel: z.number().min(0, "Nitrogen cannot be negative."),
+  phosphorusLevel: z.number().min(0, "Phosphorus cannot be negative."),
+  potassiumLevel: z.number().min(0, "Potassium cannot be negative."),
   region: z.string().min(2, "Region is required."),
   historicalYield: z.string().optional(),
 });
@@ -297,3 +297,5 @@ export async function handleUpdateListing(prevState: any, formData: FormData) {
         return { message: `error:Update failed. ${errorMessage}` };
     }
 }
+
+    
