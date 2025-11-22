@@ -195,10 +195,10 @@ export async function handleDemandForecast(data: z.infer<typeof demandSchema>) {
 }
 
 const creditScoreSchema = z.object({
-  annualRevenue: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Annual revenue must be a positive number.")),
-  yearsFarming: z.preprocess((a) => parseInt(z.string().parse(a)), z.number().int().min(0, "Years in farming cannot be negative.")),
+  annualRevenue: z.number().positive("Annual revenue must be a positive number."),
+  yearsFarming: z.number().int().min(0, "Years in farming cannot be negative."),
   loanHistory: z.enum(['No Loans', 'Paid On Time', 'Minor Delays', 'Major Delays']),
-  outstandingDebt: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().min(0, "Outstanding debt cannot be negative.")),
+  outstandingDebt: z.number().min(0, "Outstanding debt cannot be negative."),
 });
 export async function handleCreditScore(data: z.infer<typeof creditScoreSchema>) {
     const validatedFields = creditScoreSchema.safeParse(data);
@@ -223,7 +223,7 @@ const listingSchema = z.object({
   location: z.string().min(3, "Location is required."),
   harvestDate: z.string().min(1, "Harvest date is required."),
   description: z.string().min(10, "Description must be at least 10 characters."),
-  imageUrl: z.coerce.string().optional(),
+  imageUrl: z.string().optional(),
 });
 
 
