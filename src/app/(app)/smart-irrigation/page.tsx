@@ -40,6 +40,8 @@ const statusConfig: { [key in ZoneStatus]: { label: string; color: string; icon:
 export default function SmartIrrigationPage() {
   const { setPageTitle } = useAppContext();
   const [zones, setZones] = useState<IrrigationZone[]>(initialZones);
+  const [masterSystem, setMasterSystem] = useState(true);
+  const [autoSchedule, setAutoSchedule] = useState(false);
 
   useEffect(() => {
     setPageTitle('Smart Irrigation');
@@ -74,11 +76,11 @@ export default function SmartIrrigationPage() {
         <CardContent>
             <div className="flex flex-col md:flex-row gap-8">
                  <div className="flex items-center space-x-2">
-                    <Switch id="master-system" defaultChecked />
+                    <Switch id="master-system" checked={masterSystem} onCheckedChange={setMasterSystem} />
                     <label htmlFor="master-system" className="font-medium">Master System Status</label>
                 </div>
                 <div className="flex items-center space-x-2">
-                    <Switch id="auto-schedule" />
+                    <Switch id="auto-schedule" checked={autoSchedule} onCheckedChange={setAutoSchedule} />
                     <label htmlFor="auto-schedule">Enable Automatic Scheduling</label>
                 </div>
             </div>
