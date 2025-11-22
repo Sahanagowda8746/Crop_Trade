@@ -8,6 +8,7 @@ import { calculateFertilizer } from '@/ai/flows/fertilizer-calculator';
 import { predictYield } from '@/ai/flows/yield-prediction';
 import { forecastDemand } from '@/ai/flows/demand-forecast';
 import { assessCreditScore } from '@/ai/flows/credit-score-flow';
+import { simulateCropCycle } from '@/ai/flows/crop-simulator-flow';
 import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 import type { SoilAnalysis, CropListing, UserProfile, Order, Auction, TransportRequest, Review, SoilKitOrder, TransportBid } from '@/lib/types';
@@ -300,5 +301,29 @@ export async function handleTextToSpeech(data: z.infer<typeof ttsSchema>) {
         return { message: "Audio received.", data: result };
     } catch (e: any) {
         return { message: `error: Failed to get audio. ${e.message}`, data: null };
+    }
+}
+
+const cropSimulatorSchema = z.object({
+  cropType: z.string().min(2, "Crop type is required."),
+  acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be positive.")),
+  region: z.string().min(2, "Region is required."),
+  simulationMonths: z.preprocess((a) => parseInt(z.string().parse(a)), z.number().int().min(1).max(24)),
+  fertilizerPlan: z.enum(["Standard NPK", "Organic Compost", "Minimal Application"]),
+  wateringSchedule: z.enum(["Automated (Optimal)", "Twice a week", "Rain-fed only"]),
+  weatherScenario: z.enum(["Normal", "Drought", "Excessive Rain"]),
+  pestScenario: z.enum(["None", "Minor Infestation", "Major Outbreak"]),
+});
+
+export async function handleCropSimulation(data: z.infer<typeof cropSimulatorSchema>) {
+    const validatedFields = cropSimulatorSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { message: `error: Invalid form data.`, data: null };
+    }
+    try {
+        const result = await simulateCropCycle(validatedFields.data);
+        return { message: "Simulation complete.", data: result };
+    } catch (e: any) {
+        return { message: `error: ${e.message}`, data: null };
     }
 }

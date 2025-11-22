@@ -54,6 +54,7 @@ const aiAdvisoryItems = [
     { href: '/yield-prediction', label: 'Yield Prediction', icon: AreaChart, roles: ['Farmer', 'Admin'] },
     { href: '/demand-forecast', label: 'Demand Forecast', icon: LineChart, roles: ['Farmer', 'Admin'] },
     { href: '/credit-score', label: 'Credit Score', icon: CircleDollarSign, roles: ['Farmer', 'Admin'] },
+    { href: '/crop-simulator', label: 'Crop Simulator', icon: Bot, roles: ['Farmer', 'Admin'] },
     
     
 ];
