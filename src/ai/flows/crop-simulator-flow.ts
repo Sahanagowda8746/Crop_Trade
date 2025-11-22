@@ -48,6 +48,12 @@ export async function simulateCropCycle(
   return cropSimulatorFlow(input);
 }
 
+const FinalAnalysisSchema = z.object({
+    predictedYield: z.string(),
+    estimatedRevenue: z.string(),
+    roi: z.number(),
+    bestStrategy: z.string(),
+});
 
 // This is a simplified, conceptual flow. A real implementation would be much more complex.
 const cropSimulatorFlow = ai.defineFlow(
@@ -126,12 +132,8 @@ const cropSimulatorFlow = ai.defineFlow(
     const analysisResponse = await ai.generate({
         prompt: analysisPrompt,
         output: {
-            schema: z.object({
-                predictedYield: z.string(),
-                estimatedRevenue: z.string(),
-                roi: z.number(),
-                bestStrategy: z.string(),
-            })
+            format: 'json',
+            schema: FinalAnalysisSchema,
         }
     });
     
