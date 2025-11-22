@@ -1,6 +1,6 @@
 
 'use client';
-import { useEffect, useActionState, useState, useRef } from 'react';
+import { useEffect, useActionState, useState, useRef, useTransition, startTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -58,10 +58,9 @@ function fileToDataUri(file: File): Promise<string> {
 }
 
 function GenerateDescriptionButton({ onClick, disabled }: { onClick: () => void; disabled: boolean; }) {
-  const { pending } = useFormStatus();
   return (
-    <Button type="button" variant="outline" size="sm" onClick={onClick} disabled={pending || disabled}>
-      {pending ? (
+    <Button type="button" variant="outline" size="sm" onClick={onClick} disabled={disabled}>
+      {disabled ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       ) : (
         <Sparkles className="mr-2 h-4 w-4" />
@@ -140,7 +139,9 @@ export default function NewListingPage() {
     formData.append('yield', `${cropData.quantity || 0} ${cropData.unit}`);
     formData.append('uniqueQualities', 'Fresh and locally sourced.'); // Placeholder
     
-    formAction(formData);
+    startTransition(() => {
+      formAction(formData);
+    });
   };
 
   async function onSubmit(values: z.infer<typeof listingSchema>) {
@@ -343,5 +344,3 @@ export default function NewListingPage() {
     </div>
   );
 }
-
-    
