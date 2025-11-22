@@ -6,9 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
-import { Droplets, RotateCw, Play, Square, Calendar, Dot, Power } from 'lucide-react';
+import { Droplets, RotateCw, Play, Square, Calendar, Dot, Power, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 
 type ZoneStatus = 'watering' | 'idle' | 'scheduled' | 'error';
@@ -36,12 +40,64 @@ const statusConfig: { [key in ZoneStatus]: { label: string; color: string; icon:
     error: { label: 'Error', color: 'bg-red-500', icon: <Power className="h-4 w-4"/> },
 };
 
+function ScheduleDialog({ zone, onSchedule }: { zone: IrrigationZone, onSchedule: (zoneId: string, schedule: string) => void }) {
+    const [dateTime, setDateTime] = useState('');
+    const { toast } = useToast();
+
+    const handleConfirm = () => {
+        if (!dateTime) {
+            toast({ variant: 'destructive', title: 'Invalid Date', description: 'Please select a date and time for the schedule.' });
+            return;
+        }
+        const formattedDate = new Date(dateTime).toLocaleString('en-US', {
+            weekday: 'long', hour: 'numeric', minute: 'numeric', hour12: true
+        });
+        onSchedule(zone.id, `On ${formattedDate}`);
+    }
+
+    return (
+         <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Schedule
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Schedule Irrigation</DialogTitle>
+                    <DialogDescription>Set a future time to water {zone.name}.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                     <Label htmlFor="schedule-time">Date and Time</Label>
+                    <Input 
+                        id="schedule-time"
+                        type="datetime-local"
+                        value={dateTime}
+                        onChange={(e) => setDateTime(e.target.value)}
+                        className="mt-1"
+                    />
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="button" variant="ghost">Cancel</Button>
+                    </DialogClose>
+                     <DialogClose asChild>
+                        <Button type="button" onClick={handleConfirm}><Check className="mr-2 h-4 w-4"/>Set Schedule</Button>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 
 export default function SmartIrrigationPage() {
   const { setPageTitle } = useAppContext();
   const [zones, setZones] = useState<IrrigationZone[]>(initialZones);
   const [masterSystem, setMasterSystem] = useState(true);
   const [autoSchedule, setAutoSchedule] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     setPageTitle('Smart Irrigation');
@@ -53,11 +109,24 @@ export default function SmartIrrigationPage() {
         if (zone.status === 'watering') {
           return { ...zone, status: 'idle' };
         } else if (zone.status === 'idle') {
-          return { ...zone, status: 'watering' };
+          return { ...zone, status: 'watering', nextRun: null }; // Clear schedule on manual start
         }
       }
       return zone;
     }));
+  };
+  
+  const handleSchedule = (zoneId: string, schedule: string) => {
+      setZones(zones.map(zone => {
+          if (zone.id === zoneId) {
+              return { ...zone, status: 'scheduled', nextRun: schedule };
+          }
+          return zone;
+      }));
+      toast({
+          title: 'Irrigation Scheduled',
+          description: `The zone has been scheduled for irrigation.`,
+      });
   };
   
   const getMoistureColor = (moisture: number) => {
@@ -124,10 +193,7 @@ export default function SmartIrrigationPage() {
                         {zone.status === 'watering' ? <Square className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
                         {zone.status === 'watering' ? 'Stop' : 'Start'}
                     </Button>
-                    <Button variant="outline" className="w-full">
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Schedule
-                    </Button>
+                    <ScheduleDialog zone={zone} onSchedule={handleSchedule} />
                  </CardContent>
             </Card>
         ))}
