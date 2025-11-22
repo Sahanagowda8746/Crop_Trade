@@ -30,6 +30,7 @@ export async function generateAdImage(
   return adImageGeneratorFlow(input);
 }
 
+
 const adImageGeneratorFlow = ai.defineFlow(
   {
     name: 'adImageGeneratorFlow',
@@ -37,9 +38,22 @@ const adImageGeneratorFlow = ai.defineFlow(
     outputSchema: AdImageOutputSchema,
   },
   async input => {
-    // To avoid rate-limiting on image generation models, we'll use a placeholder service.
-    // We can use the input description to generate a relevant seed.
-    const seed = input.description.replace(/\s+/g, '-').toLowerCase();
+    // Generate a 1-2 word hint for Unsplash from the description
+    const hintResponse = await ai.generate({
+      prompt: `From the following crop description, extract a concise 1 or 2-word hint that can be used to search for a relevant stock photo on Unsplash. For example, if the description is "Freshly harvested, bright red Roma tomatoes", a good hint would be "red tomatoes".
+
+Description: "${input.description}"
+
+Hint:`,
+      output: {
+        format: 'text',
+      },
+    });
+
+    const hint = hintResponse.text.trim().replace(/\s+/g, ' ');
+
+    // Use the generated hint as a seed for Picsum, which pulls from Unsplash
+    const seed = hint.replace(/\s+/g, '-').toLowerCase();
     const imageUrl = `https://picsum.photos/seed/${seed}/1280/720`;
     
     return {
