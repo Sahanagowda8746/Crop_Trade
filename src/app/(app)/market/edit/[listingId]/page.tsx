@@ -88,18 +88,6 @@ export default function EditListingPage() {
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(listingSchema),
-    defaultValues: {
-      listingId,
-      cropType: '',
-      variety: '',
-      quantity: 0,
-      unit: '',
-      pricePerUnit: 0,
-      location: '',
-      harvestDate: '',
-      description: '',
-      imageUrl: '',
-    },
   });
   
   useEffect(() => {
@@ -115,7 +103,7 @@ export default function EditListingPage() {
       });
       setPreview(listing.imageUrl || null);
     }
-  }, [listing, form]);
+  }, [listing, form.reset]);
   
   useEffect(() => {
     if (state.message) {
@@ -181,7 +169,7 @@ export default function EditListingPage() {
           </CardHeader>
           <CardContent>
               <div className="space-y-8">
-                 <FormField control={form.control} name="listingId" render={({ field }) => <Input type="hidden" {...field} />} />
+                 <FormField control={form.control} name="listingId" render={({ field }) => <Input type="hidden" {...field} value={listingId} />} />
 
                  <div>
                     <FormLabel>Crop Image</FormLabel>
