@@ -53,11 +53,12 @@ export async function simulateCropCycle(
   return cropSimulatorFlow(input);
 }
 
+// This schema defines the structure the AI model must return.
 const FinalAnalysisSchema = z.object({
     predictedYield: z.string(),
     estimatedRevenue: z.string(),
     roi: z.number(),
-    analysis: FullAnalysisSchema,
+    analysis: FullAnalysisSchema, // The nested analysis object.
 });
 
 // This is a simplified, conceptual flow. A real implementation would be much more complex.
@@ -130,24 +131,23 @@ const cropSimulatorFlow = ai.defineFlow(
     - Pests: ${input.pestScenario}
 
     **Your Task:**
+    You must generate a JSON object with the following structure.
     1.  **predictedYield**: Estimate the total yield in a range (e.g., "400-420 tons").
     2.  **estimatedRevenue**: Estimate the net revenue in INR, considering typical costs and market prices for the region and crop.
     3.  **roi**: Calculate the Return on Investment as a percentage.
-    4.  **analysis**: Provide a full analysis object containing the following fields:
+    4.  **analysis**: Provide a full analysis object containing the following nested fields:
         - **executiveSummary**: A high-level overview of the simulation outcome and key takeaways.
         - **riskOpportunityAnalysis**: An analysis of the key risks (e.g., drought, pests) and opportunities (e.g., good weather) that impacted the results.
         - **comparativeAnalysis**: A comparison of the chosen strategy against alternatives. Explain why it was or wasn't optimal.
         - **recommendations**: A list of clear, actionable recommendations for improving ROI in future cycles.
-
-    Return this information in a structured JSON format.
     `;
 
     const analysisResponse = await ai.generate({
-        model: 'googleai/gemini-2.5-pro', // Use the powerful model for the main analysis
+        model: 'googleai/gemini-2.5-pro',
         prompt: analysisPrompt,
         output: {
             format: 'json',
-            schema: FinalAnalysisSchema,
+            schema: FinalAnalysisSchema, // Use the corrected schema
         }
     });
     
@@ -156,6 +156,7 @@ const cropSimulatorFlow = ai.defineFlow(
         throw new Error("Failed to generate the final analysis.");
     }
     
+    // Construct the final output object exactly as the frontend page expects it.
     return {
         timeline,
         summary: {
