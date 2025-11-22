@@ -28,6 +28,13 @@ const TimelineStageSchema = z.object({
   imageUrl: z.string().url().describe("A data URI of a generated image representing the farm's state."),
 });
 
+const FullAnalysisSchema = z.object({
+    executiveSummary: z.string().describe("A high-level overview of the simulation outcome and key takeaways."),
+    riskOpportunityAnalysis: z.string().describe("An analysis of the key risks (e.g., drought, pests) and opportunities (e.g., good weather) that impacted the results."),
+    comparativeAnalysis: z.string().describe("A comparison of the chosen strategy against alternatives. Explain why it was or wasn't optimal."),
+    recommendations: z.array(z.string()).describe("A list of clear, actionable recommendations for improving ROI in future cycles."),
+});
+
 const CropSimulatorOutputSchema = z.object({
   timeline: z.array(TimelineStageSchema).describe("A list of visual and descriptive stages for the simulation timeline."),
   summary: z.object({
@@ -35,9 +42,7 @@ const CropSimulatorOutputSchema = z.object({
     estimatedRevenue: z.string().describe('The estimated net revenue after costs (e.g., "$150,000").'),
     roi: z.number().describe("The predicted Return on Investment percentage."),
   }),
-  analysis: z.object({
-    bestStrategy: z.string().describe("A paragraph analyzing the results and explaining the best strategy for maximum ROI based on the simulation."),
-  }),
+  analysis: FullAnalysisSchema,
 });
 export type CropSimulatorOutput = z.infer<typeof CropSimulatorOutputSchema>;
 
@@ -52,7 +57,7 @@ const FinalAnalysisSchema = z.object({
     predictedYield: z.string(),
     estimatedRevenue: z.string(),
     roi: z.number(),
-    bestStrategy: z.string(),
+    analysis: FullAnalysisSchema,
 });
 
 // This is a simplified, conceptual flow. A real implementation would be much more complex.
@@ -108,7 +113,7 @@ const cropSimulatorFlow = ai.defineFlow(
     }
 
     // 3. Generate the final analysis and ROI
-    const analysisPrompt = `You are a financial and agricultural analyst. Based on the following farm simulation, calculate the final yield, revenue, and ROI, and provide a strategic analysis.
+    const analysisPrompt = `You are a financial and agricultural analyst. Based on the following farm simulation, calculate the final yield, revenue, and ROI, and provide a detailed strategic analysis report.
 
     **Simulation Parameters:**
     - Crop: ${input.cropType}
@@ -124,7 +129,11 @@ const cropSimulatorFlow = ai.defineFlow(
     1.  **predictedYield**: Estimate the total yield in a range (e.g., "400-420 tons").
     2.  **estimatedRevenue**: Estimate the net revenue in INR, considering typical costs and market prices for the region and crop.
     3.  **roi**: Calculate the Return on Investment as a percentage.
-    4.  **bestStrategy**: Write a paragraph explaining the key drivers of this outcome and whether this was a good strategy. Suggest what might be changed for a better ROI.
+    4.  **analysis**: Provide a full analysis object containing the following fields:
+        - **executiveSummary**: A high-level overview of the simulation outcome and key takeaways.
+        - **riskOpportunityAnalysis**: An analysis of the key risks (e.g., drought, pests) and opportunities (e.g., good weather) that impacted the results.
+        - **comparativeAnalysis**: A comparison of the chosen strategy against alternatives. Explain why it was or wasn't optimal.
+        - **recommendations**: A list of clear, actionable recommendations for improving ROI in future cycles.
 
     Return this information in a structured JSON format.
     `;
@@ -137,21 +146,19 @@ const cropSimulatorFlow = ai.defineFlow(
         }
     });
     
-    const analysis = analysisResponse.output;
-    if (!analysis) {
+    const result = analysisResponse.output;
+    if (!result) {
         throw new Error("Failed to generate the final analysis.");
     }
     
     return {
         timeline,
         summary: {
-            predictedYield: analysis.predictedYield,
-            estimatedRevenue: analysis.estimatedRevenue,
-            roi: analysis.roi,
+            predictedYield: result.predictedYield,
+            estimatedRevenue: result.estimatedRevenue,
+            roi: result.roi,
         },
-        analysis: {
-            bestStrategy: analysis.bestStrategy,
-        }
+        analysis: result.analysis
     };
   }
 );

@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAppContext } from '@/context/app-context';
 import { useToast } from '@/hooks/use-toast';
-import { Bot, Sparkles, Loader2, Calendar, Droplets, Leaf, Cloudy, Bug, LineChart, DollarSign } from 'lucide-react';
+import { Bot, Sparkles, Loader2, Calendar, Droplets, Leaf, Cloudy, Bug, LineChart, DollarSign, CheckCircle } from 'lucide-react';
 import { handleCropSimulation } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
@@ -19,9 +19,9 @@ import type { CropSimulatorOutput } from '@/ai/flows/crop-simulator-flow';
 
 const formSchema = z.object({
   cropType: z.string().min(2, "Crop type is required."),
-  acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be positive.")),
+  acreage: z.coerce.number().positive("Acreage must be positive."),
   region: z.string().min(2, "Region is required."),
-  simulationMonths: z.preprocess((a) => parseInt(z.string().parse(a)), z.number().int().min(1).max(24)),
+  simulationMonths: z.coerce.number().int().min(1).max(24),
   fertilizerPlan: z.enum(["Standard NPK", "Organic Compost", "Minimal Application"]),
   wateringSchedule: z.enum(["Automated (Optimal)", "Twice a week", "Rain-fed only"]),
   weatherScenario: z.enum(["Normal", "Drought", "Excessive Rain"]),
@@ -210,7 +210,7 @@ export default function CropSimulatorPage() {
             <div className="animate-in fade-in-50 space-y-8">
               <Card>
                   <CardHeader>
-                      <CardTitle className="text-xl">Executive Summary</CardTitle>
+                      <CardTitle className="text-xl">Financial Summary</CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                        <Card className="p-4">
@@ -247,10 +247,35 @@ export default function CropSimulatorPage() {
               
               <Card>
                   <CardHeader>
-                      <CardTitle className="text-xl">AI Strategy Analysis</CardTitle>
+                      <CardTitle className="text-xl">AI Strategy Analysis Report</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                      <p className="text-muted-foreground">{result.analysis.bestStrategy}</p>
+                  <CardContent className="space-y-6">
+                    <div>
+                        <h4 className="font-semibold mb-2">Executive Summary</h4>
+                        <p className="text-sm text-muted-foreground">{result.analysis.executiveSummary}</p>
+                    </div>
+                     <Separator/>
+                     <div>
+                        <h4 className="font-semibold mb-2">Risk & Opportunity Analysis</h4>
+                        <p className="text-sm text-muted-foreground">{result.analysis.riskOpportunityAnalysis}</p>
+                    </div>
+                     <Separator/>
+                     <div>
+                        <h4 className="font-semibold mb-2">Comparative Analysis</h4>
+                        <p className="text-sm text-muted-foreground">{result.analysis.comparativeAnalysis}</p>
+                    </div>
+                     <Separator/>
+                     <div>
+                        <h4 className="font-semibold mb-2">Recommendations</h4>
+                        <ul className="space-y-2">
+                           {result.analysis.recommendations.map((rec, i) => (
+                               <li key={i} className="flex items-start gap-3">
+                                   <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                   <span className="text-sm text-muted-foreground">{rec}</span>
+                               </li>
+                           ))}
+                       </ul>
+                    </div>
                   </CardContent>
               </Card>
 
