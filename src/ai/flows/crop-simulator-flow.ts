@@ -91,16 +91,18 @@ const cropSimulatorFlow = ai.defineFlow(
         });
         const description = descriptionResponse.text;
 
-        // 2. Generate an image based on the description
-        const imageResponse = await ai.generate({
-            model: 'googleai/imagen-4.0-fast-generate-001',
-            prompt: `Generate a realistic, photographic image of a farm matching this description: "${description}"`,
-        });
+        // 2. Generate a hint for an image search based on the description
+        const hintResponse = await ai.generate({
+            prompt: `From the following farm scene description, extract a concise 1 or 2-word hint that can be used to search for a relevant stock photo. For example, if the description is "Young green shoots of wheat emerge from the soil," a good hint would be "wheat shoots".
 
-        const imageUrl = imageResponse.media?.url;
-        if (!imageUrl) {
-            throw new Error(`Failed to generate image for month ${currentMonth}`);
-        }
+            Description: "${description}"
+
+            Hint:`,
+            output: { format: 'text' },
+        });
+        
+        const hint = hintResponse.text.trim().replace(/\s+/g, '-').toLowerCase();
+        const imageUrl = `https://picsum.photos/seed/${hint || 'farm'}/1280/720`;
 
         timeline.push({
             month: currentMonth,
