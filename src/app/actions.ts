@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -306,9 +307,9 @@ export async function handleTextToSpeech(data: z.infer<typeof ttsSchema>) {
 
 const cropSimulatorSchema = z.object({
   cropType: z.string().min(2, "Crop type is required."),
-  acreage: z.preprocess((a) => parseFloat(z.string().parse(a)), z.number().positive("Acreage must be positive.")),
+  acreage: z.number().positive("Acreage must be positive."),
   region: z.string().min(2, "Region is required."),
-  simulationMonths: z.preprocess((a) => parseInt(z.string().parse(a)), z.number().int().min(1).max(24)),
+  simulationMonths: z.number().int().min(1).max(24),
   fertilizerPlan: z.enum(["Standard NPK", "Organic Compost", "Minimal Application"]),
   wateringSchedule: z.enum(["Automated (Optimal)", "Twice a week", "Rain-fed only"]),
   weatherScenario: z.enum(["Normal", "Drought", "Excessive Rain"]),
@@ -327,3 +328,5 @@ export async function handleCropSimulation(data: z.infer<typeof cropSimulatorSch
         return { message: `error: ${e.message}`, data: null };
     }
 }
+
+    
