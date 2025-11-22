@@ -93,11 +93,8 @@ const cropSimulatorFlow = ai.defineFlow(
 
         // 2. Generate an image based on the description
         const imageResponse = await ai.generate({
-            model: 'googleai/gemini-2.5-flash-image-preview',
+            model: 'googleai/imagen-4.0-fast-generate-001',
             prompt: `Generate a realistic, photographic image of a farm matching this description: "${description}"`,
-            config: {
-                responseModalities: ['TEXT', 'IMAGE'],
-            },
         });
 
         const imageUrl = imageResponse.media?.url;
