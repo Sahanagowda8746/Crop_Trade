@@ -37,22 +37,13 @@ const adImageGeneratorFlow = ai.defineFlow(
     outputSchema: AdImageOutputSchema,
   },
   async input => {
-    const {media} = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-image-preview',
-      prompt: `Generate a high-quality, professional, and appealing marketing photograph for an agricultural product. The photo should look realistic and be suitable for an online marketplace.
-
-Product Description: "${input.description}"
-
-The image should be well-lit, with a clean background, and make the product look fresh and desirable. Do not include any text or logos in the image.`,
-       config: {
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
-    });
-    if (!media?.url) {
-      throw new Error('Image generation failed to return a URL.');
-    }
+    // To avoid rate-limiting on image generation models, we'll use a placeholder service.
+    // We can use the input description to generate a relevant seed.
+    const seed = input.description.replace(/\s+/g, '-').toLowerCase();
+    const imageUrl = `https://picsum.photos/seed/${seed}/1280/720`;
+    
     return {
-      imageUrl: media.url,
+      imageUrl: imageUrl,
     };
   }
 );
