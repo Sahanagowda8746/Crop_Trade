@@ -43,52 +43,17 @@ export default function AIAssistantWidget() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
-    }
-  }, [messages]);
-  
-  useEffect(() => {
-    if (!recognition) return;
-    
-    recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(transcript);
-        setIsListening(false);
-        handleSubmit(transcript);
-    };
-
-    recognition.onerror = (event) => {
-        console.error('Speech Recognition Error:', event.error);
-        if (event.error !== 'no-speech') {
-            setError(`Speech Recognition Error: ${event.error}`);
-        }
-        setIsListening(false);
-    };
-
-    recognition.onend = () => {
-        setIsListening(false);
-    };
-  }, [handleSubmit]);
-  
-  const handleVoiceInput = () => {
-    if (!recognition) {
-        setError("Voice recognition is not supported by your browser.");
-        return;
-    }
-
-    if (isListening) {
-        recognition.stop();
-        setIsListening(false);
-    } else {
-        setError(null);
-        setIsListening(true);
-        recognition.lang = languageToLocale(language);
-        recognition.start();
-    }
-  };
-
+  const languageToLocale = (lang: string) => {
+      const locales: { [key: string]: string } = {
+          'English': 'en-US',
+          'Hindi': 'hi-IN',
+          'Kannada': 'kn-IN',
+          'Tamil': 'ta-IN',
+          'Telugu': 'te-IN',
+          'Malayalam': 'ml-IN',
+      };
+      return locales[lang] || 'en-US';
+  }
 
   const playAudio = useCallback(async (text: string) => {
     setIsSpeaking(true);
@@ -142,18 +107,54 @@ export default function AIAssistantWidget() {
     
     setIsPending(false);
   }, [messages, user, language, playAudio]);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+    }
+  }, [messages]);
   
-  const languageToLocale = (lang: string) => {
-      const locales: { [key: string]: string } = {
-          'English': 'en-US',
-          'Hindi': 'hi-IN',
-          'Kannada': 'kn-IN',
-          'Tamil': 'ta-IN',
-          'Telugu': 'te-IN',
-          'Malayalam': 'ml-IN',
-      };
-      return locales[lang] || 'en-US';
-  }
+  useEffect(() => {
+    if (!recognition) return;
+    
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+        // We call handleSubmit directly here. Since it's defined with useCallback,
+        // it will have access to the latest state.
+        handleSubmit(transcript); 
+    };
+
+    recognition.onerror = (event) => {
+        console.error('Speech Recognition Error:', event.error);
+        if (event.error !== 'no-speech') {
+            setError(`Speech Recognition Error: ${event.error}`);
+        }
+        setIsListening(false);
+    };
+
+    recognition.onend = () => {
+        setIsListening(false);
+    };
+  }, [handleSubmit]); // Depend on handleSubmit to get the latest version if it changes.
+  
+  const handleVoiceInput = () => {
+    if (!recognition) {
+        setError("Voice recognition is not supported by your browser.");
+        return;
+    }
+
+    if (isListening) {
+        recognition.stop();
+        setIsListening(false);
+    } else {
+        setError(null);
+        setIsListening(true);
+        recognition.lang = languageToLocale(language);
+        recognition.start();
+    }
+  };
 
   if (!isOpen) {
     return (
