@@ -70,7 +70,7 @@ export default function AIAssistantWidget() {
     recognition.onend = () => {
         setIsListening(false);
     };
-  }, []);
+  }, [handleSubmit]);
   
   const handleVoiceInput = () => {
     if (!recognition) {
@@ -111,7 +111,7 @@ export default function AIAssistantWidget() {
     }
   }, []);
 
-  const handleSubmit = async (value: string) => {
+  const handleSubmit = useCallback(async (value: string) => {
     if (!value.trim() || !user) return;
     
     setError(null);
@@ -135,13 +135,13 @@ export default function AIAssistantWidget() {
     if (response.data?.answer) {
       const aiResponse = response.data.answer;
       setMessages(prev => [...prev, { role: 'model', content: aiResponse }]);
-      playAudio(aiResponse);
+      await playAudio(aiResponse);
     } else {
       setError(response.message.replace('error:', ''));
     }
     
     setIsPending(false);
-  };
+  }, [messages, user, language, playAudio]);
   
   const languageToLocale = (lang: string) => {
       const locales: { [key: string]: string } = {
