@@ -307,9 +307,9 @@ export async function handleTextToSpeech(data: z.infer<typeof ttsSchema>) {
 
 const cropSimulatorSchema = z.object({
   cropType: z.string().min(2, "Crop type is required."),
-  acreage: z.number().positive("Acreage must be positive."),
+  acreage: z.coerce.number().positive("Acreage must be positive."),
   region: z.string().min(2, "Region is required."),
-  simulationMonths: z.number().int().min(1).max(24),
+  simulationMonths: z.coerce.number().int().min(1).max(24),
   fertilizerPlan: z.enum(["Standard NPK", "Organic Compost", "Minimal Application"]),
   wateringSchedule: z.enum(["Automated (Optimal)", "Twice a week", "Rain-fed only"]),
   weatherScenario: z.enum(["Normal", "Drought", "Excessive Rain"]),
