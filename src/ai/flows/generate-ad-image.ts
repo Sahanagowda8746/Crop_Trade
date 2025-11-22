@@ -38,14 +38,17 @@ const adImageGeneratorFlow = ai.defineFlow(
   },
   async input => {
     const {media} = await ai.generate({
-      model: 'googleai/imagen-4.0-fast-generate-001',
+      model: 'googleai/gemini-2.5-flash-image-preview',
       prompt: `Generate a high-quality, professional, and appealing marketing photograph for an agricultural product. The photo should look realistic and be suitable for an online marketplace.
 
 Product Description: "${input.description}"
 
 The image should be well-lit, with a clean background, and make the product look fresh and desirable. Do not include any text or logos in the image.`,
+       config: {
+        responseModalities: ['TEXT', 'IMAGE'],
+      },
     });
-    if (!media.url) {
+    if (!media?.url) {
       throw new Error('Image generation failed to return a URL.');
     }
     return {
