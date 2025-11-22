@@ -74,12 +74,16 @@ const cropSimulatorFlow = ai.defineFlow(
 
     let timeline: z.infer<typeof TimelineStageSchema>[] = [];
     
+    // Use a faster model for these repetitive, simple tasks to avoid rate limits
+    const fastModel = 'googleai/gemini-1.5-flash-latest';
+
     // Generate a text prompt for each stage
     for (let i = 0; i < stages; i++) {
         const currentMonth = Math.round((i + 1) * monthsPerStage);
         
         // 1. Generate a description for the stage
         const descriptionResponse = await ai.generate({
+            model: fastModel,
             prompt: `Based on this farm simulation, write a short, 1-sentence visual description of a ${input.acreage} acre ${input.cropType} farm in ${input.region} at month ${currentMonth} of a ${input.simulationMonths} month cycle.
             - Fertilizer: ${input.fertilizerPlan}
             - Watering: ${input.wateringSchedule}
@@ -93,6 +97,7 @@ const cropSimulatorFlow = ai.defineFlow(
 
         // 2. Generate a hint for an image search based on the description
         const hintResponse = await ai.generate({
+            model: fastModel,
             prompt: `From the following farm scene description, extract a concise 1 or 2-word hint that can be used to search for a relevant stock photo. For example, if the description is "Young green shoots of wheat emerge from the soil," a good hint would be "wheat shoots".
 
             Description: "${description}"
@@ -111,7 +116,7 @@ const cropSimulatorFlow = ai.defineFlow(
         });
     }
 
-    // 3. Generate the final analysis and ROI
+    // 3. Generate the final analysis and ROI using the more powerful model
     const analysisPrompt = `You are a financial and agricultural analyst. Based on the following farm simulation, calculate the final yield, revenue, and ROI, and provide a detailed strategic analysis report.
 
     **Simulation Parameters:**
@@ -138,6 +143,7 @@ const cropSimulatorFlow = ai.defineFlow(
     `;
 
     const analysisResponse = await ai.generate({
+        model: 'googleai/gemini-2.5-pro', // Use the powerful model for the main analysis
         prompt: analysisPrompt,
         output: {
             format: 'json',
