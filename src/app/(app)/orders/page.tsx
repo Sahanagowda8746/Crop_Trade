@@ -180,21 +180,26 @@ export default function OrdersPage() {
             return query(baseCollection, where('buyerId', '==', user.uid), orderBy('orderDate', 'desc'));
         }
         if (role === 'Farmer') {
-            return query(baseCollection, where('cropListing.farmerId', '==', user.uid), orderBy('orderDate', 'desc'));
+            // NOTE: orderBy clause was removed here to prevent Firestore index error.
+            return query(baseCollection, where('cropListing.farmerId', '==', user.uid));
         }
         
-        return null; // For other roles, don't query anything
+        return null;
 
     }, [firestore, user, role]);
 
-    const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
+    const { data: rawOrders, isLoading } = useCollection<Order>(ordersQuery);
+
+    const orders = useMemo(() => {
+        if (!rawOrders) return [];
+        // Sort on the client side
+        return [...rawOrders].sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+    }, [rawOrders]);
 
     const transportRequestsQuery = useMemoFirebase(() => {
         if (!firestore || !orders || orders.length === 0) return null;
         const orderIds = orders.map(o => o.id);
         if (orderIds.length === 0) return null;
-        // This query might fail if orderIds array is > 10. A more robust solution for
-        // production would be to fetch requests individually or restructure data.
         return query(collection(firestore, 'transportRequests'), where('orderId', 'in', orderIds.slice(0, 10)));
     }, [firestore, orders]);
     const { data: transportRequests } = useCollection<TransportRequest>(transportRequestsQuery);
