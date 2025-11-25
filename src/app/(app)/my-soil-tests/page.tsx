@@ -125,9 +125,9 @@ export default function MySoilTestsPage() {
         const baseCollection = collection(firestore, 'soilKitOrders');
         // Admins see all orders to manage them. Other users only see their own.
         if (role === 'Admin') {
-            return query(baseCollection, orderBy('orderDate', 'desc'));
+            // Removing orderBy to prevent composite index requirement which causes silent failures.
+            return query(baseCollection);
         }
-        // Simplified query to avoid needing a composite index. Sorting is handled client-side.
         return query(baseCollection, where('userId', '==', user.uid));
     }, [user, firestore, role]);
 

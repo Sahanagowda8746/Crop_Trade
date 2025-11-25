@@ -88,7 +88,7 @@ service cloud.firestore {
       allow get: if true;
       allow list: if true;
       allow create: if isSignedIn() && request.resource.data.farmerId == request.auth.uid;
-      allow update: if isSignedIn() && resource.data.farmerId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.farmerId == request.auth.uid && request.resource.data.farmerId == resource.data.farmerId;
       allow delete: if isOwner(resource.data.farmerId);
     }
 
@@ -96,7 +96,7 @@ service cloud.firestore {
      * @description Rules for orders.
      * @path /orders/{orderId}
      * @allow (create) An authenticated user can create an order for themselves.
-     * @allow (get) A user can get an order if they are the buyer or the farmer.
+     * @allow (get) A user can get an order if they are the buyer or the farmer of the listing.
      * @allow (list) A user can only list orders where they are the buyer.
      * @principle Enforces ownership for all order-related actions.
      */
@@ -251,5 +251,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
