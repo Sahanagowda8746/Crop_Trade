@@ -173,10 +173,9 @@ export default function OrdersPage() {
 
     const ordersQuery = useMemoFirebase(() => {
         if (!firestore || !user) return null;
-        const baseQuery = collection(firestore, 'orders');
-
-        // The query is now simplified. Firestore security rules will handle filtering.
-        return query(baseQuery, orderBy('orderDate', 'desc'));
+        // The query is now simplified. Firestore security rules will handle filtering on the backend.
+        // We removed orderBy to prevent index-related issues with security rules.
+        return query(collection(firestore, 'orders'));
 
     }, [firestore, user]);
 
@@ -185,13 +184,16 @@ export default function OrdersPage() {
     // Client-side filtering after fetching, which is safe because the rules have already been applied
     const orders = useMemo(() => {
         if (!allOrders || !user) return [];
-        if (role === 'Buyer') {
-            return allOrders.filter(order => order.buyerId === user.uid);
-        }
-        if (role === 'Farmer') {
-            return allOrders.filter(order => order.cropListing?.farmerId === user.uid);
-        }
-        return [];
+        
+        const filteredOrders = allOrders.filter(order => {
+             if (role === 'Buyer') return order.buyerId === user.uid;
+             if (role === 'Farmer') return order.cropListing?.farmerId === user.uid;
+             return false;
+        });
+
+        // Sort on the client side
+        return filteredOrders.sort((a,b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+
     }, [allOrders, user, role]);
 
 
