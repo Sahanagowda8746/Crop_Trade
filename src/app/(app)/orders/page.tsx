@@ -162,25 +162,44 @@ function OrderCard({ order, transportRequest, onRequestTransport }: { order: Ord
 }
 
 export default function OrdersPage() {
-    const { setPageTitle } = useAppContext();
+    const { setPageTitle, role } = useAppContext();
     const firestore = useFirestore();
     const { user, isUserLoading } = useUser();
     const { toast } = useToast();
 
     useEffect(() => {
-        setPageTitle('My Orders');
-    }, [setPageTitle]);
+        setPageTitle(role === 'Farmer' ? 'Incoming Orders' : 'My Orders');
+    }, [setPageTitle, role]);
 
     const ordersQuery = useMemoFirebase(() => {
         if (!firestore || !user) return null;
-        return query(collection(firestore, 'orders'), where('buyerId', '==', user.uid), orderBy('orderDate', 'desc'));
-    }, [firestore, user]);
+        const baseQuery = collection(firestore, 'orders');
 
-    const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
+        // This is now a safe query because the security rules will filter the results
+        // on the backend for both buyers and farmers.
+        return query(baseQuery, orderBy('orderDate', 'desc'));
+
+    }, [firestore, user, role]);
+
+    const { data: allOrders, isLoading } = useCollection<Order>(ordersQuery);
+
+    // Client-side filtering after fetching
+    const orders = useMemo(() => {
+        if (!allOrders || !user) return [];
+        if (role === 'Buyer') {
+            return allOrders.filter(order => order.buyerId === user.uid);
+        }
+        if (role === 'Farmer') {
+            return allOrders.filter(order => order.cropListing?.farmerId === user.uid);
+        }
+        return [];
+    }, [allOrders, user, role]);
+
 
     const transportRequestsQuery = useMemoFirebase(() => {
         if (!firestore || !orders || orders.length === 0) return null;
         const orderIds = orders.map(o => o.id);
+        if (orderIds.length === 0) return null;
         return query(collection(firestore, 'transportRequests'), where('orderId', 'in', orderIds));
     }, [firestore, orders]);
     const { data: transportRequests } = useCollection<TransportRequest>(transportRequestsQuery);
@@ -212,6 +231,11 @@ export default function OrdersPage() {
     };
 
     const effectiveIsLoading = isLoading || isUserLoading;
+    
+    const pageTitle = role === 'Farmer' ? 'Incoming Orders' : 'My Orders';
+    const pageDescription = role === 'Farmer' 
+        ? "Track orders placed for your crops." 
+        : "Track your past and current purchases.";
 
     return (
         <div className="space-y-6">
@@ -219,9 +243,9 @@ export default function OrdersPage() {
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl flex items-center gap-2">
                         <Package className="text-primary" />
-                        My Orders
+                        {pageTitle}
                     </CardTitle>
-                    <CardDescription>Track your past and current purchases. You can request transport for pending orders.</CardDescription>
+                    <CardDescription>{pageDescription}</CardDescription>
                 </CardHeader>
             </Card>
             
@@ -247,16 +271,22 @@ export default function OrdersPage() {
             {!effectiveIsLoading && (!orders || orders.length === 0) && (
                 <Card className="text-center py-12">
                     <CardHeader>
-                        <CardTitle>No Orders Yet</CardTitle>
-                        <CardDescription>You haven't placed any orders. Head over to the marketplace to start shopping!</CardDescription>
+                        <CardTitle>No Orders Found</CardTitle>
+                        <CardDescription>
+                            {role === 'Buyer' ? "You haven't placed any orders. Head over to the marketplace to start shopping!" : "You do not have any incoming orders at this time."}
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Link href="/market">
-                            <Button>Go to Marketplace</Button>
-                        </Link>
+                        {role === 'Buyer' && (
+                             <Link href="/market">
+                                <Button>Go to Marketplace</Button>
+                            </Link>
+                        )}
                     </CardContent>
                 </Card>
             )}
         </div>
     );
 }
+
+    

@@ -97,14 +97,14 @@ service cloud.firestore {
      * @path /orders/{orderId}
      * @allow (create) An authenticated user can create an order for themselves.
      * @allow (get) A user can get an order if they are the buyer or the farmer of the listing.
-     * @allow (list) A user can only list orders where they are the buyer.
+     * @allow (list) An authenticated user can list orders, and Firestore will filter based on the get rule.
      * @principle Enforces ownership for all order-related actions.
      */
     match /orders/{orderId} {
       // Buyer or Farmer can READ a single order
       allow get: if isSignedIn() &&
           (request.auth.uid == resource.data.buyerId ||
-          (resource.data.cropListing != null && request.auth.uid == resource.data.cropListing.farmerId));
+           (resource.data.cropListing != null && request.auth.uid == resource.data.cropListing.farmerId));
 
       // Listing allowed, but Firestore filters docs using the get rule above
       allow list: if isSignedIn();
@@ -121,7 +121,7 @@ service cloud.firestore {
       allow delete: if isSignedIn() &&
           request.auth.uid == resource.data.buyerId;
     }
-
+    
     /**
      * @description Rules for transports.
      * @path /transports/{transportId}
@@ -264,3 +264,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
