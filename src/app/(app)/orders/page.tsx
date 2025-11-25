@@ -181,14 +181,13 @@ export default function OrdersPage() {
         const baseCollection = collection(firestore, 'orders');
 
         if (role === 'Buyer') {
-            return query(baseCollection, where('buyerId', '==', user.uid), orderBy('orderDate', 'desc'));
+            return query(baseCollection, where('buyerId', '==', user.uid));
         }
         if (role === 'Farmer') {
             return query(baseCollection, where('cropListing.farmerId', '==', user.uid));
         }
         if (role === 'Admin') {
-            // Admin can see all orders
-            return query(baseCollection, orderBy('orderDate', 'desc'));
+            return query(baseCollection);
         }
         // For other roles like Transporter, return a query that fetches nothing to avoid permission errors.
         return query(baseCollection, where('buyerId', '==', ''));
@@ -199,12 +198,9 @@ export default function OrdersPage() {
 
     const orders = useMemo(() => {
         if (!rawOrders) return [];
-        // For roles other than Buyer and Admin, we sort client-side as the query can't have orderBy.
-        if (role !== 'Buyer' && role !== 'Admin') {
-             return [...rawOrders].sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
-        }
-        return rawOrders;
-    }, [rawOrders, role]);
+        // Sort client-side to avoid complex indexing requirements in Firestore
+        return [...rawOrders].sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+    }, [rawOrders]);
 
     const transportRequestsQuery = useMemoFirebase(() => {
         if (!firestore || !orders || orders.length === 0 || role !== 'Buyer') return null;
