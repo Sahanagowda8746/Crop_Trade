@@ -53,8 +53,8 @@ service cloud.firestore {
     /**
      * @description Checks if the authenticated user ID matches the existing document's owner ID.
      */
-    function isExistingOwner(ownerId) {
-      return isOwner(ownerId) && resource != null;
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
     }
 
     /**
@@ -103,7 +103,7 @@ service cloud.firestore {
      * @principle Allows authenticated users to create, read, and list orders.
      */
     match /orders/{orderId} {
-      allow get: if isSignedIn() && isOwner(resource.data.buyerId);
+      allow get: if isSignedIn() && (isOwner(resource.data.buyerId) || isOwner(resource.data.cropListing.farmerId));
       allow list: if isSignedIn() && request.query.where.buyerId == request.auth.uid;
       allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
       allow update: if isSignedIn() && request.auth.uid == resource.data.buyerId;
@@ -253,3 +253,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
