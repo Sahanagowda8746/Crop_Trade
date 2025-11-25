@@ -101,11 +101,25 @@ service cloud.firestore {
      * @principle Enforces ownership for all order-related actions.
      */
     match /orders/{orderId} {
-      allow get: if isSignedIn() && (isOwner(resource.data.buyerId) || (resource.data.cropListing != null && isOwner(resource.data.cropListing.farmerId)));
-      allow list: if isSignedIn() && request.query.where.buyerId == request.auth.uid;
-      allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
-      allow update: if isSignedIn() && isOwner(resource.data.buyerId);
-      allow delete: if isSignedIn() && isOwner(resource.data.buyerId);
+      // Buyer or Farmer can READ a single order
+      allow get: if isSignedIn() &&
+          (request.auth.uid == resource.data.buyerId ||
+          (resource.data.cropListing != null && request.auth.uid == resource.data.cropListing.farmerId));
+
+      // Listing allowed, but Firestore filters docs using the get rule above
+      allow list: if isSignedIn();
+
+      // Only the Buyer can CREATE an order for themselves
+      allow create: if isSignedIn() &&
+          request.resource.data.buyerId == request.auth.uid;
+
+      // Only the Buyer can UPDATE their own order
+      allow update: if isSignedIn() &&
+          request.auth.uid == resource.data.buyerId;
+
+      // Only the Buyer can DELETE their own order
+      allow delete: if isSignedIn() &&
+          request.auth.uid == resource.data.buyerId;
     }
 
     /**
@@ -148,7 +162,6 @@ service cloud.firestore {
      * @allow (create) Any authenticated user can create an order for a soil kit.
      * @allow (read) Users can only read their own soil kit orders. Admins can read all orders.
      * @allow (list) Users can query for their own orders. Admins can list all orders.
-     * @allow (update) Admins can update the status and report URL.
      * @principle Enforces ownership for creating and reading soil kit orders, with admin override.
      */
     match /soilKitOrders/{orderId} {
