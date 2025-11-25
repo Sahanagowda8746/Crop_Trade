@@ -8,7 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 // Safe AI wrapper (handles 429 errors with retries)
 async function safeGenerate(params: any, retries = 3) {
