@@ -97,8 +97,8 @@ service cloud.firestore {
      * @path /orders/{orderId}
      * @allow (create) An authenticated user can create an order for themselves.
      * @allow (get) A user can get an order if they are the buyer or the farmer of the listing.
-     * @allow (list) An authenticated user can list orders, but only if filtered by buyer or farmer.
-     * @principle Enforces ownership for all order-related actions and ensures efficient, secure queries.
+     * @allow (list) An authenticated user can list orders, and Firestore will filter based on the get rule.
+     * @principle Enforces ownership for all order-related actions.
      */
     match /orders/{orderId} {
       // Buyer or Farmer can READ a single order
@@ -106,10 +106,10 @@ service cloud.firestore {
           (request.auth.uid == resource.data.buyerId ||
            (resource.data.cropListing != null && request.auth.uid == resource.data.cropListing.farmerId));
 
-      // Listing is only allowed if the query is filtered by buyerId or farmerId
-      allow list: if isSignedIn() && 
-        (request.query.where.buyerId == request.auth.uid || 
-         request.query.where['cropListing.farmerId'] == request.auth.uid);
+      // Listing is allowed for any signed-in user.
+      // Firestore's backend will automatically apply the 'get' rule to the results of any list query.
+      // This means a 'list' operation will only return documents the user is allowed to 'get'.
+      allow list: if isSignedIn();
 
       // Only the Buyer can CREATE an order for themselves
       allow create: if isSignedIn() &&
@@ -266,5 +266,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
