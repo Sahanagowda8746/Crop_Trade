@@ -20,7 +20,7 @@ import type { CropListing } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initialCrops } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, Pencil, CreditCard, Send, Gavel } from 'lucide-react';
+import { PlusCircle, Trash2, Pencil, CreditCard, Send, Gavel, Truck } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,13 +45,15 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 
-function PaymentDialog({ crop, onConfirm }: { crop: CropListing; onConfirm: (crop: CropListing, paymentMethod: 'UPI' | 'Card') => void; }) {
+function PaymentDialog({ crop, onConfirm }: { crop: CropListing; onConfirm: (crop: CropListing, paymentMethod: 'UPI' | 'Card', needsTransport: boolean) => void; }) {
     const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Card'>('UPI');
+    const [needsTransport, setNeedsTransport] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
 
     const handleConfirm = () => {
-        onConfirm(crop, paymentMethod);
+        onConfirm(crop, paymentMethod, needsTransport);
         setIsOpen(false);
     };
 
@@ -63,29 +65,50 @@ function PaymentDialog({ crop, onConfirm }: { crop: CropListing; onConfirm: (cro
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Complete Your Purchase</DialogTitle>
-                    <DialogDescription>Select a payment method for '{crop.cropType}'.</DialogDescription>
+                    <DialogDescription>Confirm payment and transport options for '{crop.cropType}'.</DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
-                    <RadioGroup defaultValue="upi" onValueChange={(value: 'UPI' | 'Card') => setPaymentMethod(value)}>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="UPI" id="upi" />
-                            <Label htmlFor="upi" className="flex items-center gap-2 cursor-pointer">
-                                <Send className="h-5 w-5 text-primary" />
-                                UPI
+                <div className="py-4 space-y-6">
+                     <div>
+                        <Label>Payment Method</Label>
+                        <RadioGroup defaultValue="upi" onValueChange={(value: 'UPI' | 'Card') => setPaymentMethod(value)} className="mt-2">
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="UPI" id="upi" />
+                                <Label htmlFor="upi" className="flex items-center gap-2 cursor-pointer">
+                                    <Send className="h-5 w-5 text-primary" />
+                                    UPI
+                                </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Card" id="card" />
+                                <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer">
+                                    <CreditCard className="h-5 w-5 text-primary" />
+                                    Card (Credit/Debit)
+                                </Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+                     <div className="flex items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="transport-switch" className="flex items-center gap-2">
+                                <Truck className="h-5 w-5 text-primary" />
+                                Need Transportation?
                             </Label>
+                            <DialogDescription>
+                                Request a transporter to deliver this order.
+                            </DialogDescription>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Card" id="card" />
-                            <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer">
-                                <CreditCard className="h-5 w-5 text-primary" />
-                                Card (Credit/Debit)
-                            </Label>
-                        </div>
-                    </RadioGroup>
+                        <Switch
+                            id="transport-switch"
+                            checked={needsTransport}
+                            onCheckedChange={setNeedsTransport}
+                        />
+                    </div>
                 </div>
                 <DialogFooter>
                     <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                    <Button onClick={handleConfirm}>Confirm Order</Button>
+                    <Button onClick={handleConfirm}>
+                        {needsTransport ? 'Confirm & Book Transport' : 'Confirm Order'}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -157,7 +180,7 @@ function CreateAuctionDialog({ crop, onConfirm }: { crop: CropListing, onConfirm
     );
 }
 
-function CropCard({ crop, onBuy, onRemove, onAuction, currentUserId }: { crop: CropListing, onBuy: (crop: CropListing, paymentMethod: 'UPI' | 'Card') => void, onRemove: (cropId: string) => void, onAuction: (crop: CropListing, startingBid: number, endDate: string) => void, currentUserId?: string }) {
+function CropCard({ crop, onBuy, onRemove, onAuction, currentUserId }: { crop: CropListing, onBuy: (crop: CropListing, paymentMethod: 'UPI' | 'Card', needsTransport: boolean) => void, onRemove: (cropId: string) => void, onAuction: (crop: CropListing, startingBid: number, endDate: string) => void, currentUserId?: string }) {
   const isOwner = crop.farmerId === currentUserId;
   const isOutOfStock = crop.quantity <= 0;
 
@@ -300,7 +323,7 @@ export default function MarketPage() {
     });
   };
   
-  const handleBuy = async (crop: CropListing, paymentMethod: 'UPI' | 'Card') => {
+  const handleBuy = async (crop: CropListing, paymentMethod: 'UPI' | 'Card', needsTransport: boolean) => {
     if (role !== 'Buyer') {
       toast({
         variant: 'destructive',
@@ -331,17 +354,35 @@ export default function MarketPage() {
         quantity: 1, // Placeholder quantity
         orderDate: new Date().toISOString(),
         deliveryAddress: '123 Main St, Anytown, USA', // Placeholder address
-        status: 'pending',
+        status: 'pending' as const,
         cropListing: crop, // Denormalize for easy display
         paymentMethod,
     };
     
-    await addDocumentNonBlocking(ordersCollectionRef, newOrder);
+    const orderRef = await addDocumentNonBlocking(ordersCollectionRef, newOrder);
 
     toast({
         title: 'Order Placed!',
-        description: `You have successfully ordered ${crop.quantity} ${crop.unit} of ${crop.cropType}.`
+        description: `You have successfully ordered ${newOrder.quantity} ${crop.unit} of ${crop.cropType}.`
     });
+
+    if (needsTransport && orderRef) {
+        toast({ title: "Creating Transport Request", description: "Please wait..." });
+
+        const transportRequestCollection = collection(firestore, 'transportRequests');
+        const newRequest = {
+            orderId: orderRef.id,
+            pickupLocation: crop.location || 'Unknown Location',
+            deliveryLocation: newOrder.deliveryAddress,
+            requiredVehicle: 'Standard Truck', // Placeholder
+            status: 'open' as const,
+            bidCount: 0,
+        };
+
+        await addDocumentNonBlocking(transportRequestCollection, newRequest);
+        
+        toast({ title: "Success", description: "Transport request has been created for transporters to bid on." });
+    }
   }
 
   const handleRemove = (cropId: string) => {
@@ -367,7 +408,7 @@ export default function MarketPage() {
         startDate: new Date().toISOString(),
         endDate: new Date(endDate).toISOString(),
         startingBid: startingBid,
-        status: 'open',
+        status: 'open' as const,
         cropListing: crop, // Denormalize for easy display
     };
     
