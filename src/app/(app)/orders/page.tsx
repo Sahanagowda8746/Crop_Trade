@@ -110,7 +110,7 @@ function LeaveReviewDialog({ order }: { order: Order }) {
     )
 }
 
-function OrderCard({ order, transportRequest, onRequestTransport }: { order: Order; transportRequest?: TransportRequest, onRequestTransport: (order: Order) => void; }) {
+function OrderCard({ order, transportRequest, onRequestTransport, role }: { order: Order; transportRequest?: TransportRequest, onRequestTransport: (order: Order) => void; role: string; }) {
     return (
         <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-start gap-4">
@@ -142,20 +142,24 @@ function OrderCard({ order, transportRequest, onRequestTransport }: { order: Ord
                 </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
-                {transportRequest ? (
-                     <Button variant="outline" size="sm" asChild>
-                        <Link href={`/transport/${transportRequest.id}`}>
-                             <Truck className="mr-2 h-4 w-4" />
-                            View Request
-                        </Link>
-                    </Button>
-                ) : (
-                     <Button variant="outline" size="sm" onClick={() => onRequestTransport(order)}>
-                        <Truck className="mr-2 h-4 w-4" />
-                        Request Transport
-                    </Button>
+                {role === 'Buyer' && (
+                    <>
+                        {transportRequest ? (
+                            <Button variant="outline" size="sm" asChild>
+                                <Link href={`/transport/${transportRequest.id}`}>
+                                    <Truck className="mr-2 h-4 w-4" />
+                                    View Request
+                                </Link>
+                            </Button>
+                        ) : (
+                            <Button variant="outline" size="sm" onClick={() => onRequestTransport(order)}>
+                                <Truck className="mr-2 h-4 w-4" />
+                                Request Transport
+                            </Button>
+                        )}
+                    </>
                 )}
-                {order.status === 'delivered' && <LeaveReviewDialog order={order} />}
+                {order.status === 'delivered' && role === 'Buyer' && <LeaveReviewDialog order={order} />}
             </CardFooter>
         </Card>
     );
@@ -177,17 +181,12 @@ export default function OrdersPage() {
         const baseCollection = collection(firestore, 'orders');
 
         if (role === 'Buyer') {
-            return query(baseCollection, where('buyerId', '==', user.uid));
+            return query(baseCollection, where('buyerId', '==', user.uid), orderBy('orderDate', 'desc'));
         }
         if (role === 'Farmer') {
-            // NOTE: This query requires a composite index in Firestore.
-            // If you see permission errors, it's likely due to the index not being created.
-            // Removing the orderBy clause will fix it, but the order will be inconsistent.
             return query(baseCollection, where('cropListing.farmerId', '==', user.uid));
         }
-        // For other roles like Admin, they might see all orders.
-        // The security rules will ultimately decide what is returned.
-        return query(baseCollection);
+        return query(baseCollection, orderBy('orderDate', 'desc'));
 
     }, [firestore, user, role]);
 
@@ -195,17 +194,19 @@ export default function OrdersPage() {
 
     const orders = useMemo(() => {
         if (!rawOrders) return [];
-        // Sort on the client side to avoid complex indexing issues
-        return [...rawOrders].sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
-    }, [rawOrders]);
+        if (role === 'Farmer') {
+             return [...rawOrders].sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+        }
+        return rawOrders;
+    }, [rawOrders, role]);
 
     const transportRequestsQuery = useMemoFirebase(() => {
-        if (!firestore || !orders || orders.length === 0) return null;
+        if (!firestore || !orders || orders.length === 0 || role !== 'Buyer') return null;
         const orderIds = orders.map(o => o.id);
         if (orderIds.length === 0) return null;
-        // Limit 'in' query to 10 items as per Firestore limitations
         return query(collection(firestore, 'transportRequests'), where('orderId', 'in', orderIds.slice(0, 10)));
-    }, [firestore, orders]);
+    }, [firestore, orders, role]);
+
     const { data: transportRequests } = useCollection<TransportRequest>(transportRequestsQuery);
     
     const requestsByOrderId = useMemo(() => {
@@ -266,7 +267,8 @@ export default function OrdersPage() {
                             key={order.id} 
                             order={order} 
                             transportRequest={requestsByOrderId[order.id]}
-                            onRequestTransport={handleRequestTransport} 
+                            onRequestTransport={handleRequestTransport}
+                            role={role}
                         />
                     ))}
                 </div>
