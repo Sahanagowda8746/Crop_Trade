@@ -176,15 +176,9 @@ export default function OrdersPage() {
         
         const baseCollection = collection(firestore, 'orders');
 
-        if (role === 'Buyer') {
-            return query(baseCollection, where('buyerId', '==', user.uid), orderBy('orderDate', 'desc'));
-        }
-        if (role === 'Farmer') {
-            // NOTE: orderBy clause was removed here to prevent Firestore index error.
-            return query(baseCollection, where('cropListing.farmerId', '==', user.uid));
-        }
-        
-        return null;
+        // This single query will be filtered on the backend by Firestore Security Rules
+        // based on the 'get' rule for the /orders/{orderId} path.
+        return query(baseCollection);
 
     }, [firestore, user, role]);
 
@@ -200,6 +194,7 @@ export default function OrdersPage() {
         if (!firestore || !orders || orders.length === 0) return null;
         const orderIds = orders.map(o => o.id);
         if (orderIds.length === 0) return null;
+        // Limit 'in' query to 10 items as per Firestore limitations
         return query(collection(firestore, 'transportRequests'), where('orderId', 'in', orderIds.slice(0, 10)));
     }, [firestore, orders]);
     const { data: transportRequests } = useCollection<TransportRequest>(transportRequestsQuery);
