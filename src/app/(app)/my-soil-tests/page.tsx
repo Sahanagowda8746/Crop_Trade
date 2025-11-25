@@ -128,7 +128,7 @@ export default function MySoilTestsPage() {
             // Removing orderBy to prevent composite index requirement which causes silent failures.
             return query(baseCollection);
         }
-        return query(baseCollection, where('userId', '==', user.uid));
+        return query(baseCollection, where('userId', '==', user.uid), orderBy('orderDate', 'desc'));
     }, [user, firestore, role]);
 
     const { data: kitOrders, isLoading: isLoadingKitOrders } = useCollection<SoilKitOrder>(kitOrdersQuery);
