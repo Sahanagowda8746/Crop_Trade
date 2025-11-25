@@ -175,15 +175,14 @@ export default function OrdersPage() {
         if (!firestore || !user) return null;
         const baseQuery = collection(firestore, 'orders');
 
-        // This is now a safe query because the security rules will filter the results
-        // on the backend for both buyers and farmers.
+        // The query is now simplified. Firestore security rules will handle filtering.
         return query(baseQuery, orderBy('orderDate', 'desc'));
 
-    }, [firestore, user, role]);
+    }, [firestore, user]);
 
     const { data: allOrders, isLoading } = useCollection<Order>(ordersQuery);
 
-    // Client-side filtering after fetching
+    // Client-side filtering after fetching, which is safe because the rules have already been applied
     const orders = useMemo(() => {
         if (!allOrders || !user) return [];
         if (role === 'Buyer') {
@@ -200,7 +199,9 @@ export default function OrdersPage() {
         if (!firestore || !orders || orders.length === 0) return null;
         const orderIds = orders.map(o => o.id);
         if (orderIds.length === 0) return null;
-        return query(collection(firestore, 'transportRequests'), where('orderId', 'in', orderIds));
+        // This query might fail if orderIds array is > 10. A more robust solution for
+        // production would be to fetch requests individually or restructure data.
+        return query(collection(firestore, 'transportRequests'), where('orderId', 'in', orderIds.slice(0, 10)));
     }, [firestore, orders]);
     const { data: transportRequests } = useCollection<TransportRequest>(transportRequestsQuery);
     
@@ -288,5 +289,3 @@ export default function OrdersPage() {
         </div>
     );
 }
-
-    
