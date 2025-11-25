@@ -31,7 +31,7 @@ const TimelineStageSchema = z.object({
 const FullAnalysisSchema = z.object({
     executiveSummary: z.string().describe("A high-level overview of the simulation outcome and key takeaways."),
     riskOpportunityAnalysis: z.string().describe("An analysis of the key risks (e.g., drought, pests) and opportunities (e.g., good weather) that impacted the results."),
-    comparativeAnalysis: z.string().describe("A comparison of the chosen strategy against alternatives. Explain why it was or wasn't optimal."),
+    comparativeAnalysis: z.string().describe("A comparison of the chosen strategy against alternatives. Explain why it was or was not optimal."),
     recommendations: z.array(z.string()).describe("A list of clear, actionable recommendations for improving ROI in future cycles."),
 });
 
@@ -76,7 +76,7 @@ const cropSimulatorFlow = ai.defineFlow(
     let timeline: z.infer<typeof TimelineStageSchema>[] = [];
     
     // Use a faster model for these repetitive, simple tasks to avoid rate limits
-    const fastModel = 'googleai/gemini-1.5-flash-latest';
+    const fastModel = 'googleai/gemini-1.5-pro';
 
     // Generate a text prompt for each stage
     for (let i = 0; i < stages; i++) {
@@ -138,7 +138,7 @@ const cropSimulatorFlow = ai.defineFlow(
     4.  **analysis**: Provide a full analysis object containing the following nested fields:
         - **executiveSummary**: A high-level overview of the simulation outcome and key takeaways.
         - **riskOpportunityAnalysis**: An analysis of the key risks (e.g., drought, pests) and opportunities (e.g., good weather) that impacted the results.
-        - **comparativeAnalysis**: A comparison of the chosen strategy against alternatives. Explain why it was or wasn't optimal.
+        - **comparativeAnalysis**: A comparison of the chosen strategy against alternatives. Explain why it was or was not optimal.
         - **recommendations**: A list of clear, actionable recommendations for improving ROI in future cycles.
     `;
 
