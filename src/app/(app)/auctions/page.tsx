@@ -179,7 +179,7 @@ export default function AuctionsPage() {
   
   const effectiveIsLoading = isLoading || isUserLoading;
 
-  if (effectiveIsLoading) {
+  if (effectiveIsLoading && !auctions) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Array.from({length: 4}).map((_, i) => (
@@ -279,5 +279,3 @@ export default function AuctionsPage() {
     </div>
   );
 }
-
-    
