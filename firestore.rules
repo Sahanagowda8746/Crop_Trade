@@ -101,26 +101,26 @@ service cloud.firestore {
      * @principle Enforces ownership for all order-related actions.
      */
     match /orders/{orderId} {
-      // Buyer or Farmer can READ a single order
-      allow get: if isSignedIn() &&
-          (request.auth.uid == resource.data.buyerId ||
-           (resource.data.cropListing != null && request.auth.uid == resource.data.cropListing.farmerId));
+      // This allows the frontend to LIST orders. 
+      // Filtering is still enforced by your per-document GET rule.
+      allow list: if request.auth != null;
 
-      // Listing is allowed for any signed-in user.
-      // Firestore's backend will automatically apply the 'get' rule to the results of any list query.
-      // This means a 'list' operation will only return documents the user is allowed to 'get'.
-      allow list: if isSignedIn();
+      // Allow reading ONLY orders that belong to the user
+      allow get: if request.auth != null &&
+          (
+            request.auth.uid == resource.data.buyerId ||
+            (
+                resource.data.cropListing is map &&
+                request.auth.uid == resource.data.cropListing.farmerId
+            )
+          );
 
       // Only the Buyer can CREATE an order for themselves
       allow create: if isSignedIn() &&
           request.resource.data.buyerId == request.auth.uid;
 
-      // Only the Buyer can UPDATE their own order
-      allow update: if isSignedIn() &&
-          request.auth.uid == resource.data.buyerId;
-
-      // Only the Buyer can DELETE their own order
-      allow delete: if isSignedIn() &&
+      // Only the Buyer can UPDATE/DELETE their own order
+      allow update, delete: if isSignedIn() &&
           request.auth.uid == resource.data.buyerId;
     }
     
@@ -218,7 +218,7 @@ service cloud.firestore {
      * @principle Allows authenticated users to participate in auctions.
      */
     match /auctions/{auctionId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn()
                     && request.resource.data.currentBid > resource.data.currentBid
