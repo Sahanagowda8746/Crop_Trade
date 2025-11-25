@@ -186,7 +186,12 @@ export default function OrdersPage() {
         if (role === 'Farmer') {
             return query(baseCollection, where('cropListing.farmerId', '==', user.uid));
         }
-        return query(baseCollection, orderBy('orderDate', 'desc'));
+        if (role === 'Admin') {
+            // Admin can see all orders
+            return query(baseCollection, orderBy('orderDate', 'desc'));
+        }
+        // For other roles like Transporter, return a query that fetches nothing to avoid permission errors.
+        return query(baseCollection, where('buyerId', '==', ''));
 
     }, [firestore, user, role]);
 
@@ -194,7 +199,8 @@ export default function OrdersPage() {
 
     const orders = useMemo(() => {
         if (!rawOrders) return [];
-        if (role === 'Farmer') {
+        // For roles other than Buyer and Admin, we sort client-side as the query can't have orderBy.
+        if (role !== 'Buyer' && role !== 'Admin') {
              return [...rawOrders].sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
         }
         return rawOrders;
@@ -204,7 +210,8 @@ export default function OrdersPage() {
         if (!firestore || !orders || orders.length === 0 || role !== 'Buyer') return null;
         const orderIds = orders.map(o => o.id);
         if (orderIds.length === 0) return null;
-        return query(collection(firestore, 'transportRequests'), where('orderId', 'in', orderIds.slice(0, 10)));
+        // Firestore 'in' queries are limited to 30 items. We'll slice to be safe.
+        return query(collection(firestore, 'transportRequests'), where('orderId', 'in', orderIds.slice(0, 30)));
     }, [firestore, orders, role]);
 
     const { data: transportRequests } = useCollection<TransportRequest>(transportRequestsQuery);
@@ -237,10 +244,10 @@ export default function OrdersPage() {
 
     const effectiveIsLoading = isLoading || isUserLoading;
     
-    const pageTitle = role === 'Farmer' ? 'Incoming Orders' : 'My Orders';
+    const pageTitle = role === 'Farmer' ? 'Incoming Orders' : (role === 'Admin' ? 'All Orders' : 'My Orders');
     const pageDescription = role === 'Farmer' 
         ? "Track orders placed for your crops." 
-        : "Track your past and current purchases.";
+        : (role === 'Admin' ? "View and manage all orders across the platform." : "Track your past and current purchases.");
 
     return (
         <div className="space-y-6">
@@ -279,7 +286,7 @@ export default function OrdersPage() {
                     <CardHeader>
                         <CardTitle>No Orders Found</CardTitle>
                         <CardDescription>
-                            {role === 'Buyer' ? "You haven't placed any orders. Head over to the marketplace to start shopping!" : "You do not have any incoming orders at this time."}
+                            {role === 'Buyer' ? "You haven't placed any orders. Head over to the marketplace to start shopping!" : "There are no orders to display for your current role."}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
