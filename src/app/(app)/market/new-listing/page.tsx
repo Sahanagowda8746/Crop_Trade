@@ -92,8 +92,8 @@ export default function NewListingPage() {
       harvestDate: '',
       location: '',
       imageUrl: '',
-      pricePerUnit: 0,
-      quantity: 0,
+      pricePerUnit: undefined,
+      quantity: undefined,
     },
   });
   
@@ -243,7 +243,7 @@ export default function NewListingPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Quantity</FormLabel>
-                      <FormControl><Input type="number" placeholder="e.g., 1000" {...field} /></FormControl>
+                      <FormControl><Input type="number" placeholder="e.g., 1000" {...field} value={field.value ?? ''} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -277,7 +277,7 @@ export default function NewListingPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Price per Unit (₹)</FormLabel>
-                      <FormControl><Input type="number" placeholder="e.g., 200.00" {...field} /></FormControl>
+                      <FormControl><Input type="number" placeholder="e.g., 200.00" {...field} value={field.value ?? ''}/></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -88,6 +88,18 @@ export default function EditListingPage() {
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(listingSchema),
+    defaultValues: {
+      listingId: '',
+      cropType: '',
+      variety: '',
+      quantity: 0,
+      unit: '',
+      pricePerUnit: 0,
+      location: '',
+      harvestDate: '',
+      description: '',
+      imageUrl: '',
+    },
   });
   
   useEffect(() => {
@@ -103,7 +115,7 @@ export default function EditListingPage() {
       });
       setPreview(listing.imageUrl || null);
     }
-  }, [listing, form.reset]);
+  }, [listing, form]);
   
   useEffect(() => {
     if (state.message) {
