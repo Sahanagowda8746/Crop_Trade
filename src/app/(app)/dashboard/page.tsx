@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -105,14 +106,14 @@ export default function DashboardPage() {
          <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              High-Risk Pest Alerts
+              Pest Alerts
             </CardTitle>
             <Bell className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-             <div className="text-2xl font-bold text-destructive">2</div>
+             <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-muted-foreground">
-              Aphids on Field B, Blight on Field C
+              No high-risk alerts
             </p>
           </CardContent>
         </Card>
@@ -292,3 +293,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
