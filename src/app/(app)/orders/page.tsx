@@ -176,8 +176,17 @@ export default function OrdersPage() {
         
         const baseCollection = collection(firestore, 'orders');
 
-        // This single query will be filtered on the backend by Firestore Security Rules
-        // based on the 'get' rule for the /orders/{orderId} path.
+        if (role === 'Buyer') {
+            return query(baseCollection, where('buyerId', '==', user.uid));
+        }
+        if (role === 'Farmer') {
+            // NOTE: This query requires a composite index in Firestore.
+            // If you see permission errors, it's likely due to the index not being created.
+            // Removing the orderBy clause will fix it, but the order will be inconsistent.
+            return query(baseCollection, where('cropListing.farmerId', '==', user.uid));
+        }
+        // For other roles like Admin, they might see all orders.
+        // The security rules will ultimately decide what is returned.
         return query(baseCollection);
 
     }, [firestore, user, role]);
@@ -186,7 +195,7 @@ export default function OrdersPage() {
 
     const orders = useMemo(() => {
         if (!rawOrders) return [];
-        // Sort on the client side
+        // Sort on the client side to avoid complex indexing issues
         return [...rawOrders].sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
     }, [rawOrders]);
 
