@@ -54,7 +54,7 @@ service cloud.firestore {
      * @description Checks if the authenticated user ID matches the existing document's owner ID.
      */
     function isExistingOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return isOwner(userId) && resource != null;
     }
 
     /**
@@ -96,12 +96,12 @@ service cloud.firestore {
      * @description Rules for orders.
      * @path /orders/{orderId}
      * @allow (create) An authenticated user can create an order for themselves.
-     * @allow (get) A user can get an order if they are the buyer.
+     * @allow (get) A user can get an order if they are the buyer or the farmer.
      * @allow (list) A user can only list orders where they are the buyer.
      * @principle Enforces ownership for all order-related actions.
      */
     match /orders/{orderId} {
-      allow get: if isSignedIn() && isOwner(resource.data.buyerId);
+      allow get: if isSignedIn() && (isOwner(resource.data.buyerId) || (resource.data.cropListing != null && isOwner(resource.data.cropListing.farmerId)));
       allow list: if isSignedIn() && request.query.where.buyerId == request.auth.uid;
       allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
       allow update: if isSignedIn() && isOwner(resource.data.buyerId);
