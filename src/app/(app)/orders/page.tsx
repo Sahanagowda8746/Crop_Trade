@@ -173,29 +173,21 @@ export default function OrdersPage() {
 
     const ordersQuery = useMemoFirebase(() => {
         if (!firestore || !user) return null;
-        // The query is now simplified. Firestore security rules will handle filtering on the backend.
-        // We removed orderBy to prevent index-related issues with security rules.
-        return query(collection(firestore, 'orders'));
-
-    }, [firestore, user]);
-
-    const { data: allOrders, isLoading } = useCollection<Order>(ordersQuery);
-
-    // Client-side filtering after fetching, which is safe because the rules have already been applied
-    const orders = useMemo(() => {
-        if (!allOrders || !user) return [];
         
-        const filteredOrders = allOrders.filter(order => {
-             if (role === 'Buyer') return order.buyerId === user.uid;
-             if (role === 'Farmer') return order.cropListing?.farmerId === user.uid;
-             return false;
-        });
+        const baseCollection = collection(firestore, 'orders');
 
-        // Sort on the client side
-        return filteredOrders.sort((a,b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+        if (role === 'Buyer') {
+            return query(baseCollection, where('buyerId', '==', user.uid), orderBy('orderDate', 'desc'));
+        }
+        if (role === 'Farmer') {
+            return query(baseCollection, where('cropListing.farmerId', '==', user.uid), orderBy('orderDate', 'desc'));
+        }
+        
+        return null; // For other roles, don't query anything
 
-    }, [allOrders, user, role]);
+    }, [firestore, user, role]);
 
+    const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
 
     const transportRequestsQuery = useMemoFirebase(() => {
         if (!firestore || !orders || orders.length === 0) return null;
