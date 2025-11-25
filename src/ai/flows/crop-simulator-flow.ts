@@ -10,6 +10,29 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
+// Safe AI wrapper (handles 429 errors with retries)
+async function safeGenerate(params: any, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await ai.generate(params);
+    } catch (err: any) {
+      const isRateLimit = err?.message?.includes("429");
+
+      if (isRateLimit && i < retries - 1) {
+        const wait = 2000 * (i + 1); // Backoff (2s, 4s, 6s…)
+        console.warn(`Rate limited. Retrying in ${wait}ms...`);
+        await new Promise((res) => setTimeout(res, wait));
+        continue;
+      }
+
+      throw err;
+    }
+  }
+  // This part should not be reached if retries are configured, but as a fallback:
+  throw new Error("AI generation failed after multiple retries.");
+}
+
+
 const CropSimulatorInputSchema = z.object({
   cropType: z.string().describe("The type of crop being grown."),
   acreage: z.number().describe("The total land area in acres."),
@@ -76,14 +99,14 @@ const cropSimulatorFlow = ai.defineFlow(
     let timeline: z.infer<typeof TimelineStageSchema>[] = [];
     
     // Use the model specified by the user.
-    const consistentModel = 'googleai/gemini-2.5-pro';
+    const consistentModel = 'googleai/gemini-2.0-flash'; // HIGHER QUOTA + FASTER
 
     // Generate a text prompt for each stage
     for (let i = 0; i < stages; i++) {
         const currentMonth = Math.round((i + 1) * monthsPerStage);
         
         // 1. Generate a description for the stage
-        const descriptionResponse = await ai.generate({
+        const descriptionResponse = await safeGenerate({
             model: consistentModel,
             prompt: `Based on this farm simulation, write a short, 1-sentence visual description of a ${input.acreage} acre ${input.cropType} farm in ${input.region} at month ${currentMonth} of a ${input.simulationMonths} month cycle.
             - Fertilizer: ${input.fertilizerPlan}
@@ -97,7 +120,7 @@ const cropSimulatorFlow = ai.defineFlow(
         const description = descriptionResponse.text;
 
         // 2. Generate a hint for an image search based on the description
-        const hintResponse = await ai.generate({
+        const hintResponse = await safeGenerate({
             model: consistentModel,
             prompt: `From the following farm scene description, extract a concise 1 or 2-word hint that can be used to search for a relevant stock photo. For example, if the description is "Young green shoots of wheat emerge from the soil," a good hint would be "wheat shoots".
 
@@ -142,8 +165,8 @@ const cropSimulatorFlow = ai.defineFlow(
         - **recommendations**: A list of clear, actionable recommendations for improving ROI in future cycles.
     `;
 
-    const analysisResponse = await ai.generate({
-        model: consistentModel,
+    const analysisResponse = await safeGenerate({
+        model: 'googleai/gemini-2.5-pro',
         prompt: analysisPrompt,
         output: {
             format: 'json',
