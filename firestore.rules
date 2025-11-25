@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Firestore Security Rules for CropTrade application.
  *
@@ -52,8 +53,8 @@ service cloud.firestore {
     /**
      * @description Checks if the authenticated user ID matches the existing document's owner ID.
      */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    function isExistingOwner(ownerId) {
+      return isOwner(ownerId) && resource != null;
     }
 
     /**
@@ -87,7 +88,7 @@ service cloud.firestore {
       allow get: if true;
       allow list: if true;
       allow create: if isSignedIn() && request.resource.data.farmerId == request.auth.uid;
-      allow update: if isSignedIn() && request.resource.data.farmerId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.farmerId == request.auth.uid;
       allow delete: if isOwner(resource.data.farmerId);
     }
 
