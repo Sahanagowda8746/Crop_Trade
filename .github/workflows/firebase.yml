@@ -1,3 +1,4 @@
+
 name: Build and Deploy to Firebase
 
 on:
@@ -53,12 +54,3 @@ jobs:
           firebaseServiceAccount: '${{ steps.prepare_sa.outputs.service_account }}'
           projectId: 'studio-5732742384-e8c45'
           expires: 30d # Optional: set a custom expiration for the preview channel
-```
-
-I have improved the workflow file. Now, for the pipeline to succeed, you must perform the following action:
-
-1.  Go to your GitHub repository settings (`Settings` > `Secrets and variables` > `Actions`).
-2.  Create a new secret named `FIREBASE_SERVICE_ACCOUNT`.
-3.  For the value, paste the entire content of your Firebase service account's JSON key file.
-
-Until you complete this step, the deployment will continue to fail.
