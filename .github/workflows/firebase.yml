@@ -1,3 +1,23 @@
+# This is the official CI/CD workflow for deploying the Next.js app to Firebase App Hosting.
+# It is configured to be secure and efficient.
+#
+# IMPORTANT: For this workflow to succeed, you MUST add the following secrets
+# to your GitHub repository settings under 'Settings' > 'Secrets and variables' > 'Actions':
+#
+# 1. FIREBASE_SERVICE_ACCOUNT:
+#    The entire content of the JSON key file from your Google Cloud service account.
+#    This service account needs the "Firebase Hosting Admin" role.
+#
+# 2. NEXT_PUBLIC_FIREBASE_*:
+#    All the public Firebase config variables needed for the Next.js build step.
+#    - NEXT_PUBLIC_FIREBASE_API_KEY
+#    - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+#    - NEXT_PUBLIC_FIREBASE_PROJECT_ID
+#    - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+#    - NEXT_PUBLIC_FIREBASE_APP_ID
+#
+# NOTE: This workflow will NOT work correctly on a forked repository due to GitHub's security policies
+# that prevent secrets from being passed to workflows on forks. Please use this in a fresh, non-forked repository.
 
 name: Build and Deploy to Firebase
 
@@ -5,6 +25,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch: # Allows manual triggering of the workflow
 
 jobs:
   build_and_deploy:
@@ -23,6 +44,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check for Required Build Secrets
+        run: |
+          if [ -z "${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" ]; then
+            echo "::error::Required build secret NEXT_PUBLIC_FIREBASE_API_KEY is not set."
+            exit 1
+          fi
+
       - name: Build project
         run: npm run build
         env:
@@ -32,26 +60,29 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
 
-      - name: Prepare Firebase service account
+      - name: Prepare Firebase Service Account
         id: prepare_sa
         run: |
           set -e
-          # Prefer raw JSON secret if available
+          # The workflow will fail here if no secret is found, which is the expected behavior.
+          # The raw JSON secret is preferred.
           if [ -n "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ]; then
+            echo "Found FIREBASE_SERVICE_ACCOUNT secret. Preparing for deployment."
+            # Use a here-document to securely pass the JSON to the output.
             echo "service_account<<EOF" >> $GITHUB_OUTPUT
             echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
-          # Fallback to base64 encoded secret if the raw one isn't available
+          # Fallback to a base64 encoded secret if the raw JSON one isn't available.
           elif [ -n "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" ]; then
-            echo "Using base64 decoded secret."
+            echo "Found FIREBASE_SERVICE_ACCOUNT_BASE64 secret. Decoding and preparing for deployment."
             echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > sa.json
             echo "service_account<<EOF" >> $GITHUB_OUTPUT
             cat sa.json >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
-            echo "::error title=Firebase Secret Missing::No Firebase service account secret found." >&2
-            echo "::error::Please add either FIREBASE_SERVICE_ACCOUNT (raw JSON) or FIREBASE_SERVICE_ACCOUNT_BASE64 (base64-encoded JSON) to your repository's secrets." >&2
-            echo "::error::You can find this in your repository settings under 'Secrets and variables' > 'Actions'." >&2
+            echo "::error title=Firebase Secret Missing::No Firebase service account secret was found." >&2
+            echo "::error::Please add either FIREBASE_SERVICE_ACCOUNT (raw JSON) or FIREBASE_SERVICE_ACCOUNT_BASE64 (base64-encoded) to your repository's secrets." >&2
+            echo "::error::Go to Settings > Secrets and variables > Actions to add it. This will not work on a forked repository." >&2
             exit 1
           fi
 
