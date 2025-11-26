@@ -10,6 +10,15 @@ jobs:
     name: Build and Deploy
     runs-on: ubuntu-latest
     steps:
+      - name: Check for Firebase Service Account Secret
+        run: |
+          if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ] && [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" ]; then
+            echo "Error: Firebase service account secret is not set."
+            echo "Please add either FIREBASE_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_BASE64 to your repository's secrets."
+            echo "You can find this in your repository settings under 'Secrets and variables' > 'Actions'."
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
