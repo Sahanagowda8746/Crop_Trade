@@ -32,25 +32,24 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
 
-      - name: Prepare Firebase service account
-        id: prepare_sa
+      - name: Check for Firebase Service Account Secret
+        id: check_secret
         run: |
-          set -e
-          # Check if the secret is available. If not, fail with a clear error message.
           if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ]; then
-            echo "::error title=Firebase Secret Missing::The FIREBASE_SERVICE_ACCOUNT secret is not set in your repository."
-            echo "This secret is required for deployment. Please go to your repository's 'Settings' > 'Secrets and variables' > 'Actions' and add a new repository secret."
-            echo "For 'Name', use: FIREBASE_SERVICE_ACCOUNT"
-            echo "For 'Value', paste the entire content of your Firebase service account JSON key."
+            echo "::error title=Firebase Secret Missing::The FIREBASE_SERVICE_ACCOUNT secret is not set in your repository settings."
+            echo "This secret is required for deployment to Firebase."
+            echo "Please go to your repository's 'Settings' > 'Secrets and variables' > 'Actions' and add a new repository secret."
+            echo "For the 'Name', use: FIREBASE_SERVICE_ACCOUNT"
+            echo "For the 'Value', paste the entire content of your Firebase service account JSON key file."
             exit 1
+          else
+            echo "Firebase service account secret found."
           fi
-          # Output the secret to be used in the next step.
-          echo "service_account=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" >> $GITHUB_OUTPUT
 
       - name: Deploy to Firebase App Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ steps.prepare_sa.outputs.service_account }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           projectId: 'studio-5732742384-e8c45'
-          expires: 30d # Optional: set a custom expiration for the preview channel
+          expires: 30d
