@@ -127,7 +127,11 @@ function OrderCard({ order, transportRequest, onRequestTransport, role }: { orde
                     <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'} className="capitalize">{order.status}</Badge>
                     <CardTitle className="font-headline mt-1">{order.cropListing?.cropType}</CardTitle>
                     <CardDescription>
-                        From <Link href={`/farmers/${order.cropListing?.farmerId}`} className="text-primary hover:underline">{order.cropListing?.farmerName}</Link>
+                        {role === 'Buyer' ? 
+                            <>From <Link href={`/farmers/${order.cropListing?.farmerId}`} className="text-primary hover:underline">{order.cropListing?.farmerName}</Link></>
+                            :
+                            <>For <span className="text-primary font-medium">{order.buyer?.firstName || 'a buyer'}</span></>
+                        }
                     </CardDescription>
                 </div>
             </CardHeader>
