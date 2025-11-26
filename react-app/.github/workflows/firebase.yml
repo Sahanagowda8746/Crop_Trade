@@ -40,13 +40,17 @@ jobs:
             echo "service_account<<EOF" >> $GITHUB_OUTPUT
             echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
+          # Fallback to base64 encoded secret if the raw one isn't available
           elif [ -n "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" ]; then
+            echo "Using base64 decoded secret."
             echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > sa.json
             echo "service_account<<EOF" >> $GITHUB_OUTPUT
             cat sa.json >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
-            echo "No Firebase service account secret found. Set FIREBASE_SERVICE_ACCOUNT (raw JSON) or FIREBASE_SERVICE_ACCOUNT_BASE64 (base64-encoded JSON) in repo secrets." >&2
+            echo "::error title=Firebase Secret Missing::No Firebase service account secret found." >&2
+            echo "::error::Please add either FIREBASE_SERVICE_ACCOUNT (raw JSON) or FIREBASE_SERVICE_ACCOUNT_BASE64 (base64-encoded JSON) to your repository's secrets." >&2
+            echo "::error::You can find this in your repository settings under 'Secrets and variables' > 'Actions'." >&2
             exit 1
           fi
 

@@ -32,24 +32,33 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
 
-      - name: Check for Firebase Service Account Secret
-        id: check_secret
+      - name: Prepare Firebase service account
+        id: prepare_sa
         run: |
-          if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ]; then
-            echo "::error title=Firebase Secret Missing::The FIREBASE_SERVICE_ACCOUNT secret is not set in your repository settings."
-            echo "This secret is required for deployment to Firebase."
-            echo "Please go to your repository's 'Settings' > 'Secrets and variables' > 'Actions' and add a new repository secret."
-            echo "For the 'Name', use: FIREBASE_SERVICE_ACCOUNT"
-            echo "For the 'Value', paste the entire content of your Firebase service account JSON key file."
-            exit 1
+          set -e
+          # Prefer raw JSON secret if available
+          if [ -n "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ]; then
+            echo "service_account<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          # Fallback to base64 encoded secret if the raw one isn't available
+          elif [ -n "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" ]; then
+            echo "Using base64 decoded secret."
+            echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > sa.json
+            echo "service_account<<EOF" >> $GITHUB_OUTPUT
+            cat sa.json >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           else
-            echo "Firebase service account secret found."
+            echo "::error title=Firebase Secret Missing::No Firebase service account secret found." >&2
+            echo "::error::Please add either FIREBASE_SERVICE_ACCOUNT (raw JSON) or FIREBASE_SERVICE_ACCOUNT_BASE64 (base64-encoded JSON) to your repository's secrets." >&2
+            echo "::error::You can find this in your repository settings under 'Secrets and variables' > 'Actions'." >&2
+            exit 1
           fi
 
       - name: Deploy to Firebase App Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          firebaseServiceAccount: '${{ steps.prepare_sa.outputs.service_account }}'
           projectId: 'studio-5732742384-e8c45'
           expires: 30d
