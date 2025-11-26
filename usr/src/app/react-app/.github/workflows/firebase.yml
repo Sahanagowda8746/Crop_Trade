@@ -56,4 +56,3 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ steps.prepare_sa.outputs.service_account }}'
           projectId: 'studio-5732742384-e8c45'
-          expires: 30d
